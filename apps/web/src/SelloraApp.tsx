@@ -21,7 +21,8 @@ export default function SelloraApp(){
  const [pform,setPform]=useState({name:"",sku:"",description:"",price:"",currency:"INR",unit:"kg",imageUrl:"",fields:{} as Record<string,string|number|boolean>});
  const [cform,setCform]=useState({title:"",description:"",productIds:[] as string[]});
  const [modal,setModal]=useState(""),[editing,setEditing]=useState(""),[preview,setPreview]=useState<Catalogue|null>(null),[pub,setPub]=useState<PublicData|null>(null),[pubError,setPubError]=useState("");
- const slug=window.location.pathname.match(/^\/c\/([^/]+)/)?.[1];\n const isDemo=window.location.pathname==="/demo/ganeshaa-sutra";
+ const slug=window.location.pathname.match(/^\/c\/([^/]+)/)?.[1];
+ const isDemo=window.location.pathname==="/demo/ganeshaa-sutra";
  const fields=business?.catalogueFields?.length?business.catalogueFields:(fallback[business?.productCategory||bform.productCategory]||fallback.other);
  async function load(t=access){const [b,p,c]=await Promise.all([api("/workspace/business",{},t),api("/workspace/products",{},t),api("/workspace/catalogues",{},t)]);setBusiness(b);if(b)setSellingMode(b.sellingMode||"CATALOG_ONLY");setProducts(p);setCatalogues(c);}
   async function saveSellingMode(e:FormEvent){e.preventDefault();setBusy(true);setError("");try{const updated=await api("/workspace/business/settings",{method:"PATCH",body:JSON.stringify({sellingMode})});setBusiness(old=>old?{...old,...updated}:old);setNotice(sellingMode==="ONLINE_PAYMENTS"?"Online payments selected. Connect a gateway before accepting live payments.":"Catalogue-only mode saved.");}catch(e){setError(e instanceof Error?e.message:"Could not save selling mode");}finally{setBusy(false)}}
