@@ -7,6 +7,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import { Prisma, PrismaClient, EnquiryStatus } from "@prisma/client";
 import { z } from "zod";
+import selloraRouter from "./sellora.js";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -18,6 +19,7 @@ fs.mkdirSync(uploadDir, { recursive: true });
 app.use(cors({ origin: webOrigin }));
 app.use(express.json({ limit: "1mb" }));
 app.use("/uploads", express.static(uploadDir));
+app.use("/api", selloraRouter);
 
 const upload = multer({
   dest: uploadDir,
