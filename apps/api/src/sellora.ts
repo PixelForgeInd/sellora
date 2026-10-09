@@ -156,7 +156,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
-  const owned = await prisma.selloraProduct.findFirst({where:{id:req.params.id,businessId:business.id}});
+  const owned = await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if (!owned) return res.status(404).json({error:"Product not found."});
   const {price,...rest}=data;
   const product=await prisma.selloraProduct.update({where:{id:owned.id},data:{
@@ -168,7 +168,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
 router.delete("/workspace/products/:id", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
-  const result=await prisma.selloraProduct.deleteMany({where:{id:req.params.id,businessId:business.id}});
+  const result=await prisma.selloraProduct.deleteMany({where:{id:String(req.params.id),businessId:business.id}});
   if (!result.count) return res.status(404).json({error:"Product not found."});
   res.status(204).end();
 }));
@@ -198,7 +198,7 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
   const data=z.object({title:z.string().trim().min(2).max(160).optional(),description:z.string().trim().max(1000).nullable().optional(),isPublished:z.boolean().optional(),productIds:z.array(z.string()).max(500).optional()}).parse(req.body);
   const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if(!business) return res.status(404).json({error:"Business not found."});
-  const existing=await prisma.selloraCatalogue.findFirst({where:{id:req.params.id,businessId:business.id}});
+  const existing=await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if(!existing) return res.status(404).json({error:"Catalogue not found."});
   if(data.productIds){
     const ids=[...new Set(data.productIds)];
