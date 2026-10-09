@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  QUOTATION_SENT
+  CONVERTED
+  LOST
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model YarnCount {
+  id        String    @id @default(cuid())
+  label     String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model YarnType {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  sku            String        @unique
+  name           String
+  description    String?
+  countId        String
+  count          YarnCount     @relation(fields: [countId], references: [id])
+  yarnTypeId     String
+  yarnType       YarnType      @relation(fields: [yarnTypeId], references: [id])
+  shades         ProductShade[]
+  prices         Price[]
+  availability   String        @default("CONTACT")
+  isPublished    Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  @@index([name])
+  @@index([isPublished])
+}
+
+model Shade {
+  id        String         @id @default(cuid())
+  name      String
+  code      String
+  hexColor  String?
+  products  ProductShade[]
+  createdAt DateTime       @default(now())
+  @@unique([name, code])
+}
+
+model ProductShade {
+  id        String   @id @default(cuid())
+  productId String
+  shadeId   String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shade     Shade    @relation(fields: [shadeId], references: [id], onDelete: Cascade)
+  @@unique([productId, shadeId])
+}
+
+model Price {
+  id          String        @id @default(cuid())
+  productId   String
+  product     Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  amount      Decimal       @db.Decimal(12, 2)
+  currency    String        @default("INR")
+  unit        String        @default("kg")
+  isPublished Boolean       @default(true)
+  effectiveAt DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+  history     PriceHistory[]
+  @@index([productId, effectiveAt])
+}
+
+model PriceHistory {
+  id          String   @id @default(cuid())
+  priceId     String
+  price       Price    @relation(fields: [priceId], references: [id], onDelete: Cascade)
+  oldAmount   Decimal? @db.Decimal(12, 2)
+  newAmount   Decimal  @db.Decimal(12, 2)
+  changedBy   String?
+  createdAt   DateTime @default(now())
+}
+
+model Catalogue {
+  id           String   @id @default(cuid())
+  title        String
+  originalName String
+  filePath     String
+  mimeType     String
+  fileSize     Int
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Enquiry {
+  id           String         @id @default(cuid())
+  reference    String         @unique
+  customerName String
+  businessName String?
+  phone        String
+  city         String?
+  state        String?
+  message      String?
+  status       EnquiryStatus  @default(NEW)
+  items        EnquiryItem[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  @@index([status, createdAt])
+}
+
+model EnquiryItem {
+  id          String   @id @default(cuid())
+  enquiryId   String
+  enquiry     Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  productId   String
+  productName String
+  shadeName   String?
+  quantity    Decimal  @db.Decimal(12, 3)
+  unit        String   @default("kg")
+}
