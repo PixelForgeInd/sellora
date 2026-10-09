@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip";
-import { BookOpen, Search, ShoppingBag, Phone, ChevronLeft, ChevronRight, Upload, X, CheckCircle2, Package, LayoutDashboard, ExternalLink } from "lucide-react";
+import { BookOpen, Search, ShoppingBag, Phone, ChevronLeft, ChevronRight, Upload, X, CheckCircle2, Package, LayoutDashboard, ExternalLink, Building2 } from "lucide-react";
+import BusinessOnboarding from "./BusinessOnboarding";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 const API_BASE = API.replace(/\/api\/?$/, "");
@@ -35,6 +36,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [showEnquiry, setShowEnquiry] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [successRef, setSuccessRef] = useState("");
   const [form, setForm] = useState({ customerName: "", businessName: "", phone: "", city: "", state: "", message: "" });
   const [adminForm, setAdminForm] = useState({ sku: "", name: "", count: "20s OE", yarnType: "Recycled OE", price: "", description: "" });
@@ -183,7 +185,7 @@ export default function App() {
       <nav className="header-actions">
         <a href="#catalogue" className="nav-link">Catalogue</a>
         <a href="#products" className="nav-link">Yarns & Shades</a>
-        <button className="button button-quiet" onClick={openAdmin}><LayoutDashboard size={16}/> Sales dashboard</button>
+        <button className="button button-quiet" onClick={() => setShowOnboarding(true)}><Building2 size={16}/> New business</button><button className="button button-quiet" onClick={openAdmin}><LayoutDashboard size={16}/> Sales dashboard</button>
         <button className="button button-primary" onClick={() => setShowEnquiry(true)}><ShoppingBag size={16}/> Enquiry {cart.length > 0 && <span className="cart-count">{cart.length}</span>}</button>
       </nav>
     </header>
@@ -246,6 +248,8 @@ export default function App() {
     <footer className="site-footer"><a className="brand brand-footer" href="#"><span className="brand-mark">GS</span><span><strong>GANESHAA SUTRA</strong><small>YARN TRADING · SALEM, INDIA</small></span></a><span>Quality yarn. Reliable relationships.</span><span>© {new Date().getFullYear()} Ganeshaa Sutra</span></footer>
 
     {successRef && <div className="toast-success"><CheckCircle2 size={18}/><span><strong>Enquiry received</strong><small>Reference: {successRef}</small></span><button onClick={()=>setSuccessRef("")} aria-label="Dismiss"><X size={16}/></button></div>}
+
+    {showOnboarding && <BusinessOnboarding onClose={() => setShowOnboarding(false)} />}
 
     {showEnquiry && <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowEnquiry(false)}}><section className="modal-panel" role="dialog" aria-modal="true" aria-labelledby="enquiry-title"><div className="modal-heading"><div><span className="eyebrow">SALES ENQUIRY</span><h2 id="enquiry-title">Let's talk yarn.</h2></div><button className="icon-button" onClick={()=>setShowEnquiry(false)} aria-label="Close"><X/></button></div>
       {cart.length ? <form onSubmit={submitEnquiry} className="modal-form">
