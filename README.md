@@ -10,6 +10,7 @@ Sellora is a self-service B2B catalogue platform. Businesses create an account, 
 4. Generic product library: SKU, description, optional price, currency, unit, image URL and industry-specific fields.
 5. Catalogue builder: create catalogues and choose which business-owned products they contain.
 6. Publish/share: publish or unpublish and share a public route at /c/:slug.
+7. Selling preferences: business owners can switch between catalogue-only and catalogue + online payments from dashboard Settings. Gateway status is stored separately; online checkout remains unavailable until a real gateway connection, order flow and verified payment handling are implemented.
 
 The previous yarn-specific data models remain. Generic Sellora models are additive. Legacy yarn records are not automatically copied into a new workspace because the old records do not have reliable tenant ownership; importing them needs a deliberate mapping step.
 
@@ -51,6 +52,7 @@ For an existing development database, back it up before applying the new migrati
 - GET/POST /api/workspace/products, PATCH/DELETE /api/workspace/products/:id
 - GET/POST /api/workspace/catalogues, PATCH /api/workspace/catalogues/:id
 - GET /api/public/catalogues/:slug
+- PATCH /api/workspace/business/settings (authenticated; accepts `sellingMode: CATALOG_ONLY | ONLINE_PAYMENTS`)
 - GET /api/health
 
 Workspace routes require Authorization: Bearer <token>. Product and catalogue operations scope records to the signed-in user's business. Public catalogue routes expose only published catalogues.
