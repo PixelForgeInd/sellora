@@ -73,3 +73,11 @@ This is an MVP foundation, not a production launch approval.
 
 - apps/api: Express API, Prisma schema and migrations
 - apps/web: React frontend and public catalogue view
+
+## Public catalogue template
+
+- All published business catalogues use the shared, responsive public storefront renderer.
+- The renderer is populated with that business's own branding, catalogue title/description, products, product fields and contact information.
+- Demo route: `/demo/ganeshaa-sutra` displays a sample Ganeshaa Sutra catalogue without requiring an account or API data. This is a preview route; it does not create a real business or order records.
+- Live business catalogues continue to use `/c/:slug`.
+- Deploy the web app with SPA fallback enabled before sharing the demo URL publicly. No production deployment URL is configured in this repository yet.
