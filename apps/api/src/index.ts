@@ -7,7 +7,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import { Prisma, PrismaClient, EnquiryStatus } from "@prisma/client";
 import { z } from "zod";
-import selloraRouter from "./sellora.js";
+import selloraRouter, { requireAuth } from "./sellora.js";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -20,6 +20,13 @@ app.use(cors({ origin: webOrigin }));
 app.use(express.json({ limit: "1mb" }));
 app.use("/uploads", express.static(uploadDir));
 app.use("/api", selloraRouter);
+
+// Legacy V1 admin routes are retired in the SaaS UI. Do not leave their global-data mutations exposed.
+app.post("/api/products", (_req, res) => res.status(410).json({ error: "This legacy endpoint is retired. Use the authenticated workspace product API." }));
+app.patch("/api/products/:id", (_req, res) => res.status(410).json({ error: "This legacy endpoint is retired. Use the authenticated workspace product API." }));
+app.post("/api/catalogues/upload", (_req, res) => res.status(410).json({ error: "PDF flipbook upload is not part of the current Sellora MVP." }));
+app.get("/api/enquiries", (_req, res) => res.status(410).json({ error: "Legacy global enquiry administration is retired." }));
+app.patch("/api/enquiries/:id/status", (_req, res) => res.status(410).json({ error: "Legacy global enquiry administration is retired." }));
 
 const upload = multer({
   dest: uploadDir,
@@ -84,13 +91,14 @@ const businessSchema = z.object({
   brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56")
 });
 
-app.post("/api/businesses", async (req, res, next) => {
+app.post("/api/businesses", requireAuth, async (req, res, next) => {
   try {
     const data = businessSchema.parse(req.body);
     const slug = (data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")).slice(0, 80);
     const templates = catalogueFieldTemplates[data.productCategory] || catalogueFieldTemplates.other;
     const business = await prisma.business.create({
       data: {
+        ownerUserId: (req as any).userId,
         name: data.name, slug, industry: data.industry, productCategory: data.productCategory,
         businessModel: data.businessModel, email: data.email || null, phone: data.phone || null,
         website: data.website || null, brandColor: data.brandColor,
@@ -111,9 +119,10 @@ app.post("/api/businesses", async (req, res, next) => {
 });
 
 // Internal development endpoint. Authentication and tenant authorization are required before production.
-app.get("/api/businesses", async (_req, res, next) => {
+app.get("/api/businesses", requireAuth, async (req, res, next) => {
   try {
     const businesses = await prisma.business.findMany({
+      where: { ownerUserId: (req as any).userId },
       include: { catalogueFields: { orderBy: { sortOrder: "asc" } } },
       orderBy: { createdAt: "desc" }, take: 100
     });
