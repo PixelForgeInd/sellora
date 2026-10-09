@@ -8,6 +8,9 @@ const router = Router();
 const prisma = new PrismaClient();
 const scrypt = promisify(crypto.scrypt);
 const secret = process.env.AUTH_SECRET || "sellora-development-secret-change-before-deployment";
+if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET must be configured before running Sellora in production.");
+}
 const tokenLifetimeSeconds = 60 * 60 * 24 * 7;
 
 type AuthedRequest = Request & { userId?: string };
