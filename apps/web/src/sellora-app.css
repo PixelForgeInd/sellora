@@ -14,3 +14,14 @@
 
 /* Business selling mode settings */
 .sl-settings-page>h3{margin:10px 0 8px;font:500 25px Georgia,serif}.sl-settings-page>.sl-kicker{display:block}.sl-mode-option{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:13px!important;border:1px solid var(--sl-line);border-radius:9px;padding:16px;margin:0!important;cursor:pointer;transition:border-color .15s,background .15s}.sl-mode-option.selected{border-color:#599c56;background:#f4f8f0}.sl-mode-option>input{margin-top:4px;accent-color:#599c56;flex-shrink:0}.sl-mode-option>span{display:grid;gap:7px}.sl-mode-option b{display:flex;align-items:center;gap:8px;font-size:12px}.sl-mode-option small{font-size:10px;line-height:1.7;color:#737c6d;font-weight:400}.sl-gateway-status{display:flex;align-items:center;justify-content:space-between;gap:15px;border-top:1px solid var(--sl-line);padding:17px 0 5px;margin-top:6px}.sl-gateway-status>div{display:grid;gap:5px}.sl-gateway-status b{font-size:11px}.sl-gateway-status small{font-size:10px;color:#737c6d}.sl-gateway-note{padding:12px;background:#fff7e8;border-radius:7px;color:#805b1c!important;font-size:10px!important;line-height:1.7!important;margin:5px 0!important}
+
+
+/* Fix form controls inside selectable selling-mode cards and password visibility */
+.sl-form .sl-mode-option>input[type="radio"]{width:18px;min-width:18px;height:18px;padding:0;margin:3px 0 0;flex:0 0 18px;}
+.sl-form .sl-mode-option>span{flex:1;min-width:0;}
+.sl-password-wrap{position:relative;display:flex;align-items:center;width:100%;}
+.sl-form .sl-password-wrap>input{width:100%;padding-right:44px;}
+.sl-password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:6px;background:transparent;color:#687562;cursor:pointer;}
+.sl-password-toggle:hover{background:#f0f4ec;color:#315f2f;}
+.sl-password-toggle:focus-visible{outline:2px solid #599c56;outline-offset:1px;}
+@media(max-width:650px){.sl-mode-option{width:100%;}.sl-form .sl-mode-option>span{overflow-wrap:anywhere;}}
