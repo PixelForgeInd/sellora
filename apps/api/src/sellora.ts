@@ -130,7 +130,8 @@ router.post("/workspace/business", requireAuth, authenticated(async (req,res) =>
     productCategory:z.enum(["yarn-textiles","clothing","furniture","electronics","other"]),
     businessModel:z.enum(["B2B","B2C","B2B2C"]), phone:z.string().trim().max(30).optional(),
     website:z.union([z.string().trim().url().max(200),z.literal("")]).optional(),
-    brandColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56")
+    brandColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56"),
+    sellingMode:z.enum(["CATALOG_ONLY","ONLINE_PAYMENTS"]).default("ONLINE_PAYMENTS")
   }).parse(req.body);
   const existing = await prisma.business.findFirst({where:{ownerUserId:req.userId}});
   if (existing) return res.status(409).json({error:"This account already has a business workspace."});
@@ -140,7 +141,7 @@ router.post("/workspace/business", requireAuth, authenticated(async (req,res) =>
   const fields = templates[data.productCategory] || templates.other;
   const business = await prisma.business.create({data:{
     ownerUserId:req.userId!, name:data.name, slug, industry:data.industry, productCategory:data.productCategory,
-    businessModel:data.businessModel, phone:data.phone || null, website:data.website || null, brandColor:data.brandColor,
+    businessModel:data.businessModel, phone:data.phone || null, website:data.website || null, brandColor:data.brandColor, sellingMode:data.sellingMode,
     catalogueFields:{create:fields.map((f,i)=>({key:f.key,label:f.label,type:f.type,required:f.required || false,options:f.options,sortOrder:i}))}
   },include:{catalogueFields:{orderBy:{sortOrder:"asc"}}}});
   res.status(201).json(business);
