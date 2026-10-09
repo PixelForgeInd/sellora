@@ -245,7 +245,7 @@ export default function App() {
       <section className="cta-band"><div><span className="eyebrow">LET'S WORK TOGETHER</span><h2>Have a yarn requirement?</h2><p>Tell us the count, shade and quantity you need. Our sales team will follow up.</p></div><button className="button button-light button-large" onClick={()=>setShowEnquiry(true)}><Phone size={17}/> Send an enquiry</button></section>
     </main>
 
-    <footer className="site-footer"><a className="brand brand-footer" href="#"><span className="brand-mark">GS</span><span><strong>GANESHAA SUTRA</strong><small>YARN TRADING · SALEM, INDIA</small></span></a><span>Digital Catalogues. Smarter Sales.</span><span>© {new Date().getFullYear()} Sellora</span></footer>
+    <footer className="site-footer"><a className="brand brand-footer" href="#"><span className="brand-mark">S</span><span><strong>SELLORA</strong><small>DIGITAL CATALOGUES · SMARTER SALES</small></span></a><span>Digital Catalogues. Smarter Sales.</span><span>© {new Date().getFullYear()} Sellora</span></footer>
 
     {successRef && <div className="toast-success"><CheckCircle2 size={18}/><span><strong>Enquiry received</strong><small>Reference: {successRef}</small></span><button onClick={()=>setSuccessRef("")} aria-label="Dismiss"><X size={16}/></button></div>}
 
