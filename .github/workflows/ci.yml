@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/v2-dynamic-catalogue]
   pull_request:
     branches: [main, develop]
 
