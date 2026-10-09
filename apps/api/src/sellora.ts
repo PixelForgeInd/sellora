@@ -105,6 +105,25 @@ router.get("/workspace/business", requireAuth, authenticated(async (req,res) => 
   });
   res.json(business);
 }));
+router.patch("/workspace/business/settings", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({
+    sellingMode: z.enum(["CATALOG_ONLY", "ONLINE_PAYMENTS"])
+  }).parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  const updated = await prisma.business.update({
+    where:{id:business.id},
+    data:{sellingMode:data.sellingMode},
+    select:{
+      id:true,name:true,sellingMode:true,paymentGatewayProvider:true,paymentGatewayStatus:true,updatedAt:true
+    }
+  });
+  res.json({
+    ...updated,
+    checkoutReady: updated.sellingMode === "ONLINE_PAYMENTS" && updated.paymentGatewayStatus === "ACTIVE"
+  });
+}));
+
 router.post("/workspace/business", requireAuth, authenticated(async (req,res) => {
   const data = z.object({
     name:z.string().trim().min(2).max(120), industry:z.string().trim().min(2).max(100),
