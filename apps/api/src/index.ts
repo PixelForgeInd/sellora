@@ -28,7 +28,97 @@ const upload = multer({
   }
 });
 
-app.get("/api/health", (_req, res) => res.json({ ok: true, service: "ganeshaa-sutra-api" }));
+
+app.get("/api/health", (_req, res) => res.json({ ok: true, service: "sellora-api" }));
+
+// Category templates power the first version of Sellora's dynamic product-field setup.
+const catalogueFieldTemplates: Record<string, Array<{ key: string; label: string; type: string; required?: boolean; options?: string[] }>> = {
+  "yarn-textiles": [
+    { key: "count", label: "Yarn count", type: "select", required: true, options: ["10s", "18s", "20s OE", "2/20s", "24s", "2/40s"] },
+    { key: "yarnType", label: "Yarn type", type: "select", required: true, options: ["Recycled OE", "Kora CP", "Modal", "Excel", "Cotton", "Polyester"] },
+    { key: "shade", label: "Shade / colour", type: "text" },
+    { key: "unit", label: "Selling unit", type: "select", required: true, options: ["kg", "cone", "bag"] },
+    { key: "minOrderQuantity", label: "Minimum order quantity", type: "number" }
+  ],
+  clothing: [
+    { key: "size", label: "Size", type: "multiselect", options: ["XS", "S", "M", "L", "XL", "XXL"] },
+    { key: "colour", label: "Colour", type: "text" },
+    { key: "material", label: "Material / fabric", type: "text" },
+    { key: "gender", label: "Collection", type: "select", options: ["Men", "Women", "Unisex", "Kids"] },
+    { key: "minOrderQuantity", label: "Minimum order quantity", type: "number" }
+  ],
+  furniture: [
+    { key: "material", label: "Material", type: "text", required: true },
+    { key: "dimensions", label: "Dimensions", type: "text" },
+    { key: "finish", label: "Finish", type: "text" },
+    { key: "assemblyRequired", label: "Assembly required", type: "boolean" },
+    { key: "minOrderQuantity", label: "Minimum order quantity", type: "number" }
+  ],
+  electronics: [
+    { key: "brand", label: "Brand", type: "text" },
+    { key: "model", label: "Model number", type: "text", required: true },
+    { key: "warranty", label: "Warranty", type: "text" },
+    { key: "specifications", label: "Specifications", type: "textarea" },
+    { key: "minOrderQuantity", label: "Minimum order quantity", type: "number" }
+  ],
+  other: [
+    { key: "material", label: "Material", type: "text" },
+    { key: "colour", label: "Colour", type: "text" },
+    { key: "size", label: "Size / dimensions", type: "text" },
+    { key: "unit", label: "Selling unit", type: "text" },
+    { key: "minOrderQuantity", label: "Minimum order quantity", type: "number" }
+  ]
+};
+
+const businessSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  slug: z.string().trim().min(2).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+  industry: z.string().trim().min(2).max(100),
+  productCategory: z.enum(["yarn-textiles", "clothing", "furniture", "electronics", "other"]),
+  businessModel: z.enum(["B2B", "B2C", "B2B2C"]),
+  email: z.union([z.string().trim().email().max(160), z.literal("")]).optional(),
+  phone: z.string().trim().max(30).optional(),
+  website: z.union([z.string().trim().url().max(200), z.literal("")]).optional(),
+  brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56")
+});
+
+app.post("/api/businesses", async (req, res, next) => {
+  try {
+    const data = businessSchema.parse(req.body);
+    const slug = (data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")).slice(0, 80);
+    const templates = catalogueFieldTemplates[data.productCategory] || catalogueFieldTemplates.other;
+    const business = await prisma.business.create({
+      data: {
+        name: data.name, slug, industry: data.industry, productCategory: data.productCategory,
+        businessModel: data.businessModel, email: data.email || null, phone: data.phone || null,
+        website: data.website || null, brandColor: data.brandColor,
+        catalogueFields: { create: templates.map((field, index) => ({
+          key: field.key, label: field.label, type: field.type, required: field.required || false,
+          options: field.options ? field.options : undefined, sortOrder: index
+        })) }
+      },
+      include: { catalogueFields: { orderBy: { sortOrder: "asc" } } }
+    });
+    res.status(201).json(business);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return res.status(409).json({ error: "That catalogue URL name is already in use. Choose another one." });
+    }
+    next(error);
+  }
+});
+
+// Internal development endpoint. Authentication and tenant authorization are required before production.
+app.get("/api/businesses", async (_req, res, next) => {
+  try {
+    const businesses = await prisma.business.findMany({
+      include: { catalogueFields: { orderBy: { sortOrder: "asc" } } },
+      orderBy: { createdAt: "desc" }, take: 100
+    });
+    res.json(businesses);
+  } catch (error) { next(error); }
+});
+
 
 app.get("/api/products", async (req, res, next) => {
   try {
