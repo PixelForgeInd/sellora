@@ -80,7 +80,7 @@ router.post("/auth/signup", async (req, res) => {
   const email = data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where:{email} });
   if (existing) return res.status(409).json({error:"An account with this email already exists. Please log in."});
-  const user = await prisma.user.create({data:{email,passwordHash:await hashPassword(data.password)}});
+  const user = await prisma.user.create({data:{email,passwordHash:await hashPassword(data.password),role:"BUSINESS"}});
   res.status(201).json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
 router.post("/auth/login", async (req, res) => {
