@@ -16,7 +16,7 @@ function tokenFor(userId: string) {
   const signature = crypto.createHmac("sha256", secret).update(payload).digest("base64url");
   return `${payload}.${signature}`;
 }
-function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
+export function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
   const [payload, signature] = token.split(".");
