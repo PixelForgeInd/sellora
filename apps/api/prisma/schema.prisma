@@ -138,3 +138,37 @@ model EnquiryItem {
   quantity    Decimal  @db.Decimal(12, 3)
   unit        String   @default("kg")
 }
+
+
+// Business onboarding foundation for Sellora's industry-aware catalogue builder.
+model Business {
+  id              String           @id @default(cuid())
+  name            String
+  slug            String           @unique
+  industry        String
+  productCategory String
+  businessModel   String
+  email           String?
+  phone           String?
+  website         String?
+  logoUrl         String?
+  brandColor      String           @default("#599c56")
+  catalogueFields CatalogueField[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model CatalogueField {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  key        String
+  label      String
+  type       String
+  required   Boolean  @default(false)
+  options    Json?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  @@unique([businessId, key])
+  @@index([businessId, sortOrder])
+}
