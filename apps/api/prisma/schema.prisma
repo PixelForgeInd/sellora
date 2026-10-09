@@ -154,6 +154,9 @@ model Business {
   website         String?
   logoUrl         String?
   brandColor      String           @default("#599c56")
+  sellingMode     String           @default("CATALOG_ONLY")
+  paymentGatewayProvider String?
+  paymentGatewayStatus   String    @default("NOT_CONNECTED")
   catalogueFields CatalogueField[]
   ownerUserId     String?
   owner            User?            @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
