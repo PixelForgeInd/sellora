@@ -6,3 +6,4 @@ dist/
 apps/api/uploads/*
 !apps/api/uploads/.gitkeep
 .DS_Store
+apps/api/uploads/
