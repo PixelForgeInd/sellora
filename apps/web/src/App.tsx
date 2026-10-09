@@ -30,7 +30,7 @@ export default function App() {
   const [type, setType] = useState("All types");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [catalogueUrl, setCatalogueUrl] = useState("");
-  const [catalogueTitle, setCatalogueTitle] = useState("Ganeshaa Sutra Yarn Catalogue");
+  const [catalogueTitle, setCatalogueTitle] = useState("Sellora Digital Catalogue");
   const [pdfPages, setPdfPages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -179,8 +179,8 @@ export default function App() {
 
   return <div className="app-shell">
     <header className="site-header">
-      <a className="brand" href="#" aria-label="Ganeshaa Sutra home">
-        <span className="brand-mark">GS</span><span><strong>GANESHAA SUTRA</strong><small>YARN CATALOGUE</small></span>
+      <a className="brand" href="#" aria-label="Sellora home">
+        <span className="brand-mark">S</span><span><strong>SELLORA</strong><small>DIGITAL CATALOGUES · SMARTER SALES</small></span>
       </a>
       <nav className="header-actions">
         <a href="#catalogue" className="nav-link">Catalogue</a>
@@ -193,7 +193,7 @@ export default function App() {
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <div className="eyebrow"><span className="eyebrow-dot"/> TEXTILE YARN PARTNER · SALEM, TAMIL NADU</div>
+          <div className="eyebrow"><span className="eyebrow-dot"/> DIGITAL CATALOGUES · SMARTER SALES</div>
           <h1>Find the right yarn.<br/><em>Build better textiles.</em></h1>
           <p>Explore our yarn range, browse shades and view published prices. Select what you need and send our team an enquiry.</p>
           <div className="hero-actions"><a className="button button-primary button-large" href="#catalogue"><BookOpen size={18}/> Explore catalogue</a><a className="text-link" href="#products">Browse products <ChevronRight size={16}/></a></div>
@@ -201,7 +201,7 @@ export default function App() {
         </div>
         <div className="hero-art" aria-label="Decorative yarn shade display">
           <div className="art-card art-card-back"><div className="art-label">COLOUR STORIES / 01</div><div className="cone-row">{["#e2a13c","#d44d67","#347f9b","#56885b"].map(c=><div key={c} className="mini-cone" style={{"--cone":c} as React.CSSProperties}/>)}</div></div>
-          <div className="art-card art-card-front"><div className="art-label">GANESHAA SUTRA <span>EST. 2025</span></div><div className="yarn-illustration"><div className="yarn-cone cone-orange"/><div className="yarn-cone cone-green"/><div className="yarn-cone cone-blue"/></div><div className="art-footer"><span>QUALITY · COLOUR · CONSISTENCY</span><span>GS / YARNS</span></div></div>
+          <div className="art-card art-card-front"><div className="art-label">SELLORA <span>CATALOGUE STUDIO</span></div><div className="yarn-illustration"><div className="yarn-cone cone-orange"/><div className="yarn-cone cone-green"/><div className="yarn-cone cone-blue"/></div><div className="art-footer"><span>QUALITY · COLOUR · CONSISTENCY</span><span>SELLORA / CATALOGUES</span></div></div>
           <div className="floating-note"><span className="floating-icon"><Package size={17}/></span><span><strong>Yarn range</strong><small>Explore by count & shade</small></span></div>
         </div>
       </section>
@@ -209,7 +209,7 @@ export default function App() {
       <section className="trust-strip"><span>YARN COUNTS</span><strong>20s OE</strong><i/><strong>2/20s</strong><i/><strong>2/40s</strong><i/><strong>10s</strong><i/><strong>18s</strong><i/><strong>24s</strong></section>
 
       <section className="flipbook-section section-wrap" id="catalogue">
-        <div className="section-heading"><div><div className="eyebrow">THE DIGITAL SHADE BOOK</div><h2>Turn the page.<br/><em>Find your shade.</em></h2></div><p>Browse our catalogue like a printed book. For a custom catalogue, upload your prepared PDF through the sales dashboard.</p></div>
+        <div className="section-heading"><div><div className="eyebrow">YOUR PRODUCTS, DIGITALLY PRESENTED</div><h2>Turn the page.<br/><em>Open new possibilities.</em></h2></div><p>Publish a polished digital catalogue your customers can browse and share. Upload an existing PDF to preview it as a page-turning flipbook.</p></div>
         {pdfPages.length > 0 ? <div className="flipbook-shell">
           <div className="flipbook-top"><span><BookOpen size={16}/> {catalogueTitle}</span><span>{pdfPages.length} pages</span></div>
           <div className="flipbook-stage">
@@ -223,13 +223,13 @@ export default function App() {
           </div>
           <div className="flipbook-bottom"><span>Use the arrows or swipe to turn pages</span><a href={catalogueUrl} target="_blank" rel="noreferrer">Open original PDF <ExternalLink size={14}/></a></div>
         </div> : <div className="flipbook-empty">
-          <div className="empty-book"><div className="empty-book-spine">GS</div><div className="empty-book-cover"><span>GANESHAA SUTRA</span><strong>YARN<br/>SHADE BOOK</strong><i>COLOUR COLLECTION</i><div className="cover-cones"><span/><span/><span/></div><small>SALEM · TAMIL NADU</small></div></div>
+          <div className="empty-book"><div className="empty-book-spine">S</div><div className="empty-book-cover"><span>SELLORA</span><strong>DIGITAL<br/>CATALOGUE</strong><i>YOUR PRODUCTS. BEAUTIFULLY PRESENTED.</i><div className="cover-cones"><span/><span/><span/></div><small>DIGITAL CATALOGUES · SMARTER SALES</small></div></div>
           <div className="empty-book-copy"><span className="pill-label">INTERACTIVE FLIPBOOK</span><h3>Your digital shade book starts here.</h3><p>Upload your existing yarn catalogue PDF in the sales dashboard to activate page-turning preview. The viewer will use your real catalogue pages.</p><button className="button button-primary" onClick={() => {setShowAdmin(true); setTimeout(() => pdfInput.current?.click(), 200)}}><Upload size={16}/> Upload catalogue PDF</button></div>
         </div>}
       </section>
 
       <section className="products-section section-wrap" id="products">
-        <div className="section-heading products-heading"><div><div className="eyebrow">EXPLORE OUR RANGE</div><h2>Yarns for every <em>idea.</em></h2></div><p>Prices shown are published selling prices. Confirm availability and final terms with our sales team.</p></div>
+        <div className="section-heading products-heading"><div><div className="eyebrow">CATALOGUE PREVIEW</div><h2>Products, ready to <em>be discovered.</em></h2></div><p>This starter workspace currently demonstrates the product catalogue using yarn records. Industry-specific product fields are being built next.</p></div>
         <div className="catalogue-controls">
           <label className="search-box"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search yarn, count or shade…" aria-label="Search products"/></label>
           <select value={count} onChange={e=>setCount(e.target.value)} aria-label="Filter by yarn count">{counts.map(c=><option key={c}>{c}</option>)}</select>
@@ -245,7 +245,7 @@ export default function App() {
       <section className="cta-band"><div><span className="eyebrow">LET'S WORK TOGETHER</span><h2>Have a yarn requirement?</h2><p>Tell us the count, shade and quantity you need. Our sales team will follow up.</p></div><button className="button button-light button-large" onClick={()=>setShowEnquiry(true)}><Phone size={17}/> Send an enquiry</button></section>
     </main>
 
-    <footer className="site-footer"><a className="brand brand-footer" href="#"><span className="brand-mark">GS</span><span><strong>GANESHAA SUTRA</strong><small>YARN TRADING · SALEM, INDIA</small></span></a><span>Quality yarn. Reliable relationships.</span><span>© {new Date().getFullYear()} Ganeshaa Sutra</span></footer>
+    <footer className="site-footer"><a className="brand brand-footer" href="#"><span className="brand-mark">GS</span><span><strong>GANESHAA SUTRA</strong><small>YARN TRADING · SALEM, INDIA</small></span></a><span>Digital Catalogues. Smarter Sales.</span><span>© {new Date().getFullYear()} Sellora</span></footer>
 
     {successRef && <div className="toast-success"><CheckCircle2 size={18}/><span><strong>Enquiry received</strong><small>Reference: {successRef}</small></span><button onClick={()=>setSuccessRef("")} aria-label="Dismiss"><X size={16}/></button></div>}
 
@@ -255,14 +255,14 @@ export default function App() {
       {cart.length ? <form onSubmit={submitEnquiry} className="modal-form">
         <div className="selected-items"><strong>Selected products ({cart.length})</strong>{cart.map(item=><div className="selected-item" key={item.product.id}><span>{item.product.name}<small>{item.product.count} · {item.product.yarnType}</small></span><label>Qty (kg)<input type="number" min="0.1" step="0.1" value={item.quantity} onChange={e=>setCart(old=>old.map(i=>i.product.id===item.product.id?{...i,quantity:Number(e.target.value)}:i))}/></label><button type="button" onClick={()=>setCart(old=>old.filter(i=>i.product.id!==item.product.id))} aria-label="Remove product"><X size={15}/></button></div>)}</div>
         <div className="form-grid"><label>Your name *<input required minLength={2} value={form.customerName} onChange={e=>setForm({...form,customerName:e.target.value})}/></label><label>Business name<input value={form.businessName} onChange={e=>setForm({...form,businessName:e.target.value})}/></label><label>Phone number *<input required minLength={7} value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>City<input value={form.city} onChange={e=>setForm({...form,city:e.target.value})}/></label><label>State<input value={form.state} onChange={e=>setForm({...form,state:e.target.value})}/></label><label className="full-field">Message<textarea rows={3} value={form.message} onChange={e=>setForm({...form,message:e.target.value})} placeholder="Required shade, delivery preference, etc."/></label></div>
-        {error && <div className="notice notice-error">{error}</div>}<button className="button button-primary button-large full-width" type="submit">Submit enquiry <ChevronRight size={17}/></button><p className="form-footnote">Submitting shares your details with Ganeshaa Sutra for this enquiry.</p>
+        {error && <div className="notice notice-error">{error}</div>}<button className="button button-primary button-large full-width" type="submit">Submit enquiry <ChevronRight size={17}/></button><p className="form-footnote">Submitting shares your details with the business managing this catalogue.</p>
       </form> : <div className="empty-cart"><ShoppingBag size={28}/><h3>Your enquiry list is empty</h3><p>Add yarn products from the catalogue first, then send your requirements.</p><button className="button button-primary" onClick={()=>setShowEnquiry(false)}>Browse products</button></div>}</section></div>}
 
     {showAdmin && <div className="modal-backdrop admin-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowAdmin(false)}}><section className="admin-panel" role="dialog" aria-modal="true" aria-labelledby="admin-title"><div className="modal-heading"><div><span className="eyebrow">INTERNAL TOOL · DEVELOPMENT MODE</span><h2 id="admin-title">Sales dashboard</h2></div><button className="icon-button" onClick={()=>setShowAdmin(false)} aria-label="Close"><X/></button></div><div className="admin-warning"><strong>Security note:</strong> this starter dashboard is not authenticated. Run locally only until authentication and role-based access control are implemented.</div>
       <div className="admin-grid"><section className="admin-card"><h3><Package size={17}/> Add a yarn product</h3><form onSubmit={createProduct} className="admin-form"><label>SKU *<input required value={adminForm.sku} onChange={e=>setAdminForm({...adminForm,sku:e.target.value})} placeholder="GS-20OE-001"/></label><label>Product name *<input required value={adminForm.name} onChange={e=>setAdminForm({...adminForm,name:e.target.value})} placeholder="20s OE Recycled Yarn"/></label><div className="form-grid"><label>Yarn count<select value={adminForm.count} onChange={e=>setAdminForm({...adminForm,count:e.target.value})}>{["20s OE","2/20s","2/40s","10s","18s","24s"].map(v=><option key={v}>{v}</option>)}</select></label><label>Yarn type<select value={adminForm.yarnType} onChange={e=>setAdminForm({...adminForm,yarnType:e.target.value})}>{["Recycled OE","Kora CP","Modal","Excel"].map(v=><option key={v}>{v}</option>)}</select></label></div><label>Published price (₹/kg)<input type="number" min="0.01" step="0.01" value={adminForm.price} onChange={e=>setAdminForm({...adminForm,price:e.target.value})} placeholder="Enter verified selling price"/></label><label>Description<textarea rows={2} value={adminForm.description} onChange={e=>setAdminForm({...adminForm,description:e.target.value})}/></label><button className="button button-primary full-width" type="submit">Create & publish product</button></form></section>
       <section className="admin-card"><h3><BookOpen size={17}/> Catalogue PDF</h3><p>Upload a prepared PDF to create the interactive flipbook preview. Large PDFs may take time to render.</p><input ref={pdfInput} className="hidden-input" type="file" accept="application/pdf,.pdf" onChange={uploadPdf}/><button className="upload-drop" onClick={()=>pdfInput.current?.click()} disabled={uploading}><Upload size={24}/><strong>{uploading?"Uploading…":"Choose catalogue PDF"}</strong><span>PDF only · max 25 MB</span></button>{catalogueUrl&&<p className="upload-success"><CheckCircle2 size={15}/> Current PDF: {catalogueTitle}</p>}<h3 className="admin-subheading">Recent enquiries</h3><button className="button button-quiet" onClick={loadEnquiries}>Refresh enquiries</button><div className="enquiry-list">{enquiries.length?enquiries.map((enq:any)=><div className="enquiry-row" key={enq.id}><div><strong>{enq.customerName}</strong><small>{enq.reference} · {enq.phone}</small></div><select value={enq.status} onChange={e=>changeStatus(enq.id,e.target.value)}>{["NEW","CONTACTED","QUOTATION_SENT","CONVERTED","LOST"].map(s=><option key={s} value={s}>{s.replaceAll("_"," ")}</option>)}</select></div>):<p className="muted-copy">No enquiries loaded yet.</p>}</div></section></div>
       {adminMessage&&<div className={`notice ${adminMessage.startsWith("Created")||adminMessage.startsWith("Flipbook ready")?"notice-success":"notice-info"}`}>{adminMessage}</div>}
-      <p className="admin-footer-note">Version 1.0 development foundation · Authentication and protected admin routes are required before production deployment.</p>
+      <p className="admin-footer-note">Sellora V2 development foundation · Authentication and protected admin routes are required before production deployment.</p>
     </section></div>}
   </div>;
 }
