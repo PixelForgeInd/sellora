@@ -1,4 +1,5 @@
-import { FormEvent, ReactNode, CSSProperties, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent, ReactNode, CSSProperties } from "react";
 import { ArrowRight, BookOpen, Check, Copy, ExternalLink, LayoutDashboard, LogOut, Package, Plus, Share2, Trash2, X, MessageCircle } from "lucide-react";
 const API=(import.meta.env.VITE_API_URL||"http://localhost:4000/api").replace(/\/$/,"");
 type Field={key:string;label:string;type:string;required:boolean;options?:unknown};
