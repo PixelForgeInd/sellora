@@ -1043,14 +1043,21 @@ export default function SelloraApp() {
                             try {
                               if (navigator.share) {
                                 await navigator.share({ title: c.title, url });
-                                setCatalogueActionMessage("Share dialog opened.");
+                                setCatalogueActionMessage(
+                                  "Share dialog opened.",
+                                );
                               } else {
                                 await navigator.clipboard.writeText(url);
-                                setCatalogueActionMessage("Catalogue link copied.");
+                                setCatalogueActionMessage(
+                                  "Catalogue link copied.",
+                                );
                               }
                             } catch (e) {
-                              if (e instanceof Error && e.name === "AbortError") return;
-                              setError("Could not share the catalogue. Try copying the link instead.");
+                              if (e instanceof Error && e.name === "AbortError")
+                                return;
+                              setError(
+                                "Could not share the catalogue. Try copying the link instead.",
+                              );
                             }
                           }}
                         >
@@ -1062,9 +1069,13 @@ export default function SelloraApp() {
                             const url = window.location.origin + "/c/" + c.slug;
                             try {
                               await navigator.clipboard.writeText(url);
-                              setCatalogueActionMessage("Catalogue link copied.");
+                              setCatalogueActionMessage(
+                                "Catalogue link copied.",
+                              );
                             } catch {
-                              setError("Could not copy the link. Open the catalogue and copy its URL from your browser.");
+                              setError(
+                                "Could not copy the link. Open the catalogue and copy its URL from your browser.",
+                              );
                             }
                           }}
                         >
@@ -1072,7 +1083,13 @@ export default function SelloraApp() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => window.open("/c/" + c.slug, "_blank", "noopener,noreferrer")}
+                          onClick={() =>
+                            window.open(
+                              "/c/" + c.slug,
+                              "_blank",
+                              "noopener,noreferrer",
+                            )
+                          }
                         >
                           <ExternalLink size={14} /> Open in new tab
                         </button>
@@ -1082,7 +1099,11 @@ export default function SelloraApp() {
                 })}
               </div>
             )}
-            {catalogueActionMessage && <p className="sl-analytics-action-message" role="status">{catalogueActionMessage}</p>}
+            {catalogueActionMessage && (
+              <p className="sl-analytics-action-message" role="status">
+                {catalogueActionMessage}
+              </p>
+            )}
             <p className="sl-analytics-disclaimer">
               Analytics begin after tracking is deployed. Payment completion
               stays at zero until a payment provider verifies successful
