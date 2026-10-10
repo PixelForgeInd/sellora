@@ -140,13 +140,9 @@ router.get("/auth/me", authenticated(async (req,res) => {
   res.json(user);
 }));
 
-router.get("/workspace/businesses", requireAuth, authenticated(async (req,res) => {
-  const businesses = await prisma.business.findMany({where:{ownerUserId:req.userId},orderBy:{createdAt:"asc"},select:{id:true,name:true,slug:true,industry:true,productCategory:true,businessModel:true,brandColor:true,createdAt:true}});
-  res.json(businesses);
-}));
 router.get("/workspace/business", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({
-    where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},
+    where:{ownerUserId:req.userId},
     include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}}
   });
   res.json(business);
@@ -170,7 +166,7 @@ const fieldInput = z.object({
 
 router.post("/workspace/fields", requireAuth, authenticated(async (req,res) => {
   const data = fieldInput.parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const last = await prisma.catalogueField.aggregate({where:{businessId:business.id},_max:{sortOrder:true}});
   const field = await prisma.catalogueField.create({data:{
@@ -181,7 +177,7 @@ router.post("/workspace/fields", requireAuth, authenticated(async (req,res) => {
 }));
 router.patch("/workspace/fields/:id", requireAuth, authenticated(async (req,res) => {
   const data = fieldInput.parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const owned = await prisma.catalogueField.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if (!owned) return res.status(404).json({error:"Field not found."});
@@ -196,7 +192,7 @@ router.patch("/workspace/fields/:id", requireAuth, authenticated(async (req,res)
   res.json(updated);
 }));
 router.delete("/workspace/fields/:id", requireAuth, authenticated(async (req,res) => {
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const field = await prisma.catalogueField.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if (!field) return res.status(404).json({error:"Field not found."});
@@ -204,7 +200,7 @@ router.delete("/workspace/fields/:id", requireAuth, authenticated(async (req,res
   res.status(204).end();
 }));
 router.post("/workspace/fields/restore-defaults", requireAuth, authenticated(async (req,res) => {
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const defaults = templates[business.productCategory] || templates.other;
   await prisma.$transaction(async tx => {
@@ -230,7 +226,7 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
     brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional()
   }).refine((value) => Object.values(value).some((item) => item !== undefined), { message: "Provide at least one setting to update." }).parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const updated = await prisma.business.update({
     where:{id:business.id},
@@ -246,6 +242,8 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
 }));
 
 router.post("/workspace/business", requireAuth, authenticated(async (req,res) => {
+  const existing = await prisma.business.findFirst({where:{ownerUserId:req.userId}});
+  if (existing) return res.status(409).json({error:"This account already has a business workspace."});
   const data = z.object({
     name:z.string().trim().min(2).max(120), industry:z.string().trim().min(2).max(100),
     productCategory:z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]),
@@ -266,7 +264,7 @@ router.post("/workspace/business", requireAuth, authenticated(async (req,res) =>
   res.status(201).json(business);
 }));
 router.get("/workspace/products", requireAuth, authenticated(async (req,res) => {
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const products = await prisma.selloraProduct.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"}});
   res.json(products);
@@ -297,7 +295,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).default({})
   }).parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const definitions = await prisma.catalogueField.findMany({where:{businessId:business.id},select:{key:true,label:true,type:true,required:true,options:true}});
   const fieldError = validateProductFields(data.fields, definitions);
@@ -317,7 +315,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).optional()
   }).parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const owned = await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if (!owned) return res.status(404).json({error:"Product not found."});
@@ -336,7 +334,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
   res.json(product);
 }));
 router.delete("/workspace/products/:id", requireAuth, authenticated(async (req,res) => {
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const result=await prisma.selloraProduct.deleteMany({where:{id:String(req.params.id),businessId:business.id}});
   if (!result.count) return res.status(404).json({error:"Product not found."});
@@ -344,13 +342,13 @@ router.delete("/workspace/products/:id", requireAuth, authenticated(async (req,r
 }));
 
 router.get("/workspace/catalogues", requireAuth, authenticated(async (req,res) => {
-  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   res.json(await prisma.selloraCatalogue.findMany({where:{businessId:business.id},include:{items:{include:{product:true}}},orderBy:{createdAt:"desc"}}));
 }));
 router.post("/workspace/catalogues", requireAuth, authenticated(async (req,res) => {
   const data=z.object({title:z.string().trim().min(2).max(160),description:z.string().trim().max(1000).optional(),productIds:z.array(z.string()).max(500).default([])}).parse(req.body);
-  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true,name:true,slug:true}});
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,name:true,slug:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const ids=[...new Set(data.productIds)];
   const owned=ids.length?await prisma.selloraProduct.findMany({where:{id:{in:ids},businessId:business.id},select:{id:true}}):[];
@@ -366,7 +364,7 @@ router.post("/workspace/catalogues", requireAuth, authenticated(async (req,res) 
 }));
 router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,res) => {
   const data=z.object({title:z.string().trim().min(2).max(160).optional(),description:z.string().trim().max(1000).nullable().optional(),isPublished:z.boolean().optional(),productIds:z.array(z.string()).max(500).optional()}).parse(req.body);
-  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})},select:{id:true}});
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if(!business) return res.status(404).json({error:"Business not found."});
   const existing=await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if(!existing) return res.status(404).json({error:"Catalogue not found."});
