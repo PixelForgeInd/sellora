@@ -162,6 +162,7 @@ model Business {
   owner            User?            @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
   products         SelloraProduct[]
   catalogues       SelloraCatalogue[]
+  orders           SelloraOrder[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   @@index([ownerUserId])
@@ -214,6 +215,7 @@ model SelloraCatalogue {
   isPublished Boolean            @default(false)
   publishedAt DateTime?
   items       CatalogueProduct[]
+  orders      SelloraOrder[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   @@index([businessId, createdAt])
