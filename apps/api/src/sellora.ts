@@ -7,8 +7,6 @@ import { promisify } from "node:util";
 const router = Router();
 const prisma = new PrismaClient();
 
-
-
 type AuthedRequest = Request & { userId?: string };
 function tokenFor(userId: string) {
   const payload = Buffer.from(JSON.stringify({ sub: userId, exp: Math.floor(Date.now() / 1000) + tokenLifetimeSeconds })).toString("base64url");
@@ -541,11 +539,8 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
         items:{create:orderItems}
       },select:{id:true,orderNumber:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
     });
-    res.status(201).json({
-      orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),
-      checkout:null,
-      message:"Order request received. The business will contact you to confirm availability, payment and delivery."
-    });
+    await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"order_submitted",metadata:{orderNumber:order.orderNumber}}}).catch(()=>{});
+    res.status(201).json({orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),message:"Order request received. The business will contact you to confirm availability, payment and delivery."});
   } catch (error) {
 
     const message = error instanceof Error ? error.message : "Could not submit order request.";
