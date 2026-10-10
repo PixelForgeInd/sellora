@@ -55,6 +55,30 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
   }
 
   return <div className="sl-payments-page">
+    <style>{`
+      .sl-payment-actions{display:flex;gap:8px;flex-wrap:wrap}
+      .sl-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:10px 13px;background:var(--sl-primary,#599c56);color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+      .sl-button-outline{background:transparent;color:inherit}
+      .sl-button:disabled{opacity:.55;cursor:not-allowed}
+      .sl-payment-filters{display:grid;grid-template-columns:minmax(220px,1fr) 170px 150px;gap:10px;margin:20px 0}
+      .sl-payment-search{display:flex;align-items:center;gap:9px;border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:0 12px;min-height:42px}
+      .sl-payment-search input{border:0;outline:0;background:transparent;color:inherit;width:100%;min-width:0;font:inherit}
+      .sl-payment-filters select{border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:10px;background:transparent;color:inherit;min-width:0}
+      .sl-payment-table-wrap{width:100%;overflow-x:auto}
+      .sl-payment-table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+      .sl-payment-table th{color:var(--sl-muted,#68746b);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;background:rgba(128,128,128,.05)}
+      .sl-payment-table th,.sl-payment-table td{padding:14px 12px;border-bottom:1px solid var(--sl-border,#e4e9e4);vertical-align:top}
+      .sl-payment-table td b,.sl-payment-table td small{display:block}
+      .sl-payment-table td small{font-size:11px;color:var(--sl-muted,#68746b);margin-top:4px;overflow-wrap:anywhere;max-width:220px}
+      .sl-payment-amount{font-weight:700;white-space:nowrap}
+      .sl-payment-status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:700;background:#eef1ed;color:#475247;white-space:nowrap}
+      .sl-payment-status.status-paid{background:#e1f5e8;color:#17663a}
+      .sl-payment-status.status-failed,.sl-payment-status.status-refunded{background:#fde8e7;color:#a52c2c}
+      .sl-payment-status.status-created,.sl-payment-status.status-pending,.sl-payment-status.status-authorized{background:#fff3d7;color:#805b00}
+      .sl-payment-error{padding:12px;border-radius:10px;background:#fff0ef;color:#a52c2c;margin:12px 0}
+      .sl-payment-footnote{font-size:11px;color:var(--sl-muted,#68746b);margin-top:18px}
+      @media(max-width:760px){.sl-payment-filters{grid-template-columns:1fr}.sl-payment-actions{width:100%}.sl-payment-actions .sl-button{flex:1}.sl-payment-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-payment-table{min-width:850px}}
+    `}</style>
     <section className="sl-stat-grid sl-payment-stats">
       <div><span>TOTAL COLLECTED</span><CheckCircle2/><strong>{money(collected)}</strong><small>Successful payments only</small></div>
       <div><span>SUCCESSFUL</span><CheckCircle2/><strong>{paid.length}</strong><small>Captured and verified</small></div>
