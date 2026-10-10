@@ -971,6 +971,8 @@ export default function SelloraApp() {
       </main>
       {modal === "product" && (
         <ProductModal
+          category={category}
+          error={error}
           editing={editing}
           pform={pform}
           setPform={setPform}
@@ -983,6 +985,7 @@ export default function SelloraApp() {
       )}
       {modal === "catalogue" && (
         <CatalogueModal
+          error={error}
           editingCatalogue={editingCatalogue}
           cform={cform}
           setCform={setCform}
