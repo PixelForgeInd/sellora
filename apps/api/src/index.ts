@@ -16,7 +16,7 @@ const uploadDir = path.resolve(process.env.UPLOAD_DIR || "./uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
 
 app.use(cors({ origin: webOrigin }));
-app.use(express.json({ limit: "6mb" }));
+app.use(express.json({ limit: "6mb", verify: (req, _res, buffer) => { (req as express.Request & {rawBody?:Buffer}).rawBody = Buffer.from(buffer); } }));
 app.use("/uploads", express.static(uploadDir));
 app.use("/api", selloraRouter);
 
@@ -68,6 +68,7 @@ app.get("/api/businesses", requireAuth, async (req, res, next) => {
     const businesses = await prisma.business.findMany({
       where: { ownerUserId: (req as express.Request & { userId: string }).userId },
       include: { catalogueFields: { orderBy: { sortOrder: "asc" } } },
+      omit: { razorpayKeySecretEncrypted: true, razorpayWebhookSecretEncrypted: true },
       orderBy: { createdAt: "desc" }, take: 100
     });
     res.json(businesses);

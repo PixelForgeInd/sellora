@@ -60,4 +60,5 @@ export type PublicData = {
     logoUrl?: string | null;
   };
   products: Product[];
+  checkoutReady?: boolean;
 };

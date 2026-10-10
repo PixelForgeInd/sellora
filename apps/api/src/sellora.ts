@@ -13,6 +13,35 @@ if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
 }
 const tokenLifetimeSeconds = 60 * 60 * 24 * 7;
 
+function paymentEncryptionKey(): Buffer {
+ const raw=process.env.PAYMENT_ENCRYPTION_KEY||"";
+ if(!/^[a-fA-F0-9]{64}$/.test(raw)) throw new Error("PAYMENT_ENCRYPTION_KEY must be a 32-byte (64-character hex) key.");
+ return Buffer.from(raw,"hex");
+}
+function encryptPaymentSecret(value:string):string {
+ const iv=crypto.randomBytes(12), cipher=crypto.createCipheriv("aes-256-gcm",paymentEncryptionKey(),iv);
+ const encrypted=Buffer.concat([cipher.update(value,"utf8"),cipher.final()]);
+ return [iv.toString("hex"),cipher.getAuthTag().toString("hex"),encrypted.toString("hex")].join(":");
+}
+function decryptPaymentSecret(value:string):string {
+ const [iv,tag,encrypted]=value.split(":");
+ if(!iv||!tag||!encrypted) throw new Error("Stored payment credential is invalid.");
+ const decipher=crypto.createDecipheriv("aes-256-gcm",paymentEncryptionKey(),Buffer.from(iv,"hex"));
+ decipher.setAuthTag(Buffer.from(tag,"hex"));
+ return Buffer.concat([decipher.update(Buffer.from(encrypted,"hex")),decipher.final()]).toString("utf8");
+}
+function safeEqualHex(actual:string,expected:string):boolean {
+ const a=Buffer.from(actual,"hex"),b=Buffer.from(expected,"hex");
+ return a.length===b.length&&a.length>0&&crypto.timingSafeEqual(a,b);
+}
+async function razorpayRequest(keyId:string,keySecret:string,path:string,init:RequestInit={}) {
+ const response=await fetch("https://api.razorpay.com/v1"+path,{...init,headers:{Authorization:"Basic "+Buffer.from(keyId+":"+keySecret).toString("base64"),"Content-Type":"application/json",...(init.headers||{})}});
+ const body=await response.json().catch(()=>({})) as {error?:{description?:string};id?:string;amount?:number;currency?:string};
+ if(!response.ok) throw new Error(body.error?.description||"Razorpay request failed.");
+ return body;
+}
+
+
 type AuthedRequest = Request & { userId?: string };
 function tokenFor(userId: string) {
   const payload = Buffer.from(JSON.stringify({ sub: userId, exp: Math.floor(Date.now() / 1000) + tokenLifetimeSeconds })).toString("base64url");
@@ -143,7 +172,8 @@ router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
 router.get("/workspace/business", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({
     where:{ownerUserId:req.userId},
-    include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}}
+    include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}},
+    omit:{razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true}
   });
   res.json(business);
 }));
@@ -383,6 +413,85 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
   },include:{items:{include:{product:true}}}});
   res.json(updated);
 }));
+
+
+router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=>{
+ const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+ if(!business)return res.status(404).json({error:"Business not found."});
+ const orders=await prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:100,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayPaymentId:true,createdAt:true,paidAt:true}});
+ res.json(orders.map(order=>({...order,amount:order.amount.toString()})));
+}));
+
+router.get("/workspace/business/payment-gateway",requireAuth,authenticated(async(req,res)=>{
+ const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{paymentGatewayProvider:true,paymentGatewayStatus:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true,razorpayTestMode:true}});
+ if(!b)return res.status(404).json({error:"Business not found."});
+ res.json({provider:b.paymentGatewayProvider,status:b.paymentGatewayStatus,keyId:b.razorpayKeyId||"",keySecretConfigured:Boolean(b.razorpayKeySecretEncrypted),webhookSecretConfigured:Boolean(b.razorpayWebhookSecretEncrypted),testMode:b.razorpayTestMode});
+}));
+router.put("/workspace/business/payment-gateway",requireAuth,authenticated(async(req,res)=>{
+ const d=z.object({keyId:z.string().trim().min(8).max(100),keySecret:z.string().trim().min(8).max(200).optional().or(z.literal("")),webhookSecret:z.string().trim().min(1).max(200).optional().or(z.literal("")),testMode:z.boolean().default(true)}).parse(req.body);
+ const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true}});
+ if(!b)return res.status(404).json({error:"Business not found."});
+ try{paymentEncryptionKey();}catch{return res.status(503).json({error:"PAYMENT_ENCRYPTION_KEY must be configured on the API server before connecting Razorpay."});}
+ if(d.testMode&&!d.keyId.startsWith("rzp_test_"))return res.status(400).json({error:"Test mode requires a Razorpay test Key ID (rzp_test_…)."});
+ if(!d.testMode&&!d.keyId.startsWith("rzp_live_"))return res.status(400).json({error:"Live mode requires a Razorpay live Key ID (rzp_live_…)."});
+ const secretValue=d.keySecret||(b.razorpayKeySecretEncrypted?decryptPaymentSecret(b.razorpayKeySecretEncrypted):"");
+ if(!secretValue)return res.status(400).json({error:"Enter your Razorpay Key Secret."});
+ try{await razorpayRequest(d.keyId,secretValue,"/orders?count=1");}
+ catch(error){return res.status(400).json({error:error instanceof Error?"Could not authenticate with Razorpay: "+error.message:"Razorpay credentials could not be verified."});}
+ const updated=await prisma.business.update({where:{id:b.id},data:{paymentGatewayProvider:"RAZORPAY",paymentGatewayStatus:"ACTIVE",razorpayKeyId:d.keyId,razorpayKeySecretEncrypted:d.keySecret?encryptPaymentSecret(secretValue):b.razorpayKeySecretEncrypted,razorpayWebhookSecretEncrypted:d.webhookSecret?encryptPaymentSecret(d.webhookSecret):b.razorpayWebhookSecretEncrypted,razorpayTestMode:d.testMode,sellingMode:"ONLINE_PAYMENTS"},select:{paymentGatewayProvider:true,paymentGatewayStatus:true,razorpayKeyId:true,razorpayTestMode:true}});
+ res.json({provider:updated.paymentGatewayProvider,status:updated.paymentGatewayStatus,keyId:updated.razorpayKeyId,testMode:updated.razorpayTestMode,keySecretConfigured:true,webhookSecretConfigured:Boolean(d.webhookSecret||b.razorpayWebhookSecretEncrypted)});
+}));
+router.delete("/workspace/business/payment-gateway",requireAuth,authenticated(async(req,res)=>{
+ const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+ if(!b)return res.status(404).json({error:"Business not found."});
+ await prisma.business.update({where:{id:b.id},data:{paymentGatewayProvider:null,paymentGatewayStatus:"NOT_CONNECTED",razorpayKeyId:null,razorpayKeySecretEncrypted:null,razorpayWebhookSecretEncrypted:null,sellingMode:"CATALOG_ONLY"}});
+ res.json({status:"NOT_CONNECTED"});
+}));
+router.post("/public/catalogues/:slug/payment-orders",authenticated(async(req,res)=>{
+ const d=z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(10000).default(1),customerName:z.string().trim().min(2).max(120),customerEmail:z.string().trim().email().max(160).optional().or(z.literal("")),customerPhone:z.string().trim().min(8).max(30)}).parse(req.body);
+ const c=await prisma.selloraCatalogue.findFirst({where:{slug:String(req.params.slug),isPublished:true},include:{business:true,items:{where:{productId:d.productId,product:{isActive:true}},include:{product:true}}}});
+ if(!c)return res.status(404).json({error:"Catalogue or product not found."});
+ const b=c.business;
+ if(b.sellingMode!=="ONLINE_PAYMENTS"||b.paymentGatewayStatus!=="ACTIVE"||b.paymentGatewayProvider!=="RAZORPAY")return res.status(403).json({error:"This business has not enabled online payments."});
+ const p=c.items[0]?.product;
+ if(!p||p.price===null)return res.status(400).json({error:"This product does not have a fixed price. Please enquire with the business."});
+ if(!b.razorpayKeyId||!b.razorpayKeySecretEncrypted)return res.status(409).json({error:"Payment gateway credentials are incomplete."});
+ const amountPaise=Math.round(Number(p.price)*d.quantity*100);
+ if(!Number.isSafeInteger(amountPaise)||amountPaise<100||amountPaise>1000000000)return res.status(400).json({error:"Order amount is outside the supported range."});
+ const order=await razorpayRequest(b.razorpayKeyId,decryptPaymentSecret(b.razorpayKeySecretEncrypted),"/orders",{method:"POST",body:JSON.stringify({amount:amountPaise,currency:p.currency||"INR",receipt:("sl_"+crypto.randomUUID()).slice(0,40),notes:{selloraCatalogueId:c.id,selloraBusinessId:b.id,productId:p.id,quantity:String(d.quantity)}})}) as {id:string;amount:number;currency:string};
+ const payment=await prisma.paymentOrder.create({data:{businessId:b.id,catalogueId:c.id,productId:p.id,productName:p.name,quantity:d.quantity,unit:p.unit,amount:new Prisma.Decimal((amountPaise/100).toFixed(2)),currency:p.currency||"INR",customerName:d.customerName,customerEmail:d.customerEmail||null,customerPhone:d.customerPhone,razorpayOrderId:order.id,status:"CREATED"}});
+ res.status(201).json({paymentOrderId:payment.id,orderId:order.id,amount:order.amount,currency:order.currency,keyId:b.razorpayKeyId,name:b.name,description:p.name,themeColor:b.brandColor,testMode:b.razorpayTestMode});
+}));
+router.post("/public/payments/verify",async(req,res)=>{
+ const d=z.object({paymentOrderId:z.string().min(1),razorpayPaymentId:z.string().min(1),razorpayOrderId:z.string().min(1),razorpaySignature:z.string().min(1)}).parse(req.body);
+ const p=await prisma.paymentOrder.findUnique({where:{id:d.paymentOrderId},include:{business:true}});
+ if(!p||p.razorpayOrderId!==d.razorpayOrderId)return res.status(404).json({error:"Payment order not found."});
+ if(p.status==="PAID")return res.json({status:"PAID",reference:p.id});
+ if(!p.business.razorpayKeySecretEncrypted)return res.status(409).json({error:"Payment credentials are unavailable."});
+ const expected=crypto.createHmac("sha256",decryptPaymentSecret(p.business.razorpayKeySecretEncrypted)).update(d.razorpayOrderId+"|"+d.razorpayPaymentId).digest("hex");
+ if(!safeEqualHex(d.razorpaySignature,expected))return res.status(400).json({error:"Payment signature verification failed."});
+ const paymentDetails=await razorpayRequest(p.business.razorpayKeyId!,decryptPaymentSecret(p.business.razorpayKeySecretEncrypted),"/payments/"+encodeURIComponent(d.razorpayPaymentId)) as {order_id?:string;status?:string;amount?:number;currency?:string};
+ if(paymentDetails.order_id!==p.razorpayOrderId||paymentDetails.amount!==Math.round(Number(p.amount)*100)||paymentDetails.currency!==p.currency)return res.status(400).json({error:"Razorpay payment details do not match this order."});
+ if(paymentDetails.status!=="captured")return res.status(409).json({error:"Payment has not been captured yet. Please wait for confirmation."});
+ await prisma.paymentOrder.update({where:{id:p.id},data:{status:"PAID",razorpayPaymentId:d.razorpayPaymentId,paidAt:new Date()}});
+ res.json({status:"PAID",reference:p.id});
+});
+router.post("/webhooks/razorpay",async(req,res)=>{
+ const raw=(req as Request & {rawBody?:Buffer}).rawBody,signature=String(req.headers["x-razorpay-signature"]||"");
+ if(!raw||!signature)return res.status(400).json({error:"Missing webhook signature or raw payload."});
+ const event=req.body as {event?:string;payload?:{payment?:{entity?:{order_id?:string;id?:string}};order?:{entity?:{id?:string}}}};
+ const orderId=event.payload?.payment?.entity?.order_id||event.payload?.order?.entity?.id;
+ if(!orderId)return res.json({received:true});
+ const p=await prisma.paymentOrder.findUnique({where:{razorpayOrderId:orderId},include:{business:true}});
+ if(!p?.business.razorpayWebhookSecretEncrypted)return res.status(400).json({error:"Webhook secret is not configured for this order."});
+ const expected=crypto.createHmac("sha256",decryptPaymentSecret(p.business.razorpayWebhookSecretEncrypted)).update(raw).digest("hex");
+ if(!safeEqualHex(signature,expected))return res.status(400).json({error:"Invalid webhook signature."});
+ if(event.event==="payment.captured"||event.event==="order.paid")await prisma.paymentOrder.update({where:{id:p.id},data:{status:"PAID",razorpayPaymentId:event.payload?.payment?.entity?.id||p.razorpayPaymentId,paidAt:p.paidAt||new Date()}});
+ else if(event.event==="payment.failed")await prisma.paymentOrder.update({where:{id:p.id},data:{status:"FAILED"}});
+ res.json({received:true});
+});
+
+
 router.get("/public/catalogues/:slug", async (req,res) => {
   const catalogue=await prisma.selloraCatalogue.findFirst({
     where:{slug:req.params.slug,isPublished:true},
@@ -391,7 +500,8 @@ router.get("/public/catalogues/:slug", async (req,res) => {
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,
-    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,website:catalogue.business.website,brandColor:catalogue.business.brandColor},
+    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,website:catalogue.business.website,brandColor:catalogue.business.brandColor,email:catalogue.business.email,logoUrl:catalogue.business.logoUrl},
+    checkoutReady: catalogue.business.sellingMode === "ONLINE_PAYMENTS" && catalogue.business.paymentGatewayStatus === "ACTIVE" && catalogue.business.paymentGatewayProvider === "RAZORPAY",
     products:catalogue.items.map(({product})=>({...product,price:product.price?.toString() ?? null}))
   });
 });
