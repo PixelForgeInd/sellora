@@ -711,3 +711,29 @@
     min-height:48px;padding:0 15px;border-radius:11px;font-size:13px
   }
 }
+
+
+/* Keep the empty-cart recovery action consistent with the catalogue's primary CTA. */
+.sl-storefront .sl-checkout-empty button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:48px;
+  margin-top:18px;
+  padding:0 22px;
+  border:1px solid var(--sellora-navy,#080f4d);
+  border-radius:11px;
+  background:var(--sellora-navy,#080f4d);
+  color:#fff;
+  font:700 14px/1.2 "DM Sans",ui-sans-serif,system-ui,sans-serif;
+  box-shadow:0 7px 18px rgba(8,15,77,.12);
+  transition:background .15s ease,transform .15s ease;
+}
+.sl-storefront .sl-checkout-empty button:hover{
+  background:#111b66;
+  transform:translateY(-1px);
+}
+.sl-storefront .sl-checkout-empty button:focus-visible{
+  outline:2px solid var(--sellora-navy,#080f4d);
+  outline-offset:3px;
+}
