@@ -1,4 +1,4 @@
-.sl-app,.sl-auth-layout,.sl-onboarding-page,.sl-public-page{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#262d25;min-height:100vh;background:#f8f9f6;--sl-green:#599c56;--sl-dark:#315633;--sl-line:#e5e9e1;--sl-muted:#747c70}
+.sl-app,.sl-auth-layout,.sl-onboarding-page,.sl-public-page{font-family:"DM Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#262d25;min-height:100vh;background:#f8f9f6;--sl-green:#599c56;--sl-dark:#315633;--sl-line:#e5e9e1;--sl-muted:#747c70}
 .sl-app *,.sl-auth-layout *,.sl-onboarding-page *,.sl-public-page *{box-sizing:border-box}
 .sl-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}.sl-brand>span:last-child{display:flex;flex-direction:column;gap:3px}.sl-brand b{font-size:12px;letter-spacing:1.6px}.sl-brand small{font-size:9px;letter-spacing:.1px;color:#7c8478}.sl-mark{width:39px;height:39px;background:#355b37;color:#fff;display:grid;place-items:center;border-radius:10px;font-family:Georgia,serif;font-size:24px}
 .sl-kicker{font-size:9px;letter-spacing:1.8px;font-weight:800;color:#5d8555}.sl-button{border:1px solid transparent;border-radius:7px;padding:11px 14px;font-size:11px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:background .15s,border .15s}.sl-button:disabled{opacity:.55;cursor:not-allowed}.sl-primary{background:#355b37;color:white}.sl-primary:hover:not(:disabled){background:#28472a}.sl-outline{background:#fff;border-color:#dfe5db;color:#465343}.sl-quiet{background:#eff4eb;color:#3f6c39}.sl-danger{background:#fff0ed;color:#a33c30}.sl-error{border:1px solid #f0cfc9;background:#fff2ef;color:#97453a;padding:11px 13px;border-radius:7px;font-size:11px;line-height:1.5;margin:10px 0}.sl-muted{font-size:10px;color:#7d8579}
@@ -81,3 +81,14 @@
 .sl-launch-manual small{font-size:10px;line-height:1.5;color:#788073}
 .sl-launch-next .sl-button{margin-top:8px}
 @media(max-width:640px){.sl-launch-progress{grid-template-columns:1fr auto;gap:10px}.sl-launch-progress-track{grid-column:1/-1;grid-row:2}.sl-launch-manual{align-items:flex-start}}
+
+/* Settings: business profile and selling preferences */
+.sl-settings-stack{display:grid;gap:18px}
+.sl-settings-page h3{font:600 23px/1.25 "DM Sans",ui-sans-serif,system-ui,sans-serif;margin:12px 0 7px;letter-spacing:-.4px}
+.sl-settings-page>p{max-width:760px;line-height:1.7}
+.sl-settings-page .sl-form{margin-top:20px}
+.sl-settings-page .sl-form label{font-size:12px}
+.sl-settings-page .sl-form input,.sl-settings-page .sl-form select{font:400 13px "DM Sans",ui-sans-serif,system-ui,sans-serif;min-height:43px}
+.sl-settings-page .sl-form .sl-color-field input{min-height:32px}
+.sl-settings-page .sl-modal-actions{justify-content:flex-start}
+.sl-settings-stack .sl-settings-page{padding:clamp(18px,3vw,28px)}
