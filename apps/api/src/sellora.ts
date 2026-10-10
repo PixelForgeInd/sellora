@@ -278,10 +278,11 @@ function validateProductFields(fields: Record<string, string | number | boolean 
     if (field.type === "number" && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) return `${field.label} must be a valid non-negative number.`;
     if (["text", "textarea", "select"].includes(field.type) && typeof value !== "string") return `${field.label} must be text.`;
     if (field.type === "boolean" && typeof value !== "boolean") return `${field.label} must be true or false.`;
-    if (field.type === "select" && Array.isArray(field.options) && !field.options.includes(value)) return `Choose a valid option for ${field.label}.`;
+    const options = Array.isArray(field.options) ? field.options.filter((option): option is string => typeof option === "string") : null;
+    if (field.type === "select" && options && !options.includes(value as string)) return `Choose a valid option for ${field.label}.`;
     if (field.type === "multiselect") {
       if (!Array.isArray(value) || value.some(v => typeof v !== "string")) return `${field.label} must contain a list of options.`;
-      if (Array.isArray(field.options) && value.some(v => !field.options.includes(v))) return `Choose valid options for ${field.label}.`;
+      if (options && value.some(v => !options.includes(v))) return `Choose valid options for ${field.label}.`;
     }
   }
   return null;
@@ -397,7 +398,7 @@ router.post("/public/catalogues/:slug/orders", authenticated(async (req,res) => 
     items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(10000)})).min(1).max(50)
   }).parse(req.body);
   const catalogue = await prisma.selloraCatalogue.findFirst({
-    where:{slug:req.params.slug,isPublished:true},
+    where:{slug:String(req.params.slug),isPublished:true},
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
   });
   if (!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
