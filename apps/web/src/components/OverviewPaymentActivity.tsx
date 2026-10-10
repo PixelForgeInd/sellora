@@ -38,13 +38,13 @@ export function OverviewPaymentActivity() {
 
   return (
     <section className="sl-section-card sl-settings-page">
-      <div className="sl-section-heading">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
         <div>
           <span className="sl-kicker">PAYMENT ACTIVITY</span>
           <h3>Recent payments</h3>
           <p>Payments recorded for this business.</p>
         </div>
-        <button className="sl-button sl-button-secondary" type="button" onClick={() => void loadPayments()} disabled={loading}>
+        <button className="sl-button" type="button" onClick={() => void loadPayments()} disabled={loading}>
           <RefreshCw size={15} /> {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
