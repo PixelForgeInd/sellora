@@ -204,7 +204,7 @@ router.delete("/workspace/fields/:id", requireAuth, authenticated(async (req,res
   res.status(204).end();
 }));
 router.post("/workspace/fields/restore-defaults", requireAuth, authenticated(async (req,res) => {
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId,...(req.headers["x-sellora-business-id"] ? {id:String(req.headers["x-sellora-business-id"])} : {})}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const defaults = templates[business.productCategory] || templates.other;
   await prisma.$transaction(async tx => {
