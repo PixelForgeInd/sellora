@@ -81,3 +81,31 @@ This is an MVP foundation, not a production launch approval.
 - Demo route: `/demo/ganeshaa-sutra` displays a sample Ganeshaa Sutra catalogue without requiring an account or API data. This is a preview route; it does not create a real business or order records.
 - Live business catalogues continue to use `/c/:slug`.
 - Deploy the web app with SPA fallback enabled before sharing the demo URL publicly. No production deployment URL is configured in this repository yet.
+
+
+## Version 3 — Cart and checkout
+
+The public catalogue now supports a customer cart and checkout when the business has selected **Catalogue + online payments** as its selling mode.
+
+- Add priced products to a cart, adjust quantities, and review the subtotal.
+- Submit customer contact and delivery details with an order.
+- The API rechecks that the catalogue is published, products belong to it and remain active, and each item has a fixed positive price. It calculates totals on the server and snapshots product names, prices, quantities and totals.
+- Orders receive a unique reference and begin with `PENDING` / `UNPAID` statuses.
+- Checkout is currently an **order request only**. No payment is collected and no gateway is integrated in this version. The customer is told this before submitting.
+
+### Apply the Version 3 database changes
+
+After pulling this branch, run:
+
+```bash
+npm install
+npm run db:generate
+npm run db:migrate
+npm run build
+```
+
+When Prisma asks for a migration name, use `sellora_cart_checkout_orders`. Back up your database before applying schema changes to an existing environment.
+
+### Not included yet
+
+Payment gateway creation/capture/webhook verification, shipping/tax calculations, stock reservation, order management in the business dashboard, customer notifications, and subscription billing are later-version work. Do not treat an order as paid based on the checkout response.
