@@ -772,3 +772,17 @@
 .sl-store-cart-cta .sl-store-add-cart:hover{background:#18246b;color:#fff!important;transform:translateY(-1px);box-shadow:0 6px 14px rgba(8,15,77,.16)}
 .sl-store-cart-cta .sl-store-add-cart:focus-visible{outline:3px solid color-mix(in srgb,var(--store-brand) 35%,white);outline-offset:2px}
 .sl-store-card-quantity{min-height:30px}
+
+
+/* Full order receipt shown after verified checkout */
+.sl-checkout-success-items{margin:18px 0 14px;padding:16px;border:1px solid #e2e9de;border-radius:12px;background:#fbfcf9;text-align:left}
+.sl-checkout-success-items h4{margin:0 0 12px;color:#183b31;font-size:14px}
+.sl-checkout-success-item{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:11px 0;border-bottom:1px solid #e8ede5}
+.sl-checkout-success-item>span{display:grid;gap:5px;min-width:0}
+.sl-checkout-success-item b{font-size:12px;color:#183b31;overflow-wrap:anywhere}
+.sl-checkout-success-item small{font-size:10px;line-height:1.5;color:#748174}
+.sl-checkout-success-item>strong{font-size:12px;color:#183b31;white-space:nowrap}
+.sl-checkout-success-total{display:flex;justify-content:space-between;gap:12px;padding:9px 0;color:#667568;font-size:12px}
+.sl-checkout-success-total b{color:#183b31;white-space:nowrap}
+.sl-checkout-success-total.grand{margin-top:3px;padding-top:13px;border-top:1px solid #dfe7da;font-size:14px;font-weight:800;color:#11194f}
+.sl-checkout-success-total.grand b{font-size:16px;color:#11194f}
