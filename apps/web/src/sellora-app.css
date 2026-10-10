@@ -737,3 +737,12 @@
   outline:2px solid var(--sellora-navy,#080f4d);
   outline-offset:3px;
 }
+
+
+.sl-razorpay-card{display:grid;gap:12px;padding:18px;border:1px solid #e2e8de;border-radius:13px;background:#fbfcf9}
+.sl-razorpay-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sl-razorpay-heading>span{display:flex;align-items:center;gap:9px;color:#183b31}
+.sl-razorpay-heading>small{font-size:10px;font-weight:750;color:#315633;background:#edf4e9;border-radius:999px;padding:6px 9px}
+.sl-razorpay-card>p{margin:0;color:#737d70;font-size:12px;line-height:1.65}
+.sl-razorpay-card .sl-gateway-note{margin:0;padding:10px 12px;border-radius:8px;background:#f4f6f0}
+.sl-razorpay-card .sl-form{gap:13px}
