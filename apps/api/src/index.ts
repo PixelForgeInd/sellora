@@ -68,6 +68,7 @@ app.get("/api/businesses", requireAuth, async (req, res, next) => {
     const businesses = await prisma.business.findMany({
       where: { ownerUserId: (req as express.Request & { userId: string }).userId },
       include: { catalogueFields: { orderBy: { sortOrder: "asc" } } },
+      omit: { razorpayKeySecretEncrypted: true, razorpayWebhookSecretEncrypted: true },
       orderBy: { createdAt: "desc" }, take: 100
     });
     res.json(businesses);
