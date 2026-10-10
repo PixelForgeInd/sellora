@@ -465,14 +465,7 @@ router.get("/public/catalogues/:slug", async (req,res) => {
 
 
 router.post("/public/catalogues/:slug/orders", async (req,res) => {
-  const data = z.object({
-    customerName:z.string().trim().min(2).max(120),
-    email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
-    phone:z.string().trim().min(7).max(30),
-    address:z.string().trim().min(5).max(1000),
-    notes:z.string().trim().max(1000).optional(),
-    items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(1000)})).min(1).max(100)
-  }).parse(req.body);
+
   const catalogue=await prisma.selloraCatalogue.findFirst({
     where:{slug:String(req.params.slug),isPublished:true},
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
@@ -482,6 +475,14 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   if(catalogue.business.paymentGatewayProvider !== "RAZORPAY" || catalogue.business.paymentGatewayStatus !== "ACTIVE" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) {
     return res.status(409).json({error:"This business has not connected Razorpay payments yet. Please contact the business."});
   }
+  const data = z.object({
+    customerName:z.string().trim().min(2).max(120),
+    email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
+    phone:z.string().trim().min(7).max(30),
+    address:z.string().trim().min(5).max(1000),
+    notes:z.string().trim().max(1000).optional(),
+    items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(1000)})).min(1).max(100)
+  }).parse(req.body);
   const keyId = catalogue.business.razorpayKeyId;
   let keySecret: string;
   try { keySecret = decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
