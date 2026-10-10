@@ -10,7 +10,7 @@ Sellora is a self-service B2B catalogue platform. Businesses create an account, 
 4. Generic product library: SKU, description, optional price, currency, unit, image URL and industry-specific fields.
 5. Catalogue builder: create catalogues and choose which business-owned products they contain.
 6. Publish/share: publish or unpublish and share a public route at /c/:slug.
-7. Selling preferences: business owners can switch between catalogue-only and catalogue + online payments from dashboard Settings. Gateway status is stored separately; online checkout remains unavailable until a real gateway connection, order flow and verified payment handling are implemented.
+7. Selling preferences: business owners can switch between catalogue-only and catalogue + online payments from dashboard Settings. Razorpay credentials can be configured in Settings; checkout creates server-side orders, verifies payment signatures and stores payment records.
 
 The previous yarn-specific data models remain. Generic Sellora models are additive. Legacy yarn records are not automatically copied into a new workspace because the old records do not have reliable tenant ownership; importing them needs a deliberate mapping step.
 
@@ -56,6 +56,14 @@ For an existing development database, back it up before applying the new migrati
 - GET /api/health
 
 Workspace routes require Authorization: Bearer <token>. Product and catalogue operations scope records to the signed-in user's business. Public catalogue routes expose only published catalogues.
+
+## Razorpay setup
+
+1. Configure `PAYMENT_ENCRYPTION_KEY` on the API server as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable.
+2. Apply the updated Prisma schema in development with `npx prisma db push --schema apps/api/prisma/schema.prisma`. For production, create and review a database migration before deployment.
+3. In Sellora Settings, enter the Razorpay Key ID and Key Secret. Start with test credentials; Sellora checks the credentials with Razorpay before connecting.
+4. Add the webhook URL shown in Settings to Razorpay Dashboard and enter the same webhook secret in Sellora. Subscribe to `payment.captured`, `payment.failed` and `order.paid`.
+5. Only fixed-price products in published catalogues can be purchased online. The API calculates the amount from the saved product price and verifies Razorpay's signature and payment details before marking an order paid.
 
 ## Production hardening still required
 
