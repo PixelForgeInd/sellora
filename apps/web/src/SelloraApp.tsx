@@ -42,22 +42,29 @@ import type {
   PublicData,
 } from "./sellora/types";
 export default function SelloraApp() {
-  const [access, setAccess] = useState(getSessionToken()),
-    [email, setEmail] = useState(""),
-    [password, setPassword] = useState(""),
-    [showPassword, setShowPassword] = useState(false),
-    [mode, setMode] = useState("signup"),
-    [user, setUser] = useState(""),
-    [business, setBusiness] = useState<Business | null>(null),
-    [products, setProducts] = useState<Product[]>([]),
-    [catalogues, setCatalogues] = useState<Catalogue[]>([]),
-    [page, setPage] = useState("overview"),
-    [error, setError] = useState(""),
-    [notice, setNotice] = useState(""),
-    [busy, setBusy] = useState(false),
-    [sellingMode, setSellingMode] = useState<
-      "CATALOG_ONLY" | "ONLINE_PAYMENTS"
-    >("CATALOG_ONLY");
+  // Session and workspace data
+  const [access, setAccess] = useState(getSessionToken());
+  const [user, setUser] = useState("");
+  const [business, setBusiness] = useState<Business | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+
+  // Authentication screen state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [mode, setMode] = useState("signup");
+
+  // Workspace navigation and feedback
+  const [page, setPage] = useState("overview");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  // Business setup and settings forms
+  const [sellingMode, setSellingMode] = useState<
+    "CATALOG_ONLY" | "ONLINE_PAYMENTS"
+  >("CATALOG_ONLY");
   const [bform, setBform] = useState({
     name: "",
     industry: "Textiles",
@@ -84,6 +91,8 @@ export default function SelloraApp() {
     required: false,
     options: "",
   });
+
+  // Product and catalogue editors
   const [pform, setPform] = useState({
     name: "",
     sku: "",
@@ -95,17 +104,19 @@ export default function SelloraApp() {
     fields: {} as Record<string, string | number | boolean | string[]>,
   });
   const [cform, setCform] = useState({
-      title: "",
-      description: "",
-      productIds: [] as string[],
-    }),
-    [editingCatalogue, setEditingCatalogue] = useState("");
-  const [modal, setModal] = useState(""),
-    [editing, setEditing] = useState(""),
-    [preview, setPreview] = useState<Catalogue | null>(null),
-    [pub, setPub] = useState<PublicData | null>(null),
-    [pubError, setPubError] = useState(""),
-    [launchChecks, setLaunchChecks] = useState<Record<string, boolean>>({});
+    title: "",
+    description: "",
+    productIds: [] as string[],
+  });
+  const [editingCatalogue, setEditingCatalogue] = useState("");
+  const [modal, setModal] = useState("");
+  const [editing, setEditing] = useState("");
+
+  // Public catalogue and launch-readiness state
+  const [preview, setPreview] = useState<Catalogue | null>(null);
+  const [pub, setPub] = useState<PublicData | null>(null);
+  const [pubError, setPubError] = useState("");
+  const [launchChecks, setLaunchChecks] = useState<Record<string, boolean>>({});
   const slug = window.location.pathname.match(/^\/c\/([^/]+)/)?.[1];
   const isDemo = window.location.pathname === "/demo/ganeshaa-sutra";
   const fields = business?.catalogueFields?.length
@@ -274,7 +285,7 @@ export default function SelloraApp() {
     }
     if (!access) return;
     api("/auth/me")
-      .then((u: any) => {
+      .then((u: { email: string }) => {
         setUser(u.email);
         return load(access);
       })
