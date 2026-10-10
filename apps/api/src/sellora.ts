@@ -105,6 +105,74 @@ router.get("/workspace/business", requireAuth, authenticated(async (req,res) => 
   });
   res.json(business);
 }));
+
+// Industry-specific field schema management. All operations are scoped to the authenticated business.
+const fieldInput = z.object({
+  key: z.string().trim().min(2).max(48).regex(/^[a-z][a-zA-Z0-9_]*$/, "Use a key starting with a letter; letters, numbers and underscores only."),
+  label: z.string().trim().min(2).max(80),
+  type: z.enum(["text", "number", "textarea", "select", "multiselect", "boolean"]),
+  required: z.boolean().default(false),
+  options: z.array(z.string().trim().min(1).max(80)).max(100).optional()
+}).superRefine((field, ctx) => {
+  if (["select", "multiselect"].includes(field.type) && (!field.options || field.options.length < 1)) {
+    ctx.addIssue({code:"custom", path:["options"], message:"Add at least one option for select fields."});
+  }
+  if (!["select", "multiselect"].includes(field.type) && field.options?.length) {
+    ctx.addIssue({code:"custom", path:["options"], message:"Options are only supported for select fields."});
+  }
+});
+
+router.post("/workspace/fields", requireAuth, authenticated(async (req,res) => {
+  const data = fieldInput.parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const last = await prisma.catalogueField.aggregate({where:{businessId:business.id},_max:{sortOrder:true}});
+  const field = await prisma.catalogueField.create({data:{
+    businessId:business.id,key:data.key,label:data.label,type:data.type,required:data.required,
+    options:data.options && data.options.length ? data.options : undefined,sortOrder:(last._max.sortOrder ?? -1)+1
+  }});
+  res.status(201).json(field);
+}));
+router.patch("/workspace/fields/:id", requireAuth, authenticated(async (req,res) => {
+  const data = fieldInput.parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  const owned = await prisma.catalogueField.findFirst({where:{id:String(req.params.id),businessId:business.id}});
+  if (!owned) return res.status(404).json({error:"Field not found."});
+  if (data.key !== owned.key) {
+    const duplicate = await prisma.catalogueField.findFirst({where:{businessId:business.id,key:data.key,NOT:{id:owned.id}}});
+    if (duplicate) return res.status(409).json({error:"A field with this key already exists."});
+  }
+  const updated = await prisma.catalogueField.update({where:{id:owned.id},data:{
+    key:data.key,label:data.label,type:data.type,required:data.required,
+    options:data.options && data.options.length ? data.options : Prisma.DbNull
+  }});
+  res.json(updated);
+}));
+router.delete("/workspace/fields/:id", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  const field = await prisma.catalogueField.findFirst({where:{id:String(req.params.id),businessId:business.id}});
+  if (!field) return res.status(404).json({error:"Field not found."});
+  await prisma.catalogueField.delete({where:{id:field.id}});
+  res.status(204).end();
+}));
+router.post("/workspace/fields/restore-defaults", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  const defaults = templates[business.productCategory] || templates.other;
+  await prisma.$transaction(async tx => {
+    for (const [index, field] of defaults.entries()) {
+      await tx.catalogueField.upsert({
+        where:{businessId_key:{businessId:business.id,key:field.key}},
+        create:{businessId:business.id,key:field.key,label:field.label,type:field.type,required:field.required||false,options:field.options,sortOrder:index},
+        update:{label:field.label,type:field.type,required:field.required||false,options:field.options,sortOrder:index}
+      });
+    }
+  });
+  res.json(await prisma.catalogueField.findMany({where:{businessId:business.id},orderBy:{sortOrder:"asc"}}));
+}));
+
 router.patch("/workspace/business/settings", requireAuth, authenticated(async (req,res) => {
   const data = z.object({
     sellingMode: z.enum(["CATALOG_ONLY", "ONLINE_PAYMENTS"]).optional(),
