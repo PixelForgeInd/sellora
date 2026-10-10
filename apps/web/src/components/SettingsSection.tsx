@@ -53,6 +53,8 @@ export function SettingsSection({
   sellingMode,
   setSellingMode,
   saveSellingMode,
+  saveRazorpay,
+  disconnectRazorpay,
   fields,
   fieldForm,
   setFieldForm,
@@ -61,6 +63,8 @@ export function SettingsSection({
   restoreIndustryFields,
   busy,
 }: SettingsSectionProps) {
+  const [razorpayKeyId, setRazorpayKeyId] = useState("");
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState("");
   return (
     <div className="sl-settings-stack">
       <section className="sl-section-card sl-settings-page">
