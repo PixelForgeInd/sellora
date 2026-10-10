@@ -188,23 +188,16 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     });
     assert.equal(disabledCheckout.status, 403, "catalogue-only mode must not allow checkout");
 
+    // Online payments must remain disabled until Razorpay is connected and verified.
     const enableCheckout = await jsonRequest("/api/workspace/business/settings", {
       method: "PATCH", token, body: { sellingMode: "ONLINE_PAYMENTS" },
     });
-    assert.equal(enableCheckout.status, 200);
+    assert.equal(enableCheckout.status, 409);
+    assert.match((await enableCheckout.json()).error, /connect and verify Razorpay/i);
 
-    const updatedPublic = await request(`/api/public/catalogues/${catalogueSlug}`);
-    assert.equal((await updatedPublic.json()).business.sellingMode, "ONLINE_PAYMENTS");
-
-    const order = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/orders`, {
-      method: "POST",
-      body: { customerName: "Test Customer", email: "buyer@example.test", phone: "+919876543210", address: "Test address", items: [{ productId, quantity: 2 }] },
-    });
-    assert.equal(order.status, 201);
-    const createdOrder = await order.json();
-    assert.equal(createdOrder.subtotal, "310");
-    assert.equal(createdOrder.paymentStatus, "UNPAID");
-    assert.match(createdOrder.orderNumber, /^[A-Z0-9-]+-\\d{5}$/);
+    const stillCatalogueOnly = await request(`/api/public/catalogues/${catalogueSlug}`);
+    const publicAfterRejectedEnable = await stillCatalogueOnly.json();
+    assert.equal(publicAfterRejectedEnable.business.sellingMode, "CATALOG_ONLY");
 
     for (const eventType of ["page_view", "add_to_cart", "checkout_started"]) {
       const event = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/events`, {
@@ -216,7 +209,7 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     assert.equal(orderList.status, 200);
     const listedOrders = await orderList.json();
     assert.ok(listedOrders.some((item) => item.orderNumber === createdOrder.orderNumber));
-    assert.equal(listedOrders[0].items[0].productName, `Updated Yarn ${suffix}`);
+    assert.equal(listedOrders.length, 0);
 
     const catalogueList = await jsonRequest("/api/workspace/catalogues", { token });
     const currentCatalogue = (await catalogueList.json()).find((item) => item.slug === catalogueSlug);
@@ -226,7 +219,7 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     assert.equal(metrics.views, 1);
     assert.equal(metrics.addToCart, 1);
     assert.equal(metrics.checkoutStarted, 1);
-    assert.equal(metrics.ordersSubmitted, 1);
+    assert.equal(metrics.ordersSubmitted, 0);
     assert.equal(metrics.paymentsConfirmed, 0);
   });
 
