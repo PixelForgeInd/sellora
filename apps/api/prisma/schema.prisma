@@ -157,6 +157,7 @@ model Business {
   sellingMode     String           @default("CATALOG_ONLY")
   paymentGatewayProvider String?
   paymentGatewayStatus   String    @default("NOT_CONNECTED")
+  lastOrderNumber Int @default(0)
   catalogueFields CatalogueField[]
   ownerUserId     String?
   owner            User?            @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
@@ -216,6 +217,7 @@ model SelloraCatalogue {
   publishedAt DateTime?
   items       CatalogueProduct[]
   orders      SelloraOrder[]
+  analyticsEvents CatalogueAnalyticsEvent[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   @@index([businessId, createdAt])
@@ -236,6 +238,7 @@ model CatalogueProduct {
 // Customer checkout submissions. Payment capture is not performed until a gateway is integrated.
 model SelloraOrder {
   id           String   @id @default(cuid())
+  orderNumber  String   @unique
   businessId   String
   catalogueId  String
   business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -269,4 +272,18 @@ model SelloraOrderItem {
   lineTotal   Decimal      @db.Decimal(12, 2)
   createdAt   DateTime     @default(now())
   @@index([orderId])
+}
+
+
+// Privacy-conscious catalogue funnel events. Payment completion is only recorded by a verified gateway.
+model CatalogueAnalyticsEvent {
+  id          String   @id @default(cuid())
+  catalogueId String
+  catalogue   SelloraCatalogue @relation(fields: [catalogueId], references: [id], onDelete: Cascade)
+  eventType   String
+  sessionId   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  @@index([catalogueId, eventType, createdAt])
+  @@index([catalogueId, sessionId, eventType])
 }
