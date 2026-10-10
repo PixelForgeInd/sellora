@@ -51,6 +51,10 @@ function decryptPaymentSecret(value: string): string {
   decipher.setAuthTag(Buffer.from(tag, "hex"));
   return Buffer.concat([decipher.update(Buffer.from(encrypted, "hex")), decipher.final()]).toString("utf8");
 }
+function decryptStoredGatewaySecret(value: string): string {
+  // Accept secrets saved by both the legacy Razorpay settings form and the current gateway settings form.
+  return value.includes(":") ? decryptPaymentSecret(value) : decryptGatewaySecret(value);
+}
 function safeEqualHex(actual: string, expected: string): boolean {
   const a = Buffer.from(actual, "hex");
   const b = Buffer.from(expected, "hex");
@@ -102,8 +106,6 @@ export function requireAuth(req: AuthedRequest, res: Response, next: NextFunctio
 }
 const authenticated = (handler: (req: AuthedRequest, res: Response, next: NextFunction) => Promise<unknown>) =>
   (req: Request, res: Response, next: NextFunction) => handler(req as AuthedRequest, res, next).catch(next);
-const publicAsync = (handler: (req: Request, res: Response, next: NextFunction) => Promise<unknown>) =>
-  (req: Request, res: Response, next: NextFunction) => handler(req, res, next).catch(next);
 
 async function hashPassword(password: string) {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -582,7 +584,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   }).parse(req.body);
   const keyId = catalogue.business.razorpayKeyId;
   let keySecret: string;
-  try { keySecret = decryptPaymentSecret(catalogue.business.razorpayKeySecretEncrypted); }
+  try { keySecret = decryptStoredGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
   catch { return res.status(503).json({error:"Payment configuration is unavailable. Please contact the business."}); }
   const requested = new Map<string,number>();
   for(const item of data.items) requested.set(item.productId,(requested.get(item.productId)||0)+item.quantity);
@@ -652,7 +654,7 @@ router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
   if(!order) return res.status(404).json({error:"Payment order not found."});
   if(order.paymentStatus==="PAID") return res.json({success:true,orderNumber:order.orderNumber,message:"Payment already verified."});
   let keySecret: string;
-  try { keySecret=decryptPaymentSecret(catalogue.business.razorpayKeySecretEncrypted); }
+  try { keySecret=decryptStoredGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
   catch { return res.status(503).json({error:"Payment configuration is unavailable."}); }
   const expected=crypto.createHmac("sha256",keySecret).update(data.razorpay_order_id+"|"+data.razorpay_payment_id).digest();
   let supplied: Buffer;
