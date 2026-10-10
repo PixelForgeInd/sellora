@@ -445,7 +445,7 @@ router.get("/public/catalogues/:slug", async (req,res) => {
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,
-    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,website:catalogue.business.website,brandColor:catalogue.business.brandColor},
+    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,website:catalogue.business.website,brandColor:catalogue.business.brandColor,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
     products:catalogue.items.map(({product})=>({...product,price:product.price?.toString() ?? null}))
   });
 });
