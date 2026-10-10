@@ -49,7 +49,7 @@ app.post("/api/businesses", requireAuth, async (req, res, next) => {
     const templates = catalogueFieldTemplates[data.productCategory] || catalogueFieldTemplates.other;
     const business = await prisma.business.create({
       data: {
-        ownerUserId: (req as any).userId,
+        ownerUserId: (req as express.Request & { userId: string }).userId,
         name: data.name, slug, industry: data.industry, productCategory: data.productCategory,
         businessModel: data.businessModel, email: data.email || null, phone: data.phone || null,
         website: data.website || null, brandColor: data.brandColor,
