@@ -933,7 +933,24 @@ export default function SelloraApp() {
             </section>
           </section>
         )}
-        {page === "settings" && <SettingsSection business={business} profileForm={profileForm} setProfileForm={setProfileForm} saveBusinessProfile={saveBusinessProfile} sellingMode={sellingMode} setSellingMode={setSellingMode} saveSellingMode={saveSellingMode} fields={fields} fieldForm={fieldForm} setFieldForm={setFieldForm} addIndustryField={addIndustryField} removeIndustryField={removeIndustryField} restoreIndustryFields={restoreIndustryFields} busy={busy} />}
+        {page === "settings" && (
+          <SettingsSection
+            business={business}
+            profileForm={profileForm}
+            setProfileForm={setProfileForm}
+            saveBusinessProfile={saveBusinessProfile}
+            sellingMode={sellingMode}
+            setSellingMode={setSellingMode}
+            saveSellingMode={saveSellingMode}
+            fields={fields}
+            fieldForm={fieldForm}
+            setFieldForm={setFieldForm}
+            addIndustryField={addIndustryField}
+            removeIndustryField={removeIndustryField}
+            restoreIndustryFields={restoreIndustryFields}
+            busy={busy}
+          />
+        )}
         <footer className="sl-workspace-footer">
           Sellora · Digital Catalogues. Smarter Sales.{" "}
           <span>Phase 1–6 MVP + selling mode</span>
