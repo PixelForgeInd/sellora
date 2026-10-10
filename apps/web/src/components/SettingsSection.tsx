@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { BookOpen, Check, CreditCard, Plus, Trash2 } from "lucide-react";
 import { Button as Btn } from "./ui";
@@ -29,6 +30,8 @@ type SettingsSectionProps = {
   sellingMode: "CATALOG_ONLY" | "ONLINE_PAYMENTS";
   setSellingMode: (value: "CATALOG_ONLY" | "ONLINE_PAYMENTS") => void;
   saveSellingMode: (event: FormEvent) => Promise<void>;
+  saveRazorpay: (event: FormEvent, keyId: string, keySecret: string) => Promise<void>;
+  disconnectRazorpay: () => Promise<void>;
   fields: Field[];
   fieldForm: FieldForm;
   setFieldForm: Dispatch<SetStateAction<FieldForm>>;
@@ -400,15 +403,31 @@ export function SettingsSection({
                 : "Not active"}
             </span>
           </div>
-          {sellingMode === "ONLINE_PAYMENTS" &&
-            business.paymentGatewayStatus !== "ACTIVE" && (
-              <p className="sl-gateway-note">
-                Selecting online payments does not activate a gateway by itself.
-                Gateway onboarding and secure checkout are not yet connected, so
-                live payments will remain unavailable until those features are
-                implemented.
-              </p>
-            )}
+          <div className="sl-razorpay-card">
+            <div className="sl-razorpay-heading">
+              <span><CreditCard size={19} /><b>Razorpay payments</b></span>
+              <small>{business.paymentGatewayStatus === "ACTIVE" ? "Credentials verified" : "Not connected"}</small>
+            </div>
+            <p>Connect your own Razorpay account. Use test-mode keys first, then switch to live keys after testing.</p>
+            <form className="sl-form" onSubmit={(event) => { void saveRazorpay(event, razorpayKeyId, razorpayKeySecret).then(() => setRazorpayKeySecret("")); }}>
+              <label>
+                Razorpay Key ID
+                <input required autoComplete="off" value={razorpayKeyId} onChange={(event) => setRazorpayKeyId(event.target.value)} placeholder="rzp_test_…" />
+              </label>
+              <label>
+                Razorpay Key Secret
+                <input required type="password" autoComplete="new-password" value={razorpayKeySecret} onChange={(event) => setRazorpayKeySecret(event.target.value)} placeholder={business.paymentGatewayStatus === "ACTIVE" ? "Enter a new secret to rotate credentials" : "Enter your Razorpay Key Secret"} />
+              </label>
+              <p className="sl-gateway-note">Your secret is encrypted before storage and is never sent back to this page. Add RAZORPAY_ENCRYPTION_KEY to the API environment before connecting.</p>
+              <div className="sl-modal-actions">
+                <Btn type="submit" disabled={busy}>{busy ? "Verifying…" : "Verify & connect Razorpay"} <Check size={15} /></Btn>
+                {business.paymentGatewayStatus === "ACTIVE" && <Btn kind="outline" type="button" disabled={busy} onClick={() => void disconnectRazorpay()}>Disconnect</Btn>}
+              </div>
+            </form>
+          </div>
+          {sellingMode === "ONLINE_PAYMENTS" && business.paymentGatewayStatus !== "ACTIVE" && (
+            <p className="sl-gateway-note">Connect and verify Razorpay before enabling online checkout. Customers cannot pay until the gateway is active.</p>
+          )}
           <div className="sl-modal-actions">
             <Btn type="submit" disabled={busy}>
               {busy ? "Saving…" : "Save selling preference"} <Check size={15} />
