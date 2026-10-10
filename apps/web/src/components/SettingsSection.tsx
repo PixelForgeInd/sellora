@@ -393,8 +393,9 @@ export function SettingsSection({
         <span className="sl-kicker">PAYMENT INTEGRATION</span>
         <h3>Connect Razorpay</h3>
         <p>
-          Connect your Razorpay account for catalogue checkout. Secrets are
-          encrypted on the server and never displayed again.
+          Accept payments directly into your own Razorpay account. Enter your
+          Key ID and Key Secret from Razorpay Dashboard. Sellora protects your
+          credentials automatically.
         </p>
         <form className="sl-form" onSubmit={saveGateway}>
           <label>
@@ -421,20 +422,27 @@ export function SettingsSection({
               autoComplete="new-password"
             />
           </label>
-          <label>
-            Razorpay Webhook Secret
-            <input
-              type="password"
-              value={gatewayWebhookSecret}
-              onChange={(e) => setGatewayWebhookSecret(e.target.value)}
-              placeholder={
-                webhookSaved
-                  ? "Saved securely — leave blank to keep"
-                  : "Webhook secret from Razorpay"
-              }
-              autoComplete="new-password"
-            />
-          </label>
+          <details className="sl-gateway-advanced">
+            <summary>Advanced setup (optional)</summary>
+            <p className="sl-gateway-note">
+              Most customers can start by entering their Key ID and Key Secret.
+              Configure a webhook for automatic payment event updates.
+            </p>
+            <label>
+              Razorpay Webhook Secret
+              <input
+                type="password"
+                value={gatewayWebhookSecret}
+                onChange={(e) => setGatewayWebhookSecret(e.target.value)}
+                placeholder={
+                  webhookSaved
+                    ? "Saved securely — leave blank to keep"
+                    : "Optional: webhook secret from Razorpay"
+                }
+                autoComplete="new-password"
+              />
+            </label>
+          </details>
           <label className="sl-field-required-toggle">
             <input
               type="checkbox"
@@ -484,17 +492,19 @@ export function SettingsSection({
             )}
           </div>
         </form>
-        <p className="sl-gateway-note">
-          Webhook URL:{" "}
-          <b>
+        <details className="sl-gateway-advanced">
+          <summary>Webhook URL and event setup</summary>
+          <p className="sl-gateway-note">
+            Add this URL in Razorpay Dashboard and subscribe to
+            payment.captured, payment.failed and order.paid:
+          </p>
+          <code>
             {(
               import.meta.env.VITE_API_URL || "http://localhost:4000/api"
             ).replace(/\/$/, "")}
             /webhooks/razorpay
-          </b>
-          . Configure payment.captured, payment.failed and order.paid events in
-          Razorpay Dashboard.
-        </p>
+          </code>
+        </details>
       </section>
 
       <section className="sl-section-card sl-settings-page">
