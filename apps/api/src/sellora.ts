@@ -506,6 +506,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     notes:z.string().trim().max(1000).optional(),
     items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(1000)})).min(1).max(100)
   }).parse(req.body);
+  if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
   const requested = new Map<string,number>();
   for(const item of data.items) requested.set(item.productId,(requested.get(item.productId)||0)+item.quantity);
   const available = new Map(catalogue.items.map(({product})=>[product.id,product]));
@@ -524,6 +525,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
   }
   if(!currency) return res.status(400).json({error:"Cart is empty."});
+  if(currency !== "INR") return res.status(400).json({error:"Online orders currently support INR pricing only."});
   let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date} | null = null;
   try {
     order = await prisma.$transaction(async (tx) => {
