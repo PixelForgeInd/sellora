@@ -39,7 +39,7 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
         sessionId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
         sessionStorage.setItem(key, sessionId);
       }
-      void fetch(((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\\/$/, "")) + "/public/catalogues/" + encodeURIComponent(data.slug) + "/events", {
+      void fetch(((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "")) + "/public/catalogues/" + encodeURIComponent(data.slug) + "/events", {
         method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({eventType,sessionId})
       }).catch(() => {});
