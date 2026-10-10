@@ -764,3 +764,11 @@
 .sl-checkout-panel .sl-store-secondary{width:100%;justify-content:center;margin-top:12px;cursor:pointer}
 .sl-checkout-panel .sl-checkout-error{margin:0}
 @media(max-width:620px){.sl-store-cart-fab{right:14px;bottom:14px}.sl-store-card-quantity{gap:9px}}
+
+
+/* Product card add-to-cart: intentional primary action, not a full-width grey form button */
+.sl-store-cart-cta .sl-store-add-cart{width:100%;min-height:43px;display:flex;align-items:center;justify-content:center;gap:9px;padding:0 15px;border:1px solid var(--sellora-navy,#080f4d);border-radius:9px;background:var(--sellora-navy,#080f4d);color:#fff!important;font-size:12px;font-weight:750;letter-spacing:.1px;box-shadow:0 3px 8px rgba(8,15,77,.10);transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+.sl-store-cart-cta .sl-store-add-cart svg:last-child{margin-left:auto;opacity:.8}
+.sl-store-cart-cta .sl-store-add-cart:hover{background:#18246b;color:#fff!important;transform:translateY(-1px);box-shadow:0 6px 14px rgba(8,15,77,.16)}
+.sl-store-cart-cta .sl-store-add-cart:focus-visible{outline:3px solid color-mix(in srgb,var(--store-brand) 35%,white);outline-offset:2px}
+.sl-store-card-quantity{min-height:30px}
