@@ -5,6 +5,9 @@ on:
     branches: [develop]
     paths:
       - "apps/web/src/SelloraApp.tsx"
+      - "apps/web/src/components/WorkspaceSections.tsx"
+      - "apps/web/src/components/SettingsSection.tsx"
+      - "apps/web/src/components/EditorModals.tsx"
       - ".github/workflows/format-sellora-frontend.yml"
   workflow_dispatch:
 
@@ -23,17 +26,22 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Format SelloraApp.tsx
-        run: npx --yes prettier@3.5.3 --write apps/web/src/SelloraApp.tsx
+          node-version: 24
+      - name: Format Sellora frontend files
+        run: >-
+          npx --yes prettier@3.5.3 --write
+          apps/web/src/SelloraApp.tsx
+          apps/web/src/components/WorkspaceSections.tsx
+          apps/web/src/components/SettingsSection.tsx
+          apps/web/src/components/EditorModals.tsx
       - name: Commit formatting changes
         run: |
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add apps/web/src/SelloraApp.tsx
-            git commit -m "style: format SelloraApp component"
+            git add apps/web/src/SelloraApp.tsx apps/web/src/components/WorkspaceSections.tsx apps/web/src/components/SettingsSection.tsx apps/web/src/components/EditorModals.tsx
+            git commit -m "style: format extracted Sellora components"
             git push
           else
-            echo "SelloraApp.tsx is already formatted."
+            echo "Sellora frontend files are already formatted."
           fi

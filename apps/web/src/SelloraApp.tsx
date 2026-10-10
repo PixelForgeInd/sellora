@@ -27,6 +27,14 @@ import {
 } from "./sellora/catalogue-fields";
 import { formatMoney as money } from "./sellora/formatters";
 import { PublicCatalogue } from "./components/PublicCatalogue";
+import {
+  AuthScreen,
+  CatalogueSection,
+  OnboardingScreen,
+  ProductSection,
+} from "./components/WorkspaceSections";
+import { SettingsSection } from "./components/SettingsSection";
+import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
   Business,
@@ -36,22 +44,29 @@ import type {
   PublicData,
 } from "./sellora/types";
 export default function SelloraApp() {
-  const [access, setAccess] = useState(getSessionToken()),
-    [email, setEmail] = useState(""),
-    [password, setPassword] = useState(""),
-    [showPassword, setShowPassword] = useState(false),
-    [mode, setMode] = useState("signup"),
-    [user, setUser] = useState(""),
-    [business, setBusiness] = useState<Business | null>(null),
-    [products, setProducts] = useState<Product[]>([]),
-    [catalogues, setCatalogues] = useState<Catalogue[]>([]),
-    [page, setPage] = useState("overview"),
-    [error, setError] = useState(""),
-    [notice, setNotice] = useState(""),
-    [busy, setBusy] = useState(false),
-    [sellingMode, setSellingMode] = useState<
-      "CATALOG_ONLY" | "ONLINE_PAYMENTS"
-    >("CATALOG_ONLY");
+  // Session and workspace data
+  const [access, setAccess] = useState(getSessionToken());
+  const [user, setUser] = useState("");
+  const [business, setBusiness] = useState<Business | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+
+  // Authentication screen state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [mode, setMode] = useState("signup");
+
+  // Workspace navigation and feedback
+  const [page, setPage] = useState("overview");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  // Business setup and settings forms
+  const [sellingMode, setSellingMode] = useState<
+    "CATALOG_ONLY" | "ONLINE_PAYMENTS"
+  >("CATALOG_ONLY");
   const [bform, setBform] = useState({
     name: "",
     industry: "Textiles",
@@ -78,6 +93,8 @@ export default function SelloraApp() {
     required: false,
     options: "",
   });
+
+  // Product and catalogue editors
   const [pform, setPform] = useState({
     name: "",
     sku: "",
@@ -89,17 +106,19 @@ export default function SelloraApp() {
     fields: {} as Record<string, string | number | boolean | string[]>,
   });
   const [cform, setCform] = useState({
-      title: "",
-      description: "",
-      productIds: [] as string[],
-    }),
-    [editingCatalogue, setEditingCatalogue] = useState("");
-  const [modal, setModal] = useState(""),
-    [editing, setEditing] = useState(""),
-    [preview, setPreview] = useState<Catalogue | null>(null),
-    [pub, setPub] = useState<PublicData | null>(null),
-    [pubError, setPubError] = useState(""),
-    [launchChecks, setLaunchChecks] = useState<Record<string, boolean>>({});
+    title: "",
+    description: "",
+    productIds: [] as string[],
+  });
+  const [editingCatalogue, setEditingCatalogue] = useState("");
+  const [modal, setModal] = useState("");
+  const [editing, setEditing] = useState("");
+
+  // Public catalogue and launch-readiness state
+  const [preview, setPreview] = useState<Catalogue | null>(null);
+  const [pub, setPub] = useState<PublicData | null>(null);
+  const [pubError, setPubError] = useState("");
+  const [launchChecks, setLaunchChecks] = useState<Record<string, boolean>>({});
   const slug = window.location.pathname.match(/^\/c\/([^/]+)/)?.[1];
   const isDemo = window.location.pathname === "/demo/ganeshaa-sutra";
   const fields = business?.catalogueFields?.length
@@ -268,7 +287,7 @@ export default function SelloraApp() {
     }
     if (!access) return;
     api("/auth/me")
-      .then((u: any) => {
+      .then((u: { email: string }) => {
         setUser(u.email);
         return load(access);
       })
@@ -489,290 +508,31 @@ export default function SelloraApp() {
     return <PublicCatalogue data={pub} error={pubError} demo={isDemo} />;
   if (!access || !user)
     return (
-      <div className="sl-auth-layout">
-        <section className="sl-auth-story">
-          <Brand />
-          <div className="sl-story-content">
-            <span className="sl-kicker">YOUR PRODUCTS. YOUR BRAND.</span>
-            <h1>
-              One catalogue.
-              <br />
-              <em>More possibilities.</em>
-            </h1>
-            <p>
-              Create a polished, shareable product catalogue for your business.
-              No design tools or technical skills required.
-            </p>
-            <div className="sl-story-points">
-              <span>
-                <Check size={16} /> Set up in minutes
-              </span>
-              <span>
-                <Check size={16} /> Fields for your industry
-              </span>
-              <span>
-                <Check size={16} /> Share one simple link
-              </span>
-            </div>
-          </div>
-          <small>SELLORA · DIGITAL CATALOGUES. SMARTER SALES.</small>
-        </section>
-        <section className="sl-auth-main">
-          <div className="sl-auth-card">
-            <Brand />
-            <span className="sl-kicker">
-              {mode === "signup" ? "START YOUR WORKSPACE" : "WELCOME BACK"}
-            </span>
-            <h2>
-              {mode === "signup"
-                ? "Create your Sellora account"
-                : "Log in to Sellora"}
-            </h2>
-            <p>
-              {mode === "signup"
-                ? "Your catalogue journey starts here."
-                : "Continue managing products and catalogues."}
-            </p>
-            <Err text={error} />
-            <form className="sl-form" onSubmit={auth}>
-              <label>
-                Email address
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                />
-              </label>
-              <label>
-                Password
-                <div className="sl-password-wrap">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    minLength={mode === "signup" ? 8 : 1}
-                    autoComplete={
-                      mode === "signup" ? "new-password" : "current-password"
-                    }
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      mode === "signup"
-                        ? "At least 8 characters"
-                        : "Your password"
-                    }
-                  />
-                  <button
-                    className="sl-password-toggle"
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                    aria-pressed={showPassword}
-                  >
-                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                  </button>
-                </div>
-              </label>
-              <Btn type="submit" disabled={busy}>
-                {busy
-                  ? "Please wait…"
-                  : mode === "signup"
-                    ? "Create account"
-                    : "Log in"}{" "}
-                <ArrowRight size={16} />
-              </Btn>
-            </form>
-            <p className="sl-auth-switch">
-              {mode === "signup"
-                ? "Already have an account?"
-                : "New to Sellora?"}{" "}
-              <button
-                onClick={() => {
-                  setMode(mode === "signup" ? "login" : "signup");
-                  setError("");
-                }}
-              >
-                {mode === "signup" ? "Log in" : "Create account"}
-              </button>
-            </p>
-            <small className="sl-muted">
-              Your workspace is private to your account.
-            </small>
-          </div>
-        </section>
-      </div>
+      <AuthScreen
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        mode={mode}
+        setMode={setMode}
+        error={error}
+        setError={setError}
+        busy={busy}
+        auth={auth}
+      />
     );
   if (!business)
     return (
-      <div className="sl-onboarding-page">
-        <header className="sl-topbar">
-          <Brand />
-          <div className="sl-onboarding-actions">
-            <button onClick={signOut} className="sl-text-button">
-              <LogOut size={15} /> Sign out
-            </button>
-          </div>
-        </header>
-        <div className="sl-onboarding-card">
-          <span className="sl-kicker">BUSINESS SETUP</span>
-          <h1>Tell us about your business.</h1>
-          <p>
-            We'll use this information to suggest the right product fields for
-            your catalogue.
-          </p>
-          <Err text={error} />
-          <form className="sl-form" onSubmit={createBusiness}>
-            <label>
-              Business name
-              <input
-                required
-                minLength={2}
-                value={bform.name}
-                onChange={(e) => setBform({ ...bform, name: e.target.value })}
-                placeholder="e.g. Ganeshaa Sutra"
-              />
-            </label>
-            <div className="sl-form-row">
-              <label>
-                What do you sell?
-                <select
-                  value={bform.productCategory}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setBform({
-                      ...bform,
-                      productCategory: v,
-                      industry: cats.find((c) => c[0] === v)?.[2] || "General",
-                    });
-                  }}
-                >
-                  {cats.map((c) => (
-                    <option key={c[0]} value={c[0]}>
-                      {c[1]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Business model
-                <select
-                  value={bform.businessModel}
-                  onChange={(e) =>
-                    setBform({ ...bform, businessModel: e.target.value })
-                  }
-                >
-                  <option>B2B</option>
-                  <option>B2C</option>
-                  <option>B2B2C</option>
-                </select>
-              </label>
-            </div>
-            <div className="sl-form-row">
-              <label>
-                Phone (optional)
-                <input
-                  value={bform.phone}
-                  onChange={(e) =>
-                    setBform({ ...bform, phone: e.target.value })
-                  }
-                  placeholder="+91…"
-                />
-              </label>
-              <label>
-                Website (optional)
-                <input
-                  type="url"
-                  value={bform.website}
-                  onChange={(e) =>
-                    setBform({ ...bform, website: e.target.value })
-                  }
-                  placeholder="https://…"
-                />
-              </label>
-            </div>
-            <label>
-              Brand colour
-              <div className="sl-color-field">
-                <input
-                  type="color"
-                  value={bform.brandColor}
-                  onChange={(e) =>
-                    setBform({ ...bform, brandColor: e.target.value })
-                  }
-                />
-                <span>{bform.brandColor.toUpperCase()}</span>
-              </div>
-            </label>
-            <div className="sl-field-divider">HOW DO YOU WANT TO SELL?</div>
-            <label
-              className={
-                "sl-mode-option" +
-                (bform.sellingMode === "CATALOG_ONLY" ? " selected" : "")
-              }
-            >
-              <input
-                type="radio"
-                name="onboardingSellingMode"
-                value="CATALOG_ONLY"
-                checked={bform.sellingMode === "CATALOG_ONLY"}
-                onChange={() =>
-                  setBform({ ...bform, sellingMode: "CATALOG_ONLY" })
-                }
-              />
-              <span>
-                <b>
-                  <BookOpen size={18} /> Catalogue only
-                </b>
-                <small>Share products and collect enquiries.</small>
-              </span>
-            </label>
-            <label
-              className={
-                "sl-mode-option" +
-                (bform.sellingMode === "ONLINE_PAYMENTS" ? " selected" : "")
-              }
-            >
-              <input
-                type="radio"
-                name="onboardingSellingMode"
-                value="ONLINE_PAYMENTS"
-                checked={bform.sellingMode === "ONLINE_PAYMENTS"}
-                onChange={() =>
-                  setBform({ ...bform, sellingMode: "ONLINE_PAYMENTS" })
-                }
-              />
-              <span>
-                <b>
-                  <CreditCard size={18} /> Catalogue + online payments
-                </b>
-                <small>
-                  Choose online checkout; you can connect a gateway after setup.
-                  This is the default.
-                </small>
-              </span>
-            </label>
-            <div className="sl-template-preview">
-              <BookOpen size={18} />
-              <span>
-                <b>Suggested fields</b>
-                <small>
-                  {(fallback[bform.productCategory] || fallback.other)
-                    .map((f) => f.label)
-                    .join(" · ")}
-                </small>
-              </span>
-            </div>
-            <Btn type="submit" disabled={busy}>
-              {busy ? "Setting up…" : "Create my workspace"}{" "}
-              <ArrowRight size={16} />
-            </Btn>
-          </form>
-        </div>
-      </div>
+      <OnboardingScreen
+        bform={bform}
+        setBform={setBform}
+        error={error}
+        busy={busy}
+        createBusiness={createBusiness}
+        signOut={signOut}
+      />
     );
   const category =
     cats.find((c) => c[0] === business.productCategory)?.[1] || "Products";
@@ -1041,174 +801,28 @@ export default function SelloraApp() {
           </>
         )}
         {page === "products" && (
-          <section className="sl-section-card">
-            <div className="sl-section-head">
-              <div>
-                <h3>Product library</h3>
-                <p>
-                  Suggested fields are tailored to {category.toLowerCase()}.
-                </p>
-              </div>
-              <Btn onClick={() => startProduct()}>
-                <Plus size={16} /> Add product
-              </Btn>
-            </div>
-            {!products.length ? (
-              <div className="sl-empty">
-                <Package size={30} />
-                <h3>Your product library is empty</h3>
-                <p>
-                  Add a product with an image, price and industry-specific
-                  details.
-                </p>
-                <Btn onClick={() => startProduct()}>
-                  <Plus size={15} /> Add your first product
-                </Btn>
-              </div>
-            ) : (
-              products.map((p) => (
-                <article className="sl-product-row" key={p.id}>
-                  <div className="sl-product-thumb">
-                    {p.imageUrl ? (
-                      <img src={p.imageUrl} alt="" />
-                    ) : (
-                      <Package size={22} />
-                    )}
-                  </div>
-                  <div className="sl-product-name">
-                    <b>{p.name}</b>
-                    <small>
-                      {p.sku || "No SKU"} ·{" "}
-                      {Object.entries(p.fields || {})
-                        .filter(([, v]) => v !== "")
-                        .slice(0, 3)
-                        .map(([k, v]) => k + ": " + v)
-                        .join(" · ")}
-                    </small>
-                  </div>
-                  <strong>{money(p.price, p.currency, p.unit)}</strong>
-                  <Btn kind="outline" onClick={() => startProduct(p)}>
-                    Edit
-                  </Btn>
-                  <button
-                    className="sl-icon-action"
-                    onClick={() => void deleteProduct(p)}
-                    title="Delete"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </article>
-              ))
-            )}
-          </section>
+          <ProductSection
+            category={category}
+            products={products}
+            startProduct={startProduct}
+            deleteProduct={deleteProduct}
+          />
         )}
         {page === "catalogues" && (
-          <section className="sl-section-card">
-            <div className="sl-section-head">
-              <div>
-                <h3>Digital catalogues</h3>
-                <p>
-                  Create, preview and publish catalogues for your customers.
-                </p>
-              </div>
-              <Btn
-                onClick={() => {
-                  setEditingCatalogue("");
-                  setCform({
-                    title: business.name + " Product Catalogue",
-                    description: "",
-                    productIds: products.map((p) => p.id),
-                  });
-                  setError("");
-                  setModal("catalogue");
-                }}
-              >
-                <Plus size={16} /> New catalogue
-              </Btn>
-            </div>
-            {!catalogues.length ? (
-              <div className="sl-empty">
-                <BookOpen size={30} />
-                <h3>Your first catalogue is one step away</h3>
-                <p>Choose your products and publish a link for customers.</p>
-                <Btn
-                  onClick={() => {
-                    setEditingCatalogue("");
-                    setCform({
-                      title: business.name + " Product Catalogue",
-                      description: "",
-                      productIds: products.map((p) => p.id),
-                    });
-                    setModal("catalogue");
-                  }}
-                >
-                  <Plus size={15} /> Create catalogue
-                </Btn>
-              </div>
-            ) : (
-              <div className="sl-catalogue-grid">
-                {catalogues.map((c) => (
-                  <article className="sl-catalogue-card" key={c.id}>
-                    <div
-                      className="sl-catalogue-cover"
-                      style={{ background: business.brandColor }}
-                    >
-                      <span>{business.name.toUpperCase()}</span>
-                      <BookOpen size={29} />
-                      <b>{c.title}</b>
-                      <small>{c.items.length} PRODUCTS</small>
-                    </div>
-                    <div className="sl-catalogue-card-body">
-                      <div className="sl-catalogue-title">
-                        <b>{c.title}</b>
-                        <span
-                          className={
-                            c.isPublished ? "sl-published" : "sl-draft"
-                          }
-                        >
-                          {c.isPublished ? "Published" : "Draft"}
-                        </span>
-                      </div>
-                      <p>
-                        {c.description || "A catalogue from " + business.name}
-                      </p>
-                      <div className="sl-catalogue-actions">
-                        <Btn kind="outline" onClick={() => setPreview(c)}>
-                          <ExternalLink size={14} /> Preview
-                        </Btn>
-                        <Btn kind="outline" onClick={() => editCatalogue(c)}>
-                          Edit
-                        </Btn>
-                        <Btn onClick={() => void publish(c)}>
-                          {c.isPublished ? "Unpublish" : "Publish"}
-                        </Btn>
-                        {c.isPublished && (
-                          <>
-                            <Btn kind="quiet" onClick={() => void share(c)}>
-                              <Copy size={14} /> Copy link
-                            </Btn>
-                            <Btn kind="quiet" onClick={() => shareWhatsApp(c)}>
-                              <MessageCircle size={14} /> WhatsApp
-                            </Btn>
-                          </>
-                        )}
-                      </div>
-                      {c.isPublished && (
-                        <a
-                          className="sl-public-link"
-                          href={"/c/" + c.slug}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {location.origin}/c/{c.slug} <Copy size={12} />
-                        </a>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
+          <CatalogueSection
+            business={business}
+            products={products}
+            catalogues={catalogues}
+            setCform={setCform}
+            setEditingCatalogue={setEditingCatalogue}
+            setError={setError}
+            setModal={setModal}
+            setPreview={setPreview}
+            editCatalogue={editCatalogue}
+            publish={publish}
+            share={share}
+            shareWhatsApp={shareWhatsApp}
+          />
         )}
         {page === "launch" && (
           <section className="sl-launch-page">
@@ -1333,375 +947,22 @@ export default function SelloraApp() {
           </section>
         )}
         {page === "settings" && (
-          <div className="sl-settings-stack">
-            <section className="sl-section-card sl-settings-page">
-              <span className="sl-kicker">BUSINESS PROFILE</span>
-              <h3>Business details</h3>
-              <p>
-                Update the information collected during onboarding. These
-                details help customers recognize and contact your business.
-              </p>
-              <form className="sl-form" onSubmit={saveBusinessProfile}>
-                <label>
-                  Business name
-                  <input
-                    required
-                    minLength={2}
-                    maxLength={120}
-                    value={profileForm.name}
-                    onChange={(e) =>
-                      setProfileForm({ ...profileForm, name: e.target.value })
-                    }
-                  />
-                </label>
-                <div className="sl-form-row">
-                  <label>
-                    Industry
-                    <input
-                      required
-                      minLength={2}
-                      maxLength={100}
-                      value={profileForm.industry}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          industry: e.target.value,
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    What do you sell?
-                    <select
-                      value={profileForm.productCategory}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setProfileForm({
-                          ...profileForm,
-                          productCategory: v,
-                          industry:
-                            cats.find((c) => c[0] === v)?.[2] || "General",
-                        });
-                      }}
-                    >
-                      {cats.map((c) => (
-                        <option key={c[0]} value={c[0]}>
-                          {c[1]}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <div className="sl-form-row">
-                  <label>
-                    Business model
-                    <select
-                      value={profileForm.businessModel}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          businessModel: e.target.value,
-                        })
-                      }
-                    >
-                      <option>B2B</option>
-                      <option>B2C</option>
-                      <option>B2B2C</option>
-                    </select>
-                  </label>
-                  <label>
-                    Phone
-                    <input
-                      value={profileForm.phone}
-                      maxLength={30}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          phone: e.target.value,
-                        })
-                      }
-                      placeholder="+91…"
-                    />
-                  </label>
-                </div>
-                <label>
-                  Website
-                  <input
-                    type="url"
-                    value={profileForm.website}
-                    onChange={(e) =>
-                      setProfileForm({
-                        ...profileForm,
-                        website: e.target.value,
-                      })
-                    }
-                    placeholder="https://example.com"
-                  />
-                </label>
-                <label>
-                  Brand colour
-                  <div className="sl-color-field">
-                    <input
-                      type="color"
-                      value={profileForm.brandColor}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          brandColor: e.target.value,
-                        })
-                      }
-                    />
-                    <span>{profileForm.brandColor.toUpperCase()}</span>
-                  </div>
-                </label>
-                <div className="sl-modal-actions">
-                  <Btn type="submit" disabled={busy}>
-                    {busy ? "Saving…" : "Save business details"}{" "}
-                    <Check size={15} />
-                  </Btn>
-                </div>
-              </form>
-            </section>
-            <section className="sl-section-card sl-settings-page">
-              <span className="sl-kicker">PRODUCT FIELD BUILDER</span>
-              <h3>
-                Fields for{" "}
-                {business.productCategory === "yarn-textiles"
-                  ? "Yarn & Textiles"
-                  : cats.find((c) => c[0] === business.productCategory)?.[1] ||
-                    business.industry}
-              </h3>
-              <p>
-                Control the information collected for each product. Fields
-                appear automatically in the product form and are validated
-                before saving.
-              </p>
-              <div className="sl-industry-fields">
-                {fields.map((f) => (
-                  <div className="sl-industry-field" key={f.id || f.key}>
-                    <span>
-                      <b>{f.label}</b>
-                      <small>
-                        {f.key} · {f.type}
-                        {f.required ? " · Required" : " · Optional"}
-                        {Array.isArray(f.options) && f.options.length
-                          ? " · " + f.options.length + " options"
-                          : ""}
-                      </small>
-                    </span>
-                    {f.id && (
-                      <button
-                        type="button"
-                        className="sl-field-remove"
-                        onClick={() => void removeIndustryField(f)}
-                        aria-label={"Remove " + f.label}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <form
-                className="sl-form sl-add-field-form"
-                onSubmit={addIndustryField}
-              >
-                <div className="sl-form-row">
-                  <label>
-                    Field label
-                    <input
-                      required
-                      minLength={2}
-                      maxLength={80}
-                      value={fieldForm.label}
-                      onChange={(e) =>
-                        setFieldForm({
-                          ...fieldForm,
-                          label: e.target.value,
-                          key:
-                            fieldForm.key ||
-                            e.target.value
-                              .toLowerCase()
-                              .replace(/[^a-z0-9]+/g, "_")
-                              .replace(/^_+|_+$/g, ""),
-                        })
-                      }
-                      placeholder="e.g. Fabric composition"
-                    />
-                  </label>
-                  <label>
-                    Field key
-                    <input
-                      required
-                      pattern="[a-z][a-zA-Z0-9_]*"
-                      maxLength={48}
-                      value={fieldForm.key}
-                      onChange={(e) =>
-                        setFieldForm({ ...fieldForm, key: e.target.value })
-                      }
-                      placeholder="fabricComposition"
-                    />
-                  </label>
-                </div>
-                <div className="sl-form-row">
-                  <label>
-                    Field type
-                    <select
-                      value={fieldForm.type}
-                      onChange={(e) =>
-                        setFieldForm({ ...fieldForm, type: e.target.value })
-                      }
-                    >
-                      <option value="text">Short text</option>
-                      <option value="number">Number</option>
-                      <option value="textarea">Long text</option>
-                      <option value="select">Single choice</option>
-                      <option value="multiselect">Multiple choice</option>
-                      <option value="boolean">Yes / no</option>
-                    </select>
-                  </label>
-                  <label className="sl-field-required-toggle">
-                    <input
-                      type="checkbox"
-                      checked={fieldForm.required}
-                      onChange={(e) =>
-                        setFieldForm({
-                          ...fieldForm,
-                          required: e.target.checked,
-                        })
-                      }
-                    />{" "}
-                    Required field
-                  </label>
-                </div>
-                {["select", "multiselect"].includes(fieldForm.type) && (
-                  <label>
-                    Options (one per line)
-                    <textarea
-                      required
-                      rows={4}
-                      value={fieldForm.options}
-                      onChange={(e) =>
-                        setFieldForm({ ...fieldForm, options: e.target.value })
-                      }
-                      placeholder={"Cotton\nPolyester\nBlend"}
-                    />
-                  </label>
-                )}
-                <div className="sl-modal-actions">
-                  <Btn type="submit" disabled={busy}>
-                    {busy ? "Adding…" : "Add product field"} <Plus size={15} />
-                  </Btn>
-                  <Btn
-                    kind="outline"
-                    onClick={() => void restoreIndustryFields()}
-                    disabled={busy}
-                  >
-                    Restore recommended fields
-                  </Btn>
-                </div>
-              </form>
-            </section>
-            <section className="sl-section-card sl-settings-page">
-              <span className="sl-kicker">SELLING PREFERENCES</span>
-              <h3>Choose how customers buy from you</h3>
-              <p>
-                You can change this setting any time. Your catalogues and
-                products remain intact.
-              </p>
-              <form className="sl-form" onSubmit={saveSellingMode}>
-                <label
-                  className={
-                    "sl-mode-option" +
-                    (sellingMode === "CATALOG_ONLY" ? " selected" : "")
-                  }
-                >
-                  <input
-                    type="radio"
-                    name="sellingMode"
-                    value="CATALOG_ONLY"
-                    checked={sellingMode === "CATALOG_ONLY"}
-                    onChange={() => setSellingMode("CATALOG_ONLY")}
-                  />
-                  <span>
-                    <b>
-                      <BookOpen size={18} /> Catalogue only
-                    </b>
-                    <small>
-                      Show products, share links and receive enquiries. Buyers
-                      contact you to confirm pricing, stock and payment.
-                    </small>
-                  </span>
-                </label>
-                <label
-                  className={
-                    "sl-mode-option" +
-                    (sellingMode === "ONLINE_PAYMENTS" ? " selected" : "")
-                  }
-                >
-                  <input
-                    type="radio"
-                    name="sellingMode"
-                    value="ONLINE_PAYMENTS"
-                    checked={sellingMode === "ONLINE_PAYMENTS"}
-                    onChange={() => setSellingMode("ONLINE_PAYMENTS")}
-                  />
-                  <span>
-                    <b>
-                      <CreditCard size={18} /> Catalogue + online payments
-                    </b>
-                    <small>
-                      Prepare to offer cart and online checkout once a supported
-                      gateway is connected and orders/checkout are enabled.
-                    </small>
-                  </span>
-                </label>
-                <div className="sl-gateway-status">
-                  <div>
-                    <b>Payment gateway</b>
-                    <small>
-                      {business.paymentGatewayStatus === "ACTIVE"
-                        ? "Connected"
-                        : business.paymentGatewayStatus === "PENDING"
-                          ? "Setup pending"
-                          : business.paymentGatewayStatus === "DISABLED"
-                            ? "Disabled"
-                            : "Not connected"}
-                      {business.paymentGatewayProvider
-                        ? " · " + business.paymentGatewayProvider
-                        : ""}
-                    </small>
-                  </div>
-                  <span
-                    className={
-                      business.paymentGatewayStatus === "ACTIVE"
-                        ? "sl-published"
-                        : "sl-draft"
-                    }
-                  >
-                    {business.paymentGatewayStatus === "ACTIVE"
-                      ? "Active"
-                      : "Not active"}
-                  </span>
-                </div>
-                {sellingMode === "ONLINE_PAYMENTS" &&
-                  business.paymentGatewayStatus !== "ACTIVE" && (
-                    <p className="sl-gateway-note">
-                      Selecting online payments does not activate a gateway by
-                      itself. Gateway onboarding and secure checkout are not yet
-                      connected, so live payments will remain unavailable until
-                      those features are implemented.
-                    </p>
-                  )}
-                <div className="sl-modal-actions">
-                  <Btn type="submit" disabled={busy}>
-                    {busy ? "Saving…" : "Save selling preference"}{" "}
-                    <Check size={15} />
-                  </Btn>
-                </div>
-              </form>
-            </section>
-          </div>
+          <SettingsSection
+            business={business}
+            profileForm={profileForm}
+            setProfileForm={setProfileForm}
+            saveBusinessProfile={saveBusinessProfile}
+            sellingMode={sellingMode}
+            setSellingMode={setSellingMode}
+            saveSellingMode={saveSellingMode}
+            fields={fields}
+            fieldForm={fieldForm}
+            setFieldForm={setFieldForm}
+            addIndustryField={addIndustryField}
+            removeIndustryField={removeIndustryField}
+            restoreIndustryFields={restoreIndustryFields}
+            busy={busy}
+          />
         )}
         <footer className="sl-workspace-footer">
           Sellora · Digital Catalogues. Smarter Sales.{" "}
@@ -1709,337 +970,30 @@ export default function SelloraApp() {
         </footer>
       </main>
       {modal === "product" && (
-        <div className="sl-modal-backdrop">
-          <section className="sl-modal">
-            <header className="sl-modal-head">
-              <div>
-                <span className="sl-kicker">PRODUCT LIBRARY</span>
-                <h2>{editing ? "Edit product" : "Add a product"}</h2>
-                <p>Enter the details your customers need.</p>
-              </div>
-              <button onClick={() => setModal("")}>
-                <X />
-              </button>
-            </header>
-            <Err text={error} />
-            <form className="sl-form" onSubmit={saveProduct}>
-              <label>
-                Product name
-                <input
-                  required
-                  minLength={2}
-                  value={pform.name}
-                  onChange={(e) => setPform({ ...pform, name: e.target.value })}
-                />
-              </label>
-              <div className="sl-form-row">
-                <label>
-                  SKU / code
-                  <input
-                    value={pform.sku}
-                    onChange={(e) =>
-                      setPform({ ...pform, sku: e.target.value })
-                    }
-                  />
-                </label>
-                <div className="sl-photo-upload">
-                  <label>
-                    Product photo{" "}
-                    <span className="sl-muted">
-                      Optional · JPG, PNG, WebP · up to 3 MB
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => uploadProductPhoto(e.target.files?.[0])}
-                    />
-                  </label>
-                  {pform.imageUrl && (
-                    <div className="sl-photo-preview">
-                      <img src={pform.imageUrl} alt="Product preview" />
-                      <button
-                        type="button"
-                        onClick={() => setPform({ ...pform, imageUrl: "" })}
-                      >
-                        Remove photo
-                      </button>
-                    </div>
-                  )}
-                  <label className="sl-image-url-label">
-                    Or use an image URL
-                    <input
-                      type="url"
-                      value={
-                        pform.imageUrl.startsWith("data:") ? "" : pform.imageUrl
-                      }
-                      onChange={(e) =>
-                        setPform({ ...pform, imageUrl: e.target.value })
-                      }
-                      placeholder="https://…"
-                    />
-                  </label>
-                </div>
-              </div>
-              <label>
-                Description
-                <textarea
-                  rows={2}
-                  value={pform.description}
-                  onChange={(e) =>
-                    setPform({ ...pform, description: e.target.value })
-                  }
-                />
-              </label>
-              <div className="sl-form-row">
-                <label>
-                  Price (optional)
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={pform.price}
-                    onChange={(e) =>
-                      setPform({ ...pform, price: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Currency
-                  <select
-                    value={pform.currency}
-                    onChange={(e) =>
-                      setPform({ ...pform, currency: e.target.value })
-                    }
-                  >
-                    <option>INR</option>
-                    <option>USD</option>
-                    <option>EUR</option>
-                    <option>GBP</option>
-                  </select>
-                </label>
-                <label>
-                  Unit
-                  <input
-                    required
-                    value={pform.unit}
-                    onChange={(e) =>
-                      setPform({ ...pform, unit: e.target.value })
-                    }
-                  />
-                </label>
-              </div>
-              <div className="sl-field-divider">
-                PRODUCT DETAILS · {category.toUpperCase()}
-              </div>
-              <div className="sl-dynamic-fields">
-                {fields.map((f) => (
-                  <label key={f.key}>
-                    {f.label}
-                    {f.required ? " *" : ""}
-                    {f.type === "select" ? (
-                      <select
-                        required={f.required}
-                        value={String(pform.fields[f.key] ?? "")}
-                        onChange={(e) =>
-                          setPform({
-                            ...pform,
-                            fields: {
-                              ...pform.fields,
-                              [f.key]: e.target.value,
-                            },
-                          })
-                        }
-                      >
-                        <option value="">Choose…</option>
-                        {(Array.isArray(f.options) ? f.options : []).map(
-                          (o) => (
-                            <option key={String(o)}>{String(o)}</option>
-                          ),
-                        )}
-                      </select>
-                    ) : f.type === "multiselect" ? (
-                      <select
-                        multiple
-                        required={f.required}
-                        value={
-                          Array.isArray(pform.fields[f.key])
-                            ? (pform.fields[f.key] as string[])
-                            : []
-                        }
-                        onChange={(e) =>
-                          setPform({
-                            ...pform,
-                            fields: {
-                              ...pform.fields,
-                              [f.key]: Array.from(
-                                e.target.selectedOptions,
-                                (o) => o.value,
-                              ),
-                            },
-                          })
-                        }
-                      >
-                        {(Array.isArray(f.options) ? f.options : []).map(
-                          (o) => (
-                            <option key={String(o)}>{String(o)}</option>
-                          ),
-                        )}
-                      </select>
-                    ) : f.type === "boolean" ? (
-                      <select
-                        required={f.required}
-                        value={String(pform.fields[f.key] ?? "")}
-                        onChange={(e) =>
-                          setPform({
-                            ...pform,
-                            fields: {
-                              ...pform.fields,
-                              [f.key]: e.target.value === "true",
-                            },
-                          })
-                        }
-                      >
-                        <option value="">Choose…</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                      </select>
-                    ) : f.type === "textarea" ? (
-                      <textarea
-                        required={f.required}
-                        rows={2}
-                        value={String(pform.fields[f.key] ?? "")}
-                        onChange={(e) =>
-                          setPform({
-                            ...pform,
-                            fields: {
-                              ...pform.fields,
-                              [f.key]: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    ) : (
-                      <input
-                        type={f.type === "number" ? "number" : "text"}
-                        required={f.required}
-                        value={String(pform.fields[f.key] ?? "")}
-                        onChange={(e) =>
-                          setPform({
-                            ...pform,
-                            fields: {
-                              ...pform.fields,
-                              [f.key]:
-                                f.type === "number" && e.target.value !== ""
-                                  ? Number(e.target.value)
-                                  : e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    )}
-                  </label>
-                ))}
-              </div>
-              <div className="sl-modal-actions">
-                <Btn kind="outline" onClick={() => setModal("")}>
-                  Cancel
-                </Btn>
-                <Btn type="submit" disabled={busy}>
-                  {busy ? "Saving…" : "Save product"} <ArrowRight size={15} />
-                </Btn>
-              </div>
-            </form>
-          </section>
-        </div>
+        <ProductModal
+          category={category}
+          error={error}
+          editing={editing}
+          pform={pform}
+          setPform={setPform}
+          fields={fields}
+          busy={busy}
+          setModal={setModal}
+          uploadProductPhoto={uploadProductPhoto}
+          saveProduct={saveProduct}
+        />
       )}
       {modal === "catalogue" && (
-        <div className="sl-modal-backdrop">
-          <section className="sl-modal">
-            <header className="sl-modal-head">
-              <div>
-                <span className="sl-kicker">CATALOGUE BUILDER</span>
-                <h2>
-                  {editingCatalogue ? "Edit catalogue" : "Create a catalogue"}
-                </h2>
-                <p>
-                  Select the products that should appear in your public
-                  catalogue.
-                </p>
-              </div>
-              <button onClick={() => setModal("")}>
-                <X />
-              </button>
-            </header>
-            <Err text={error} />
-            <form className="sl-form" onSubmit={saveCatalogue}>
-              <label>
-                Catalogue title
-                <input
-                  required
-                  minLength={2}
-                  value={cform.title}
-                  onChange={(e) =>
-                    setCform({ ...cform, title: e.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Introduction (optional)
-                <textarea
-                  rows={2}
-                  value={cform.description}
-                  onChange={(e) =>
-                    setCform({ ...cform, description: e.target.value })
-                  }
-                />
-              </label>
-              <div className="sl-picker-heading">
-                <b>Choose products</b>
-                <span>{cform.productIds.length} selected</span>
-              </div>
-              <div className="sl-product-picker">
-                {products.map((p) => (
-                  <label key={p.id}>
-                    <input
-                      type="checkbox"
-                      checked={cform.productIds.includes(p.id)}
-                      onChange={(e) =>
-                        setCform({
-                          ...cform,
-                          productIds: e.target.checked
-                            ? [...cform.productIds, p.id]
-                            : cform.productIds.filter((id) => id !== p.id),
-                        })
-                      }
-                    />
-                    <span>
-                      <b>{p.name}</b>
-                      <small>{money(p.price, p.currency, p.unit)}</small>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {!products.length && (
-                <p>Add products first before creating a catalogue.</p>
-              )}
-              <div className="sl-modal-actions">
-                <Btn kind="outline" onClick={() => setModal("")}>
-                  Cancel
-                </Btn>
-                <Btn type="submit" disabled={busy || !products.length}>
-                  {busy
-                    ? editingCatalogue
-                      ? "Saving…"
-                      : "Creating…"
-                    : editingCatalogue
-                      ? "Save changes"
-                      : "Create catalogue"}{" "}
-                  <ArrowRight size={15} />
-                </Btn>
-              </div>
-            </form>
-          </section>
-        </div>
+        <CatalogueModal
+          error={error}
+          editingCatalogue={editingCatalogue}
+          cform={cform}
+          setCform={setCform}
+          products={products}
+          busy={busy}
+          setModal={setModal}
+          saveCatalogue={saveCatalogue}
+        />
       )}
       {preview && (
         <div
