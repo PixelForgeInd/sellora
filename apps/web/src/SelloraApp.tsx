@@ -55,6 +55,7 @@ export default function SelloraApp() {
   const [orders, setOrders] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<Record<string, any>>({});
   const [analyticsBusy, setAnalyticsBusy] = useState("");
+  const [catalogueActionMessage, setCatalogueActionMessage] = useState("");
 
   // Authentication screen state
   const [email, setEmail] = useState("");
@@ -1034,14 +1035,54 @@ export default function SelloraApp() {
                           </span>
                         </div>
                       )}
-                      <a href={"/c/" + c.slug} target="_blank" rel="noreferrer">
-                        Open public catalogue <ExternalLink size={13} />
-                      </a>
+                      <div className="sl-analytics-share-actions">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const url = window.location.origin + "/c/" + c.slug;
+                            try {
+                              if (navigator.share) {
+                                await navigator.share({ title: c.title, url });
+                                setCatalogueActionMessage("Share dialog opened.");
+                              } else {
+                                await navigator.clipboard.writeText(url);
+                                setCatalogueActionMessage("Catalogue link copied.");
+                              }
+                            } catch (e) {
+                              if (e instanceof Error && e.name === "AbortError") return;
+                              setError("Could not share the catalogue. Try copying the link instead.");
+                            }
+                          }}
+                        >
+                          <Share2 size={14} /> Share catalogue
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const url = window.location.origin + "/c/" + c.slug;
+                            try {
+                              await navigator.clipboard.writeText(url);
+                              setCatalogueActionMessage("Catalogue link copied.");
+                            } catch {
+                              setError("Could not copy the link. Open the catalogue and copy its URL from your browser.");
+                            }
+                          }}
+                        >
+                          <Copy size={14} /> Copy link
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.open("/c/" + c.slug, "_blank", "noopener,noreferrer")}
+                        >
+                          <ExternalLink size={14} /> Open in new tab
+                        </button>
+                      </div>
                     </article>
                   );
                 })}
               </div>
             )}
+            {catalogueActionMessage && <p className="sl-analytics-action-message" role="status">{catalogueActionMessage}</p>}
             <p className="sl-analytics-disclaimer">
               Analytics begin after tracking is deployed. Payment completion
               stays at zero until a payment provider verifies successful
