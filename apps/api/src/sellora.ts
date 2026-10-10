@@ -8,11 +8,13 @@ const router = Router();
 const prisma = new PrismaClient();
 
 function razorpayEncryptionKey(): Buffer {
-  const configured = process.env.RAZORPAY_ENCRYPTION_KEY || "";
+  // Use the same server-managed key for both payment credential formats.
+  // Keep the legacy variable as a fallback for existing local environments.
+  const configured = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
   const key = /^[a-fA-F0-9]{64}$/.test(configured)
     ? Buffer.from(configured, "hex")
     : Buffer.from(configured, "base64");
-  if (key.length !== 32) throw new Error("Set RAZORPAY_ENCRYPTION_KEY to a 32-byte base64 or 64-character hex key.");
+  if (key.length !== 32) throw new Error("Configure PAYMENT_ENCRYPTION_KEY (or the legacy RAZORPAY_ENCRYPTION_KEY) as a 32-byte key in the API environment.");
   return key;
 }
 function encryptGatewaySecret(value: string): string {
@@ -215,13 +217,9 @@ router.get("/platform/admin/payment-settings", requireAuth, authenticated(async 
     return res.status(403).json({error:"Platform owner access required."});
   }
   const apiBase = (process.env.PUBLIC_API_URL || "").replace(/\/$/, "");
-  const rawKey = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
-  const keyBytes = /^[a-fA-F0-9]{64}$/.test(rawKey) ? Buffer.from(rawKey,"hex") : Buffer.from(rawKey,"base64");
   res.json({
     company:"PixelForge",
-    webhookUrl: apiBase ? apiBase + "/api/webhooks/razorpay" : null,
-    encryptionKeyConfigured:keyBytes.length===32,
-    encryptionKeySource:process.env.PAYMENT_ENCRYPTION_KEY ? "PAYMENT_ENCRYPTION_KEY" : process.env.RAZORPAY_ENCRYPTION_KEY ? "RAZORPAY_ENCRYPTION_KEY (legacy)" : null
+    webhookUrl: apiBase ? apiBase + "/api/webhooks/razorpay" : null
   });
 }));
 
