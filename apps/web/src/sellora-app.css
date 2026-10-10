@@ -680,3 +680,34 @@
 .sl-analytics-share-actions button:focus-visible{outline:2px solid rgba(8,15,77,.45);outline-offset:2px}
 .sl-analytics-action-message{font-size:11px;color:#315633;margin:0}
 @media(max-width:680px){.sl-analytics-share-actions{display:grid;grid-template-columns:1fr}.sl-analytics-share-actions button{width:100%}}
+
+
+/* Public catalogue hero actions share one consistent button scale. */
+.sl-storefront .sl-store-hero-actions .sl-store-quote,
+.sl-storefront .sl-store-hero-actions .sl-store-secondary{
+  min-height:62px;
+  padding:0 24px;
+  border-radius:14px;
+  font:700 16px/1.2 "DM Sans",ui-sans-serif,system-ui,sans-serif;
+  gap:10px;
+  white-space:nowrap;
+}
+.sl-storefront .sl-store-hero-actions .sl-store-secondary{
+  background:#fff;
+  color:#274b3d!important;
+  border:1px solid #dfe6dc;
+  box-shadow:none;
+}
+.sl-storefront .sl-store-hero-actions .sl-store-secondary:hover{
+  background:#f4f6f0;
+  border-color:#cfd8ca;
+  color:var(--sellora-navy,#080f4d)!important;
+}
+.sl-storefront .sl-store-hero-actions .sl-store-quote svg,
+.sl-storefront .sl-store-hero-actions .sl-store-secondary svg{width:20px;height:20px;flex-shrink:0}
+@media(max-width:700px){
+  .sl-storefront .sl-store-hero-actions .sl-store-quote,
+  .sl-storefront .sl-store-hero-actions .sl-store-secondary{
+    min-height:48px;padding:0 15px;border-radius:11px;font-size:13px
+  }
+}
