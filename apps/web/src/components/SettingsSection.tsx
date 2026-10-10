@@ -665,56 +665,66 @@ export function SettingsSection({
               Connect your own Razorpay account. Use test-mode keys first, then
               switch to live keys after testing.
             </p>
-            <form
-              className="sl-form"
-              onSubmit={(event) => {
-                void saveRazorpay(event, razorpayKeyId, razorpayKeySecret).then(
-                  () => setRazorpayKeySecret(""),
-                );
-              }}
-            >
+            <form className="sl-form" onSubmit={saveGateway}>
               <label>
                 Razorpay Key ID
                 <input
                   required
                   autoComplete="off"
-                  value={razorpayKeyId}
-                  onChange={(event) => setRazorpayKeyId(event.target.value)}
-                  placeholder="rzp_test_…"
+                  value={gatewayKeyId}
+                  onChange={(event) => setGatewayKeyId(event.target.value)}
+                  placeholder={gatewayTestMode ? "rzp_test_…" : "rzp_live_…"}
                 />
               </label>
               <label>
                 Razorpay Key Secret
                 <input
-                  required
                   type="password"
                   autoComplete="new-password"
-                  value={razorpayKeySecret}
-                  onChange={(event) => setRazorpayKeySecret(event.target.value)}
+                  value={gatewayKeySecret}
+                  onChange={(event) => setGatewayKeySecret(event.target.value)}
                   placeholder={
-                    business.paymentGatewayStatus === "ACTIVE"
-                      ? "Enter a new secret to rotate credentials"
+                    gatewaySecretSaved
+                      ? "Saved securely — enter only to replace"
                       : "Enter your Razorpay Key Secret"
+                  }
+                  required={!gatewaySecretSaved}
+                />
+              </label>
+              <label>
+                Razorpay Webhook Secret (optional)
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={gatewayWebhookSecret}
+                  onChange={(event) => setGatewayWebhookSecret(event.target.value)}
+                  placeholder={
+                    webhookSaved
+                      ? "Saved securely — enter only to replace"
+                      : "Enter the webhook secret"
                   }
                 />
               </label>
+              <label className="sl-checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={gatewayTestMode}
+                  onChange={(event) => setGatewayTestMode(event.target.checked)}
+                />
+                Use Razorpay test mode
+              </label>
               <p className="sl-gateway-note">
-                Your secret is encrypted before storage and is never sent back
-                to this page. Add RAZORPAY_ENCRYPTION_KEY to the API environment
-                before connecting.
+                Secrets are encrypted before storage and never returned to this page.
+                Configure PAYMENT_ENCRYPTION_KEY on the API server before connecting.
               </p>
+              {gatewayMessage && <p role="status" className="sl-gateway-note">{gatewayMessage}</p>}
               <div className="sl-modal-actions">
-                <Btn type="submit" disabled={busy}>
-                  {busy ? "Verifying…" : "Verify & connect Razorpay"}{" "}
+                <Btn type="submit" disabled={gatewayBusy}>
+                  {gatewayBusy ? "Verifying…" : "Verify & connect Razorpay"}{" "}
                   <Check size={15} />
                 </Btn>
                 {business.paymentGatewayStatus === "ACTIVE" && (
-                  <Btn
-                    kind="outline"
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void disconnectRazorpay()}
-                  >
+                  <Btn kind="outline" type="button" disabled={gatewayBusy} onClick={() => void disconnectGateway()}>
                     Disconnect
                   </Btn>
                 )}
