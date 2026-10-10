@@ -439,3 +439,66 @@
     padding:0 13px;
   }
 }
+
+
+/* Tenant brand colour is authoritative on every customer-facing catalogue screen */
+.sl-storefront{
+  --store-accent:var(--store-brand,#599c56);
+  --store-accent-contrast:#fff;
+}
+.sl-storefront .sl-store-header nav a:hover,
+.sl-storefront .sl-store-header nav a:focus-visible{
+  color:var(--store-accent);
+  border-bottom-color:var(--store-accent);
+}
+.sl-storefront .sl-store-quote,
+.sl-storefront .sl-store-contact-primary,
+.sl-storefront .sl-store-header-actions button.sl-store-quote,
+.sl-storefront .sl-store-product-bottom button,
+.sl-storefront .sl-store-product-bottom>a,
+.sl-storefront .sl-store-category-list button.active{
+  background:var(--store-accent);
+  border-color:var(--store-accent);
+  color:var(--store-accent-contrast);
+}
+.sl-storefront .sl-store-quote:hover,
+.sl-storefront .sl-store-contact-primary:hover,
+.sl-storefront .sl-store-header-actions button.sl-store-quote:hover,
+.sl-storefront .sl-store-product-bottom button:hover,
+.sl-storefront .sl-store-product-bottom>a:hover,
+.sl-storefront .sl-store-category-list button.active:hover{
+  background:color-mix(in srgb,var(--store-accent) 86%,#000);
+  border-color:color-mix(in srgb,var(--store-accent) 86%,#000);
+  color:var(--store-accent-contrast);
+}
+.sl-storefront .sl-store-share:hover,
+.sl-storefront .sl-store-secondary:hover,
+.sl-storefront .sl-store-whatsapp:hover{
+  border-color:var(--store-accent);
+  color:var(--store-accent);
+}
+.sl-storefront .sl-store-eyebrow,
+.sl-storefront .sl-store-product-bottom>strong,
+.sl-storefront .sl-store-footer-note a,
+.sl-storefront .sl-store-footer a{
+  color:var(--store-accent);
+}
+.sl-storefront .sl-store-product-badge{
+  border-color:color-mix(in srgb,var(--store-accent) 22%,#fff);
+}
+.sl-storefront .sl-checkout-form input:focus,
+.sl-storefront .sl-checkout-form textarea:focus{
+  border-color:var(--store-accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--store-accent) 16%,transparent);
+}
+.sl-storefront .sl-checkout-continue{
+  background:var(--store-accent);
+  border-color:var(--store-accent);
+  color:var(--store-accent-contrast);
+}
+.sl-storefront .sl-checkout-continue:hover:not(:disabled){
+  background:color-mix(in srgb,var(--store-accent) 86%,#000);
+}
+.sl-storefront .sl-store-product-arrow{
+  color:var(--store-accent);
+}
