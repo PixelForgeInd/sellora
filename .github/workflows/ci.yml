@@ -1,15 +1,20 @@
 
 name: Sellora CI
 
+permissions:
+  contents: read
+
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/v2-dynamic-catalogue]
   pull_request:
-    branches: [main]
+    branches: [main, develop, feature/v2-dynamic-catalogue]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Build the latest self-service catalogue flow before merge, including the API and web TypeScript checks.
 
     steps:
       - name: Checkout repository
