@@ -431,6 +431,9 @@ router.put("/workspace/business/payment-gateway",requireAuth,authenticated(async
  const d=z.object({keyId:z.string().trim().min(8).max(100),keySecret:z.string().trim().min(8).max(200).optional().or(z.literal("")),webhookSecret:z.string().trim().min(1).max(200).optional().or(z.literal("")),testMode:z.boolean().default(true)}).parse(req.body);
  const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true}});
  if(!b)return res.status(404).json({error:"Business not found."});
+ try{paymentEncryptionKey();}catch{return res.status(503).json({error:"PAYMENT_ENCRYPTION_KEY must be configured on the API server before connecting Razorpay."});}
+ if(d.testMode&&!d.keyId.startsWith("rzp_test_"))return res.status(400).json({error:"Test mode requires a Razorpay test Key ID (rzp_test_…)."});
+ if(!d.testMode&&!d.keyId.startsWith("rzp_live_"))return res.status(400).json({error:"Live mode requires a Razorpay live Key ID (rzp_live_…)."});
  const secretValue=d.keySecret||(b.razorpayKeySecretEncrypted?decryptPaymentSecret(b.razorpayKeySecretEncrypted):"");
  if(!secretValue)return res.status(400).json({error:"Enter your Razorpay Key Secret."});
  try{await razorpayRequest(d.keyId,secretValue,"/orders?count=1");}
