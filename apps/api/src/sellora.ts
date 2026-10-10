@@ -415,7 +415,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   const requested = new Map<string,number>();
   for(const item of data.items) requested.set(item.productId,(requested.get(item.productId)||0)+item.quantity);
   const available = new Map(catalogue.items.map(({product})=>[product.id,product]));
-  const orderItems = [];
+  const orderItems: Prisma.SelloraOrderItemCreateWithoutOrderInput[] = [];
   let currency: string | null = null;
   let total = new Prisma.Decimal(0);
   for(const [productId,quantity] of requested.entries()){
