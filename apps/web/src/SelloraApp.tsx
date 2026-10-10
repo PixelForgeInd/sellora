@@ -37,6 +37,7 @@ import {
 } from "./components/WorkspaceSections";
 import { SettingsSection } from "./components/SettingsSection";
 import { PaymentsSection } from "./components/PaymentsSection";
+import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
@@ -827,6 +828,7 @@ export default function SelloraApp() {
                 </small>
               </div>
             </section>
+            <OverviewPaymentActivity />
             <section className="sl-section-card">
               <h3>Your launch checklist</h3>
               <p>Complete these steps to share your first catalogue.</p>
