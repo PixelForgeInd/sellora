@@ -313,7 +313,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     description:z.string().trim().max(2000).nullable().optional(),price:z.number().positive().nullable().optional(),
     currency:z.string().length(3).optional(),unit:z.string().trim().min(1).max(20).optional(),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).nullable().optional(),
-    fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean()])).optional()
+    fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).optional()
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
