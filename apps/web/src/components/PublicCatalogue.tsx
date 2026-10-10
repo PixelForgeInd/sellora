@@ -32,7 +32,7 @@ export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;er
  const buyNow=async()=>{
   const product=checkoutProduct;
   if(!product||!data?.checkoutReady||demo)return;
-  if(customerName.trim().length<2||customerPhone.replace(/\\D/g,"").length<8||customerAddress.trim().length<8){setCheckoutError("Enter your name, a valid phone number and full delivery address.");return;}
+  if(customerName.trim().length<2||customerPhone.replace(/\D/g,"").length<8||customerAddress.trim().length<8){setCheckoutError("Enter your name, a valid phone number and full delivery address.");return;}
   setCheckoutBusy(true);setCheckoutError("");
   try{
    const order=await api("/public/catalogues/"+encodeURIComponent(data.slug)+"/payment-orders",{method:"POST",body:JSON.stringify({productId:product.id,quantity:checkoutQuantity,customerName:customerName.trim(),customerPhone:customerPhone.trim(),customerEmail:customerEmail.trim(),customerAddress:customerAddress.trim()})},"");
