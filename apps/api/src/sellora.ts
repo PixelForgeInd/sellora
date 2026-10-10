@@ -290,8 +290,9 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
     brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional()
   }).refine((value) => Object.values(value).some((item) => item !== undefined), { message: "Provide at least one setting to update." }).parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,paymentGatewayStatus:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
+  if (data.sellingMode === "ONLINE_PAYMENTS" && (business.paymentGatewayStatus !== "ACTIVE" || !business.razorpayKeyId || !business.razorpayKeySecretEncrypted)) return res.status(409).json({error:"Connect and verify Razorpay before enabling online payments."});
   const updated = await prisma.business.update({
     where:{id:business.id},
     data:{...data,website:data.website === "" ? null : data.website},
@@ -455,7 +456,7 @@ router.get("/public/catalogues/:slug", async (req,res) => {
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,
-    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,email:catalogue.business.email,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
+    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,email:catalogue.business.email,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode === "ONLINE_PAYMENTS" && catalogue.business.paymentGatewayStatus === "ACTIVE" ? "ONLINE_PAYMENTS" : "CATALOG_ONLY",paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
     products:catalogue.items.map(({product})=>({...product,price:product.price?.toString() ?? null}))
   });
 });
