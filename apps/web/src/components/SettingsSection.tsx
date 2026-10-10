@@ -79,6 +79,19 @@ export function SettingsSection({
   const [gatewayMessage, setGatewayMessage] = useState("");
   const [platformPaymentSettings, setPlatformPaymentSettings] = useState<any>(null);
   const [platformSettingsError, setPlatformSettingsError] = useState("");
+  const [taxEnabled, setTaxEnabled] = useState(false);
+  const [taxRate, setTaxRate] = useState("0");
+  const [taxBusy, setTaxBusy] = useState(false);
+  const [taxMessage, setTaxMessage] = useState("");
+  useEffect(() => {
+    api("/workspace/business/tax-settings").then((v) => { setTaxEnabled(Boolean(v.enabled)); setTaxRate(String(v.rate ?? "0")); }).catch((err) => setTaxMessage(err instanceof Error ? err.message : "Could not load tax settings."));
+  }, []);
+  async function saveTaxSettings(e: FormEvent) {
+    e.preventDefault(); setTaxBusy(true); setTaxMessage("");
+    try { const v = await api("/workspace/business/tax-settings", { method: "PUT", body: JSON.stringify({ enabled: taxEnabled, rate: Number(taxRate) }) }); setTaxEnabled(Boolean(v.enabled)); setTaxRate(String(v.rate)); setTaxMessage(v.enabled ? "Tax settings saved. Tax will be calculated on new orders." : "Tax disabled. New orders will have no tax."); }
+    catch (err) { setTaxMessage(err instanceof Error ? err.message : "Could not save tax settings."); }
+    finally { setTaxBusy(false); }
+  }
   useEffect(() => {
     if (!isPlatformOwner) return;
     api("/platform/admin/payment-settings")
@@ -504,6 +517,24 @@ export function SettingsSection({
             )}
           </section>
         )}
+      </section>
+
+      <section className="sl-section-card sl-settings-page">
+        <span className="sl-kicker">TAX SETTINGS</span>
+        <h3>Optional order tax</h3>
+        <p>Enable tax calculation for new online orders. Leave it disabled if your prices already include tax or you do not need tax added at checkout.</p>
+        <form className="sl-form" onSubmit={saveTaxSettings}>
+          <label className="sl-field-required-toggle">
+            <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} />
+            Calculate tax on online orders
+          </label>
+          {taxEnabled && <label>Tax rate (%)
+            <input type="number" min="0" max="100" step="0.01" required value={taxRate} onChange={(e) => setTaxRate(e.target.value)} placeholder="e.g. 5 or 18" />
+            <small>Enter the applicable rate for your products. Confirm the correct tax treatment with your accountant.</small>
+          </label>}
+          {taxMessage && <p role="status" className="sl-gateway-note">{taxMessage}</p>}
+          <div className="sl-modal-actions"><Btn type="submit" disabled={taxBusy}>{taxBusy ? "Saving…" : "Save tax settings"} <Check size={15}/></Btn></div>
+        </form>
       </section>
 
       <section className="sl-section-card sl-settings-page">
