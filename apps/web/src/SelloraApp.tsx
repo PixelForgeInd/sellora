@@ -361,6 +361,7 @@ export default function SelloraApp() {
       .catch(() => {
         sessionStorage.removeItem("sellora_token");
         setAccess("");
+        setIsPlatformOwner(false);
       });
   }, []);
   async function auth(e: FormEvent) {
@@ -569,6 +570,7 @@ export default function SelloraApp() {
     sessionStorage.removeItem("sellora_token");
     setAccess("");
     setUser("");
+    setIsPlatformOwner(false);
     setBusiness(null);
     setProducts([]);
     setCatalogues([]);
