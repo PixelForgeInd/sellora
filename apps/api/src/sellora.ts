@@ -418,7 +418,7 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
 router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=>{
  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
  if(!business)return res.status(404).json({error:"Business not found."});
- const orders=await prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:100,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayPaymentId:true,createdAt:true,paidAt:true}});
+ const orders=await prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:500,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayOrderId:true,razorpayPaymentId:true,createdAt:true,paidAt:true,updatedAt:true}});
  res.json(orders.map(order=>({...order,amount:order.amount.toString()})));
 }));
 
