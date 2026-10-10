@@ -382,6 +382,61 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
   },include:{items:{include:{product:true}}}});
   res.json(updated);
 }));
+router.post("/public/catalogues/:slug/orders", authenticated(async (req,res) => {
+  const input = z.object({
+    customerName:z.string().trim().min(2).max(120),
+    customerEmail:z.string().trim().email().max(254).optional().or(z.literal("")),
+    customerPhone:z.string().trim().min(7).max(24),
+    addressLine1:z.string().trim().min(3).max(180),
+    addressLine2:z.string().trim().max(180).optional(),
+    city:z.string().trim().min(2).max(100),
+    state:z.string().trim().min(2).max(100),
+    postalCode:z.string().trim().min(4).max(12),
+    country:z.string().trim().min(2).max(80).default("India"),
+    notes:z.string().trim().max(1000).optional(),
+    items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(10000)})).min(1).max(50)
+  }).parse(req.body);
+  const catalogue = await prisma.selloraCatalogue.findFirst({
+    where:{slug:req.params.slug,isPublished:true},
+    include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
+  });
+  if (!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
+  if (catalogue.business.sellingMode !== "ONLINE_PAYMENTS") {
+    return res.status(409).json({error:"This business has not enabled online checkout. Please enquire directly."});
+  }
+  if (catalogue.business.paymentGatewayStatus !== "ACTIVE") {
+    // Until a payment provider is connected, this flow captures an order request only;
+    // it must never imply that a payment has been taken.
+  }
+  const byId = new Map(catalogue.items.map(item=>[item.product.id,item.product]));
+  const quantities = new Map<string,number>();
+  for (const item of input.items) quantities.set(item.productId,(quantities.get(item.productId)||0)+item.quantity);
+  if (quantities.size > 50) return res.status(400).json({error:"Please limit your order to 50 different products."});
+  const orderItems:Array<{productId:string;productName:string;sku:string|null;unit:string;quantity:number;unitPrice:Prisma.Decimal;lineTotal:Prisma.Decimal}>=[];
+  let subtotal = new Prisma.Decimal(0);
+  let currency = "INR";
+  for (const [productId,quantity] of quantities) {
+    const product = byId.get(productId);
+    if (!product) return res.status(400).json({error:"One or more products are no longer available in this catalogue. Refresh and try again."});
+    if (product.price === null || product.price.lessThanOrEqualTo(0)) return res.status(400).json({error:`“${product.name}” has no fixed price. Please enquire about it instead.`});
+    if (product.currency !== currency && orderItems.length > 0) return res.status(400).json({error:"Products in one order must use the same currency."});
+    currency = product.currency;
+    const unitPrice = new Prisma.Decimal(product.price);
+    const lineTotal = unitPrice.mul(quantity).toDecimalPlaces(2);
+    subtotal = subtotal.plus(lineTotal);
+    orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
+  }
+  const reference = "SL-" + Date.now().toString(36).toUpperCase() + "-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+  const order = await prisma.selloraOrder.create({data:{
+    reference,businessId:catalogue.businessId,catalogueId:catalogue.id,
+    customerName:input.customerName,customerEmail:input.customerEmail||null,customerPhone:input.customerPhone,
+    addressLine1:input.addressLine1,addressLine2:input.addressLine2||null,city:input.city,state:input.state,
+    postalCode:input.postalCode,country:input.country,notes:input.notes||null,currency,
+    subtotal,shippingAmount:new Prisma.Decimal(0),total:subtotal,status:"PENDING",paymentStatus:"UNPAID",
+    items:{create:orderItems}
+  },select:{reference:true,total:true,currency:true,status:true,paymentStatus:true,createdAt:true}});
+  res.status(201).json({...order,total:order.total.toString(),message:"Order request received. The business will contact you to confirm availability, delivery and payment."});
+}));
 router.get("/public/catalogues/:slug", async (req,res) => {
   const catalogue=await prisma.selloraCatalogue.findFirst({
     where:{slug:req.params.slug,isPublished:true},
