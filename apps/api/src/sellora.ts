@@ -207,8 +207,8 @@ router.get("/workspace/business", requireAuth, authenticated(async (req,res) => 
     omit:{razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true}
   });
   if (!business) return res.json(null);
-  const { razorpayKeySecretEncrypted: _secretNeverReturn, ...safeBusiness } = business;
-  res.json(safeBusiness);
+  // Prisma's omit option above already excludes both gateway secrets from the response.
+  res.json(business);
 }));
 
 // Industry-specific field schema management. All operations are scoped to the authenticated business.
