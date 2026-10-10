@@ -10,7 +10,6 @@ export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;er
  const [query,setQuery]=useState("");
  const [category,setCategory]=useState("All products");
  const [details,setDetails]=useState<Product|null>(null);
- const [checkoutBusy,setCheckoutBusy]=useState(false);
  const [cart,setCart]=useState<Record<string,number>>({});
  const [cartOpen,setCartOpen]=useState(false);
  const [checkoutStep,setCheckoutStep]=useState<"cart"|"details"|"success">("cart");
