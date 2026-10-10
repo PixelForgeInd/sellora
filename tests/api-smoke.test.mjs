@@ -204,6 +204,30 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     const createdOrder = await order.json();
     assert.equal(createdOrder.subtotal, "310");
     assert.equal(createdOrder.paymentStatus, "UNPAID");
+    assert.match(createdOrder.orderNumber, /^[A-Z0-9-]+-\\d{5}$/);
+
+    for (const eventType of ["page_view", "add_to_cart", "checkout_started"]) {
+      const event = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/events`, {
+        method: "POST", body: { eventType, sessionId: `test-session-${suffix}` },
+      });
+      assert.equal(event.status, 202);
+    }
+    const orderList = await jsonRequest("/api/workspace/orders", { token });
+    assert.equal(orderList.status, 200);
+    const listedOrders = await orderList.json();
+    assert.ok(listedOrders.some((item) => item.orderNumber === createdOrder.orderNumber));
+    assert.equal(listedOrders[0].items[0].productName, `Updated Yarn ${suffix}`);
+
+    const catalogueList = await jsonRequest("/api/workspace/catalogues", { token });
+    const currentCatalogue = (await catalogueList.json()).find((item) => item.slug === catalogueSlug);
+    const analytics = await jsonRequest(`/api/workspace/catalogues/${currentCatalogue.id}/analytics`, { token });
+    assert.equal(analytics.status, 200);
+    const metrics = await analytics.json();
+    assert.equal(metrics.views, 1);
+    assert.equal(metrics.addToCart, 1);
+    assert.equal(metrics.checkoutStarted, 1);
+    assert.equal(metrics.ordersSubmitted, 1);
+    assert.equal(metrics.paymentsConfirmed, 0);
   });
 
   await t.test("isolates another account from the first account's products", async () => {
