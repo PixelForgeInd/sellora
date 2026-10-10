@@ -69,12 +69,71 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
         body: JSON.stringify({ ...checkout, items: cart.map(line => ({ productId: line.product.id, quantity: line.quantity })) })
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Could not submit your order. Please try again.");
-      setOrderNumber(result.orderNumber || result.id);
-      setOrderMessage(result.message || "Your order request has been submitted. The business will contact you to confirm availability and payment.");
-      setCart([]); setCheckoutOpen(false); setCartOpen(false);
-    } catch (err) { setOrderError(err instanceof Error ? err.message : "Could not submit your order."); }
-    finally { setSubmitting(false); }
+      if (!response.ok) throw new Error(result.error || "Could not start checkout. Please try again.");
+      const checkoutData = result.checkout;
+      if (!checkoutData?.keyId || !checkoutData?.razorpayOrderId) throw new Error("Payment details were not returned. Please contact the business.");
+      const loadRazorpay = () => new Promise<void>((resolve, reject) => {
+        const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay-checkout="true"]');
+        if ((window as Window & { Razorpay?: unknown }).Razorpay) { resolve(); return; }
+        if (existing) {
+          existing.addEventListener("load", () => resolve(), { once: true });
+          existing.addEventListener("error", () => reject(new Error("Could not load Razorpay Checkout.")), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        script.dataset.razorpayCheckout = "true";
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Could not load Razorpay Checkout. Check your internet connection and try again."));
+        document.body.appendChild(script);
+      });
+      await loadRazorpay();
+      const RazorpayConstructor = (window as Window & { Razorpay?: new (options: Record<string, unknown>) => { open: () => void; on: (event: string, callback: (response: unknown) => void) => void } }).Razorpay;
+      if (!RazorpayConstructor) throw new Error("Razorpay Checkout is unavailable. Please refresh and try again.");
+      const razorpay = new RazorpayConstructor({
+        key: checkoutData.keyId,
+        amount: checkoutData.amount,
+        currency: checkoutData.currency,
+        name: checkoutData.name,
+        description: checkoutData.description,
+        order_id: checkoutData.razorpayOrderId,
+        prefill: checkoutData.prefill,
+        theme: { color: data.business.brandColor },
+        handler: async (paymentResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            const verifyResponse = await fetch(((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "")) + "/public/catalogues/" + encodeURIComponent(data.slug) + "/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(paymentResponse)
+            });
+            const verified = await verifyResponse.json().catch(() => ({}));
+            if (!verifyResponse.ok || !verified.success) throw new Error(verified.error || verified.message || "Payment verification is pending. Do not pay again; contact the business with your payment reference.");
+            setOrderNumber(verified.orderNumber || result.orderNumber);
+            setOrderMessage("Payment confirmed successfully. Your order has been recorded.");
+            setCart([]);
+            setCheckoutOpen(false);
+            setCartOpen(false);
+          } catch (err) {
+            setOrderError(err instanceof Error ? err.message : "Payment verification is pending. Do not pay again.");
+            setCheckoutOpen(true);
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        modal: { ondismiss: () => setSubmitting(false) }
+      });
+      razorpay.on("payment.failed", (failure: unknown) => {
+        const description = (failure as { error?: { description?: string } })?.error?.description;
+        setOrderError(description || "Payment did not complete. You can retry checkout.");
+        setSubmitting(false);
+      });
+      setSubmitting(false);
+      razorpay.open();
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : "Could not start checkout.");
+      setSubmitting(false);
+    }
   };
   if (error) return <div className="sl-public-error"><h1>Catalogue unavailable</h1><p>{error}</p><a href="/">Create your catalogue with Sellora <ArrowRight size={15}/></a></div>;
   if (!data) return <div className="sl-public-loading"><p>Loading catalogue…</p></div>;
@@ -107,7 +166,7 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
     <footer className="sl-store-footer"><div className="sl-store-footer-brand"><a className="sl-store-brand" href="#top"><span className="sl-store-logo">{data.business.logoUrl ? <img src={data.business.logoUrl} alt=""/> : data.business.name.slice(0,1)}</span><span><b>{data.business.name}</b><small>{data.business.industry}</small></span></a><p>{data.description}</p><small>Digital catalogue powered by Sellora</small></div><div><b>Explore</b><a href="#products">All products</a><a href="#why-us">Why choose us</a><a href="#contact">Contact</a></div><div><b>Get in touch</b>{data.business.phone && <a href={"tel:" + data.business.phone}>{data.business.phone}</a>}{data.business.email && <a href={"mailto:" + data.business.email}>{data.business.email}</a>}{data.business.website && <a href={data.business.website} target="_blank" rel="noreferrer">Website <ExternalLink size={13}/></a>}<small>{data.business.industry}</small></div><div className="sl-store-footer-note"><span>SELLORA</span><b>Digital catalogues.<br/>Smarter sales.</b><a href="/">Create your catalogue <ArrowRight size={14}/></a></div></footer>
     {orderMessage && <div className="sl-checkout-success" role="status"><Check size={19}/><span>{orderMessage}</span><button onClick={() => setOrderMessage("")} aria-label="Dismiss"><X size={17}/></button></div>}
     {cartOpen && <div className="sl-checkout-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCartOpen(false); }}><section className="sl-checkout-panel" role="dialog" aria-modal="true" aria-label="Shopping cart"><header><div><span className="sl-store-eyebrow">YOUR ORDER</span><h2>Shopping cart <small>({cartCount})</small></h2></div><button onClick={() => setCartOpen(false)} aria-label="Close cart"><X/></button></header>{orderError && <p className="sl-checkout-error">{orderError}</p>}{!cart.length ? <div className="sl-checkout-empty"><ShoppingCart size={30}/><h3>Your cart is empty</h3><p>Add priced products from the catalogue to get started.</p><button onClick={() => setCartOpen(false)}>Continue browsing</button></div> : <><div className="sl-checkout-lines">{cart.map(line => <article key={line.product.id}>{line.product.imageUrl ? <img src={line.product.imageUrl} alt=""/> : <span className="sl-checkout-line-image"><Package/></span>}<div><b>{line.product.name}</b><small>{money(line.product.price,line.product.currency,line.product.unit)}</small><div className="sl-checkout-quantity"><button onClick={() => updateQuantity(line.product.id,line.quantity-1)} aria-label="Decrease quantity">−</button><span>{line.quantity}</span><button onClick={() => updateQuantity(line.product.id,line.quantity+1)} aria-label="Increase quantity">+</button><button className="sl-checkout-remove" onClick={() => updateQuantity(line.product.id,0)}>Remove</button></div></div><strong>{money(Number(line.product.price)*line.quantity,line.product.currency,line.product.unit)}</strong></article>)}</div><div className="sl-checkout-total"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN",{style:"currency",currency,maximumFractionDigits:2}).format(cartTotal)}</strong></div><button className="sl-store-contact-primary sl-checkout-continue" onClick={() => { setOrderError(""); trackEvent("checkout_started"); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16}/></button><p className="sl-checkout-note">This submits an order request. The business will confirm payment and delivery separately.</p></>}</section></div>}
-    {checkoutOpen && <div className="sl-checkout-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCheckoutOpen(false); }}><section className="sl-checkout-panel" role="dialog" aria-modal="true" aria-label="Checkout"><header><div><span className="sl-store-eyebrow">CHECKOUT</span><h2>Delivery details</h2></div><button onClick={() => setCheckoutOpen(false)} aria-label="Close checkout"><X/></button></header><form className="sl-checkout-form" onSubmit={submitOrder}><label>Full name<input required minLength={2} maxLength={120} value={checkout.customerName} onChange={e => setCheckout({...checkout,customerName:e.target.value})}/></label><label>Email (optional)<input type="email" maxLength={160} value={checkout.email} onChange={e => setCheckout({...checkout,email:e.target.value})}/></label><label>Phone number<input required minLength={7} maxLength={30} value={checkout.phone} onChange={e => setCheckout({...checkout,phone:e.target.value})}/></label><label>Delivery address<textarea maxLength={1000} value={checkout.address} onChange={e => setCheckout({...checkout,address:e.target.value})}/></label><label>Order notes (optional)<textarea maxLength={1000} value={checkout.notes} onChange={e => setCheckout({...checkout,notes:e.target.value})}/></label>{orderError && <p className="sl-checkout-error">{orderError}</p>}<div className="sl-checkout-total"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN",{style:"currency",currency,maximumFractionDigits:2}).format(cartTotal)}</strong></div><button className="sl-store-contact-primary sl-checkout-continue" type="submit" disabled={submitting}>{submitting ? "Submitting…" : "Place order request"} <ArrowRight size={16}/></button><p className="sl-checkout-note">No online payment is collected by this MVP. The business will contact you to confirm payment and delivery.</p></form></section></div>}
+    {checkoutOpen && <div className="sl-checkout-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCheckoutOpen(false); }}><section className="sl-checkout-panel" role="dialog" aria-modal="true" aria-label="Checkout"><header><div><span className="sl-store-eyebrow">CHECKOUT</span><h2>Delivery details</h2></div><button onClick={() => setCheckoutOpen(false)} aria-label="Close checkout"><X/></button></header><form className="sl-checkout-form" onSubmit={submitOrder}><label>Full name<input required minLength={2} maxLength={120} value={checkout.customerName} onChange={e => setCheckout({...checkout,customerName:e.target.value})}/></label><label>Email (optional)<input type="email" maxLength={160} value={checkout.email} onChange={e => setCheckout({...checkout,email:e.target.value})}/></label><label>Phone number<input required minLength={7} maxLength={30} value={checkout.phone} onChange={e => setCheckout({...checkout,phone:e.target.value})}/></label><label>Delivery address<textarea required minLength={5} maxLength={1000} value={checkout.address} onChange={e => setCheckout({...checkout,address:e.target.value})}/></label><label>Order notes (optional)<textarea maxLength={1000} value={checkout.notes} onChange={e => setCheckout({...checkout,notes:e.target.value})}/></label>{orderError && <p className="sl-checkout-error">{orderError}</p>}<div className="sl-checkout-total"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN",{style:"currency",currency,maximumFractionDigits:2}).format(cartTotal)}</strong></div><button className="sl-store-contact-primary sl-checkout-continue" type="submit" disabled={submitting}>{submitting ? "Opening secure checkout…" : "Pay securely with Razorpay"} <ArrowRight size={16}/></button><p className="sl-checkout-note">Your payment is processed securely by Razorpay. Your order is confirmed after the server verifies payment.</p></form></section></div>}
     {details && <div className="sl-store-detail-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setDetails(null); }}><section className="sl-store-detail"><button className="sl-store-detail-close" onClick={() => setDetails(null)} aria-label="Close details"><X/></button><div className="sl-store-detail-image">{details.imageUrl && <img src={details.imageUrl} alt={details.name}/>}</div><div className="sl-store-detail-content"><span className="sl-store-eyebrow">PRODUCT DETAILS</span><h2>{details.name}</h2><p>{details.description}</p><strong>{money(details.price,details.currency,details.unit)}</strong><div className="sl-store-detail-specs">{Object.entries(details.fields||{}).map(([k,v]) => <span key={k}><small>{k.replace(/([A-Z])/g," $1")}</small><b>{String(v)}</b></span>)}</div>{onlineSelling ? <button className="sl-store-contact-primary" disabled={details.price == null || Number(details.price) <= 0} onClick={() => { addToCart(details); setDetails(null); }}><ShoppingCart size={16}/> Add to cart</button> : <a className="sl-store-contact-primary" href={wa === "#contact" ? "#contact" : "https://wa.me/" + data.business.phone!.replace(/\D/g,"") + "?text=" + encodeURIComponent("Hi, I'm interested in " + details.name + ".")} target={wa === "#contact" ? "_self" : "_blank"} rel="noreferrer"><MessageCircle size={16}/> Enquire about this product</a>}</div></section></div>}
   </div>;
 }
