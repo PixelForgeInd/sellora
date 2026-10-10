@@ -107,15 +107,22 @@ router.get("/workspace/business", requireAuth, authenticated(async (req,res) => 
 }));
 router.patch("/workspace/business/settings", requireAuth, authenticated(async (req,res) => {
   const data = z.object({
-    sellingMode: z.enum(["CATALOG_ONLY", "ONLINE_PAYMENTS"])
-  }).parse(req.body);
+    sellingMode: z.enum(["CATALOG_ONLY", "ONLINE_PAYMENTS"]).optional(),
+    name: z.string().trim().min(2).max(120).optional(),
+    industry: z.string().trim().min(2).max(100).optional(),
+    productCategory: z.enum(["yarn-textiles","clothing","furniture","electronics","other"]).optional(),
+    businessModel: z.enum(["B2B","B2C","B2B2C"]).optional(),
+    phone: z.string().trim().max(30).nullable().optional(),
+    website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
+    brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional()
+  }).refine((value) => Object.values(value).some((item) => item !== undefined), { message: "Provide at least one setting to update." }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
   const updated = await prisma.business.update({
     where:{id:business.id},
-    data:{sellingMode:data.sellingMode},
+    data:{...data,website:data.website === "" ? null : data.website},
     select:{
-      id:true,name:true,sellingMode:true,paymentGatewayProvider:true,paymentGatewayStatus:true,updatedAt:true
+      id:true,name:true,slug:true,industry:true,productCategory:true,businessModel:true,phone:true,website:true,brandColor:true,sellingMode:true,paymentGatewayProvider:true,paymentGatewayStatus:true,updatedAt:true
     }
   });
   res.json({
