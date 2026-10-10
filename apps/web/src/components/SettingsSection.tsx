@@ -44,6 +44,7 @@ type SettingsSectionProps = {
   removeIndustryField: (field: Field) => Promise<void>;
   restoreIndustryFields: () => Promise<void>;
   busy: boolean;
+  isPlatformOwner?: boolean;
 };
 
 export function SettingsSection({
@@ -63,6 +64,7 @@ export function SettingsSection({
   removeIndustryField,
   restoreIndustryFields,
   busy,
+  isPlatformOwner = false,
 }: SettingsSectionProps) {
   const [gatewayKeyId, setGatewayKeyId] = useState("");
   const [gatewayKeySecret, setGatewayKeySecret] = useState("");
@@ -75,6 +77,14 @@ export function SettingsSection({
   const [webhookSaved, setWebhookSaved] = useState(false);
   const [gatewayBusy, setGatewayBusy] = useState(false);
   const [gatewayMessage, setGatewayMessage] = useState("");
+  const [platformPaymentSettings, setPlatformPaymentSettings] = useState<any>(null);
+  const [platformSettingsError, setPlatformSettingsError] = useState("");
+  useEffect(() => {
+    if (!isPlatformOwner) return;
+    api("/platform/admin/payment-settings")
+      .then(setPlatformPaymentSettings)
+      .catch((err) => setPlatformSettingsError(err instanceof Error ? err.message : "Could not load platform payment settings."));
+  }, [isPlatformOwner]);
   async function saveGateway(e: FormEvent) {
     e.preventDefault();
     setGatewayBusy(true);
@@ -492,19 +502,32 @@ export function SettingsSection({
             )}
           </div>
         </form>
-        <details className="sl-gateway-advanced">
-          <summary>Webhook URL and event setup</summary>
-          <p className="sl-gateway-note">
-            Add this URL in Razorpay Dashboard and subscribe to
-            payment.captured, payment.failed and order.paid:
-          </p>
-          <code>
-            {(
-              import.meta.env.VITE_API_URL || "http://localhost:4000/api"
-            ).replace(/\/$/, "")}
-            /webhooks/razorpay
-          </code>
-        </details>
+        {isPlatformOwner && (
+          <section className="sl-section-card sl-settings-page">
+            <span className="sl-kicker">PIXELFORGE PLATFORM ADMIN</span>
+            <h3>Payment infrastructure</h3>
+            <p>Owner-only operational settings for managing Sellora's payment integration. Encryption secrets are never displayed here.</p>
+            {platformSettingsError && <p role="alert" className="sl-gateway-note">{platformSettingsError}</p>}
+            {platformPaymentSettings && (
+              <>
+                <div className="sl-gateway-status">
+                  <div><b>Payment encryption key</b><small>{platformPaymentSettings.encryptionKeyConfigured ? "Configured on API server" : "Missing or invalid — configure the API environment"}</small></div>
+                  <span className={platformPaymentSettings.encryptionKeyConfigured ? "sl-published" : "sl-draft"}>{platformPaymentSettings.encryptionKeyConfigured ? "Ready" : "Action needed"}</span>
+                </div>
+                <label>
+                  Razorpay webhook endpoint
+                  <input readOnly value={platformPaymentSettings.webhookUrl || "Set PUBLIC_API_URL on the API server to display the public webhook URL"} />
+                </label>
+                {platformPaymentSettings.webhookUrl && (
+                  <div className="sl-modal-actions">
+                    <Btn type="button" kind="outline" onClick={() => void navigator.clipboard.writeText(platformPaymentSettings.webhookUrl)}>Copy webhook URL</Btn>
+                  </div>
+                )}
+                <p className="sl-gateway-note">Configure this endpoint in the Razorpay account used for Sellora platform operations. Customer workspaces do not see this panel.</p>
+              </>
+            )}
+          </section>
+        )}
       </section>
 
       <section className="sl-section-card sl-settings-page">
