@@ -3,9 +3,46 @@ import { PrismaClient, Prisma } from "@prisma/client";
 import { z } from "zod";
 import crypto from "node:crypto";
 import { promisify } from "node:util";
+import type { Prisma as PrismaTypes } from "@prisma/client";
 
 const router = Router();
 const prisma = new PrismaClient();
+
+function razorpayEncryptionKey(): Buffer {
+  const configured = process.env.RAZORPAY_ENCRYPTION_KEY || "";
+  const key = /^[a-fA-F0-9]{64}$/.test(configured)
+    ? Buffer.from(configured, "hex")
+    : Buffer.from(configured, "base64");
+  if (key.length !== 32) throw new Error("Set RAZORPAY_ENCRYPTION_KEY to a 32-byte base64 or 64-character hex key.");
+  return key;
+}
+function encryptGatewaySecret(value: string): string {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", razorpayEncryptionKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return [iv.toString("base64"), cipher.getAuthTag().toString("base64"), encrypted.toString("base64")].join(".");
+}
+function decryptGatewaySecret(value: string): string {
+  const [ivPart, tagPart, encryptedPart] = value.split(".");
+  if (!ivPart || !tagPart || !encryptedPart) throw new Error("Stored Razorpay credentials are invalid.");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", razorpayEncryptionKey(), Buffer.from(ivPart, "base64"));
+  decipher.setAuthTag(Buffer.from(tagPart, "base64"));
+  return Buffer.concat([decipher.update(Buffer.from(encryptedPart, "base64")), decipher.final()]).toString("utf8");
+}
+async function razorpayRequest<T>(keyId: string, keySecret: string, path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch("https://api.razorpay.com/v1" + path, {
+    ...init,
+    headers: {
+      Authorization: "Basic " + Buffer.from(keyId + ":" + keySecret).toString("base64"),
+      "Content-Type": "application/json",
+      ...(init.headers || {})
+    }
+  });
+  const result = await response.json().catch(() => ({})) as T & { error?: { description?: string } };
+  if (!response.ok) throw new Error(result?.error?.description || "Razorpay request failed.");
+  return result;
+}
+
 const scrypt = promisify(crypto.scrypt);
 const secret = process.env.AUTH_SECRET || "sellora-development-secret-change-before-deployment";
 if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
@@ -213,6 +250,34 @@ router.post("/workspace/fields/restore-defaults", requireAuth, authenticated(asy
     }
   });
   res.json(await prisma.catalogueField.findMany({where:{businessId:business.id},orderBy:{sortOrder:"asc"}}));
+}));
+
+router.post("/workspace/payments/razorpay/connect", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({
+    keyId: z.string().trim().min(8).max(100).regex(/^rzp_(test|live)_/, "Enter a Razorpay test or live Key ID."),
+    keySecret: z.string().trim().min(8).max(200)
+  }).parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  try {
+    await razorpayRequest(data.keyId, data.keySecret, "/orders?count=1");
+    const updated = await prisma.business.update({
+      where:{id:business.id},
+      data:{paymentGatewayProvider:"RAZORPAY",paymentGatewayStatus:"ACTIVE",razorpayKeyId:data.keyId,razorpayKeySecretEncrypted:encryptGatewaySecret(data.keySecret)},
+      select:{id:true,paymentGatewayProvider:true,paymentGatewayStatus:true}
+    });
+    res.json({...updated,message:"Razorpay credentials verified and saved securely."});
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not validate Razorpay credentials.";
+    res.status(400).json({error:message});
+  }
+}));
+
+router.post("/workspace/payments/razorpay/disconnect", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  await prisma.business.update({where:{id:business.id},data:{paymentGatewayProvider:null,paymentGatewayStatus:"DISABLED",razorpayKeyId:null,razorpayKeySecretEncrypted:null}});
+  res.json({paymentGatewayProvider:null,paymentGatewayStatus:"DISABLED"});
 }));
 
 router.patch("/workspace/business/settings", requireAuth, authenticated(async (req,res) => {
