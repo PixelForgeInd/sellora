@@ -202,9 +202,27 @@ router.post("/auth/login", async (req, res) => {
   res.json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
 router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
-  const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,createdAt:true}});
+  const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
   if (!user) return res.status(401).json({error:"Account not found."});
-  res.json(user);
+  res.json({id:user.id,email:user.email,createdAt:user.createdAt,isPlatformOwner:user.role==="PLATFORM_OWNER"});
+}));
+
+// Platform-only diagnostics. Never return encryption keys or stored payment credentials.
+router.get("/platform/admin/payment-settings", requireAuth, authenticated(async (req,res) => {
+  const user = await prisma.user.findUnique({where:{id:req.userId},select:{email:true,role:true}});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  if (!user || user.role !== "PLATFORM_OWNER" || !ownerEmail || user.email.toLowerCase() !== ownerEmail) {
+    return res.status(403).json({error:"Platform owner access required."});
+  }
+  const apiBase = (process.env.PUBLIC_API_URL || "").replace(/\\/$/, "");
+  const rawKey = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
+  const keyBytes = /^[a-fA-F0-9]{64}$/.test(rawKey) ? Buffer.from(rawKey,"hex") : Buffer.from(rawKey,"base64");
+  res.json({
+    company:"PixelForge",
+    webhookUrl: apiBase ? apiBase + "/api/webhooks/razorpay" : null,
+    encryptionKeyConfigured:keyBytes.length===32,
+    encryptionKeySource:process.env.PAYMENT_ENCRYPTION_KEY ? "PAYMENT_ENCRYPTION_KEY" : process.env.RAZORPAY_ENCRYPTION_KEY ? "RAZORPAY_ENCRYPTION_KEY (legacy)" : null
+  });
 }));
 
 router.get("/workspace/business", requireAuth, authenticated(async (req,res) => {
