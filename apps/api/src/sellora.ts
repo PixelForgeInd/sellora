@@ -71,6 +71,48 @@ const templates: Record<string, Array<{key:string;label:string;type:string;requi
     {key:"brand",label:"Brand",type:"text"},{key:"model",label:"Model number",type:"text",required:true},
     {key:"warranty",label:"Warranty",type:"text"},{key:"specifications",label:"Specifications",type:"textarea"}
   ],
+  "food-beverage": [
+    {key:"ingredients",label:"Ingredients / composition",type:"textarea",required:true},
+    {key:"netWeight",label:"Net weight / volume",type:"text",required:true},
+    {key:"shelfLife",label:"Shelf life",type:"text"},
+    {key:"dietary",label:"Dietary information",type:"multiselect",options:["Vegetarian","Vegan","Gluten-free","Sugar-free"]},
+    {key:"storage",label:"Storage instructions",type:"text"}
+  ],
+  "beauty-personal-care": [
+    {key:"skinType",label:"Suitable skin / hair type",type:"text"},
+    {key:"ingredients",label:"Ingredients",type:"textarea",required:true},
+    {key:"netVolume",label:"Net volume / weight",type:"text"},
+    {key:"fragrance",label:"Fragrance",type:"text"},
+    {key:"expiry",label:"Shelf life / expiry",type:"text"}
+  ],
+  "automotive": [
+    {key:"makeModel",label:"Compatible make / model",type:"text",required:true},
+    {key:"partNumber",label:"Part number",type:"text"},
+    {key:"material",label:"Material",type:"text"},
+    {key:"warranty",label:"Warranty",type:"text"},
+    {key:"condition",label:"Condition",type:"select",options:["New","Refurbished","Used"]}
+  ],
+  "healthcare": [
+    {key:"manufacturer",label:"Manufacturer",type:"text",required:true},
+    {key:"model",label:"Model / reference",type:"text"},
+    {key:"specifications",label:"Specifications",type:"textarea"},
+    {key:"warranty",label:"Warranty",type:"text"},
+    {key:"certification",label:"Certification / compliance",type:"text"}
+  ],
+  "building-materials": [
+    {key:"material",label:"Material / grade",type:"text",required:true},
+    {key:"dimensions",label:"Dimensions",type:"text"},
+    {key:"finish",label:"Finish",type:"text"},
+    {key:"unit",label:"Selling unit",type:"select",options:["piece","bag","kg","tonne","sq ft"]},
+    {key:"minOrderQuantity",label:"Minimum order quantity",type:"number"}
+  ],
+  agriculture: [
+    {key:"variety",label:"Variety / crop",type:"text",required:true},
+    {key:"grade",label:"Grade / quality",type:"text"},
+    {key:"origin",label:"Origin",type:"text"},
+    {key:"packaging",label:"Packaging",type:"text"},
+    {key:"season",label:"Season / harvest",type:"text"}
+  ],
   other: [
     {key:"material",label:"Material",type:"text"},{key:"colour",label:"Colour",type:"text"},
     {key:"size",label:"Size / dimensions",type:"text"},{key:"unit",label:"Selling unit",type:"text"}
@@ -178,7 +220,7 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     sellingMode: z.enum(["CATALOG_ONLY", "ONLINE_PAYMENTS"]).optional(),
     name: z.string().trim().min(2).max(120).optional(),
     industry: z.string().trim().min(2).max(100).optional(),
-    productCategory: z.enum(["yarn-textiles","clothing","furniture","electronics","other"]).optional(),
+    productCategory: z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]).optional(),
     businessModel: z.enum(["B2B","B2C","B2B2C"]).optional(),
     phone: z.string().trim().max(30).nullable().optional(),
     website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
