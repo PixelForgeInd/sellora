@@ -16,7 +16,7 @@ const uploadDir = path.resolve(process.env.UPLOAD_DIR || "./uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
 
 app.use(cors({ origin: webOrigin }));
-app.use(express.json({ limit: "6mb" }));
+app.use(express.json({ limit: "6mb", verify: (req, _res, buffer) => { (req as express.Request & {rawBody?:Buffer}).rawBody = Buffer.from(buffer); } }));
 app.use("/uploads", express.static(uploadDir));
 app.use("/api", selloraRouter);
 
