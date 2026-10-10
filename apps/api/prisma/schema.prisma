@@ -254,6 +254,7 @@ model PaymentOrder {
  customerName String
  customerEmail String?
  customerPhone String
+ customerAddress String
  razorpayOrderId String @unique
  razorpayPaymentId String?
  status String @default("CREATED")
