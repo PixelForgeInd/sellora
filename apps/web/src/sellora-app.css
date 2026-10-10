@@ -502,3 +502,43 @@
 .sl-storefront .sl-store-product-arrow{
   color:var(--store-accent);
 }
+
+
+/* Accessibility fix: preserve strong contrast for customer-facing actions */
+.sl-storefront .sl-checkout-continue,
+.sl-storefront .sl-checkout-continue:visited{
+  background:var(--store-accent,var(--store-brand,#599c56));
+  border:1px solid var(--store-accent,var(--store-brand,#599c56));
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+  font-weight:750;
+  opacity:1;
+}
+.sl-storefront .sl-checkout-continue:hover:not(:disabled),
+.sl-storefront .sl-checkout-continue:focus-visible{
+  background:color-mix(in srgb,var(--store-accent,var(--store-brand,#599c56)) 84%,#000);
+  border-color:color-mix(in srgb,var(--store-accent,var(--store-brand,#599c56)) 84%,#000);
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
+.sl-storefront .sl-checkout-continue:disabled{
+  background:#e5e9e2;
+  border-color:#e5e9e2;
+  color:#586457!important;
+  -webkit-text-fill-color:#586457;
+  opacity:1;
+}
+.sl-storefront .sl-store-contact-primary,
+.sl-storefront .sl-store-contact-primary:visited,
+.sl-storefront .sl-store-product-bottom>a{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
+.sl-storefront .sl-store-header-actions button.sl-store-quote{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
+.sl-storefront .sl-checkout-panel button,
+.sl-storefront .sl-checkout-panel a{
+  text-shadow:none;
+}
