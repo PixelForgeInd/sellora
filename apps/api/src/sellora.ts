@@ -3,7 +3,6 @@ import { PrismaClient, Prisma } from "@prisma/client";
 import { z } from "zod";
 import crypto from "node:crypto";
 import { promisify } from "node:util";
-import type { Prisma as PrismaTypes } from "@prisma/client";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -504,7 +503,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   if(currency !== "INR") return res.status(400).json({error:"Razorpay checkout currently supports INR orders only."});
   const amountPaise = total.mul(100).toDecimalPlaces(0).toNumber();
   if(!Number.isSafeInteger(amountPaise) || amountPaise < 100) return res.status(400).json({error:"Order total is outside Razorpay's supported amount range."});
-  let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date};
+  let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date} | null = null;
   try {
     order = await prisma.$transaction(async (tx) => {
       const sequence = await tx.business.update({
