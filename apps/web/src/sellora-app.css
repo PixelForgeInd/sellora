@@ -107,3 +107,10 @@
 .sl-field-required-toggle input{width:16px;height:16px;accent-color:#599c56}
 .sl-dynamic-fields select[multiple]{min-height:100px;padding:8px}
 @media(max-width:640px){.sl-add-field-form{padding:12px}.sl-industry-field{padding:11px}}
+
+/* Version 2: multiple business workspaces */
+.sl-workspace-switcher{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.sl-workspace-select-label{display:flex;align-items:center;gap:8px;margin:0}
+.sl-workspace-select-label>span{font-size:9px;font-weight:800;letter-spacing:.12em;color:#778174}
+.sl-workspace-select-label select{max-width:220px;min-width:140px;border:1px solid #e1e7dd;border-radius:9px;background:#fff;padding:9px 30px 9px 11px;color:#263329;font:600 12px "DM Sans",sans-serif}
+@media(max-width:760px){.sl-workspace-switcher{justify-content:flex-start;gap:8px}.sl-workspace-select-label{flex:1;min-width:0}.sl-workspace-select-label select{max-width:none;min-width:0;width:100%}.sl-workspace-switcher .sl-online-dot{display:none}}
