@@ -51,6 +51,7 @@ export default function SelloraApp() {
   // Session and workspace data
   const [access, setAccess] = useState(getSessionToken());
   const [user, setUser] = useState("");
+  const [isPlatformOwner, setIsPlatformOwner] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
@@ -352,8 +353,9 @@ export default function SelloraApp() {
     }
     if (!access) return;
     api("/auth/me")
-      .then((u: { email: string }) => {
+      .then((u: { email: string; isPlatformOwner?: boolean }) => {
         setUser(u.email);
+        setIsPlatformOwner(Boolean(u.isPlatformOwner));
         return load(access);
       })
       .catch(() => {
@@ -374,6 +376,8 @@ export default function SelloraApp() {
       sessionStorage.setItem("sellora_token", d.token);
       setAccess(d.token);
       setUser(d.user.email);
+      const currentUser = await api("/auth/me", {}, d.token);
+      setIsPlatformOwner(Boolean(currentUser.isPlatformOwner));
       const b = await api("/workspace/business", {}, d.token);
       if (b) await load(d.token);
     } catch (e) {
@@ -1315,6 +1319,7 @@ export default function SelloraApp() {
             removeIndustryField={removeIndustryField}
             restoreIndustryFields={restoreIndustryFields}
             busy={busy}
+            isPlatformOwner={isPlatformOwner}
           />
         )}
         <footer className="sl-workspace-footer">
