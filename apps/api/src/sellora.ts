@@ -140,6 +140,10 @@ router.get("/auth/me", authenticated(async (req,res) => {
   res.json(user);
 }));
 
+router.get("/workspace/businesses", requireAuth, authenticated(async (req,res) => {
+  const businesses = await prisma.business.findMany({where:{ownerUserId:req.userId},orderBy:{createdAt:"asc"},select:{id:true,name:true,slug:true,industry:true,productCategory:true,businessModel:true,brandColor:true,createdAt:true}});
+  res.json(businesses);
+}));
 router.get("/workspace/business", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({
     where:{ownerUserId:req.userId},
