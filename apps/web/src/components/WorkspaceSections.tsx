@@ -1,0 +1,514 @@
+import type { Dispatch, FormEvent, SetStateAction } from "react";
+import {
+  ArrowRight, BookOpen, Check, CreditCard, Copy, ExternalLink, Eye, EyeOff,
+  LogOut, MessageCircle, Package, Plus, Trash2,
+} from "lucide-react";
+import { Brand, Button as Btn, ErrorMessage as Err } from "./ui";
+import { categories as cats, fallbackFields as fallback } from "../sellora/catalogue-fields";
+import { formatMoney as money } from "../sellora/formatters";
+import type { Business, Catalogue, Product } from "../sellora/types";
+
+type BusinessForm = {
+  name: string; industry: string; productCategory: string; businessModel: string;
+  phone: string; website: string; brandColor: string;
+  sellingMode: "CATALOG_ONLY" | "ONLINE_PAYMENTS";
+};
+type CatalogueForm = { title: string; description: string; productIds: string[] };
+
+type AuthScreenProps = {
+  email: string; setEmail: (value: string) => void;
+  password: string; setPassword: (value: string) => void;
+  showPassword: boolean; setShowPassword: Dispatch<SetStateAction<boolean>>;
+  mode: string; setMode: (value: string) => void;
+  error: string; setError: (value: string) => void;
+  busy: boolean; auth: (event: FormEvent) => Promise<void>;
+};
+export function AuthScreen({
+  email, setEmail, password, setPassword, showPassword, setShowPassword,
+  mode, setMode, error, setError, busy, auth,
+}: AuthScreenProps) {
+  return (<div className="sl-auth-layout">
+        <section className="sl-auth-story">
+          <Brand />
+          <div className="sl-story-content">
+            <span className="sl-kicker">YOUR PRODUCTS. YOUR BRAND.</span>
+            <h1>
+              One catalogue.
+              <br />
+              <em>More possibilities.</em>
+            </h1>
+            <p>
+              Create a polished, shareable product catalogue for your business.
+              No design tools or technical skills required.
+            </p>
+            <div className="sl-story-points">
+              <span>
+                <Check size={16} /> Set up in minutes
+              </span>
+              <span>
+                <Check size={16} /> Fields for your industry
+              </span>
+              <span>
+                <Check size={16} /> Share one simple link
+              </span>
+            </div>
+          </div>
+          <small>SELLORA · DIGITAL CATALOGUES. SMARTER SALES.</small>
+        </section>
+        <section className="sl-auth-main">
+          <div className="sl-auth-card">
+            <Brand />
+            <span className="sl-kicker">
+              {mode === "signup" ? "START YOUR WORKSPACE" : "WELCOME BACK"}
+            </span>
+            <h2>
+              {mode === "signup"
+                ? "Create your Sellora account"
+                : "Log in to Sellora"}
+            </h2>
+            <p>
+              {mode === "signup"
+                ? "Your catalogue journey starts here."
+                : "Continue managing products and catalogues."}
+            </p>
+            <Err text={error} />
+            <form className="sl-form" onSubmit={auth}>
+              <label>
+                Email address
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                />
+              </label>
+              <label>
+                Password
+                <div className="sl-password-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={mode === "signup" ? 8 : 1}
+                    autoComplete={
+                      mode === "signup" ? "new-password" : "current-password"
+                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={
+                      mode === "signup"
+                        ? "At least 8 characters"
+                        : "Your password"
+                    }
+                  />
+                  <button
+                    className="sl-password-toggle"
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </label>
+              <Btn type="submit" disabled={busy}>
+                {busy
+                  ? "Please wait…"
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Log in"}{" "}
+                <ArrowRight size={16} />
+              </Btn>
+            </form>
+            <p className="sl-auth-switch">
+              {mode === "signup"
+                ? "Already have an account?"
+                : "New to Sellora?"}{" "}
+              <button
+                onClick={() => {
+                  setMode(mode === "signup" ? "login" : "signup");
+                  setError("");
+                }}
+              >
+                {mode === "signup" ? "Log in" : "Create account"}
+              </button>
+            </p>
+            <small className="sl-muted">
+              Your workspace is private to your account.
+            </small>
+          </div>
+        </section>
+      </div>);
+}
+
+type OnboardingScreenProps = {
+  bform: BusinessForm; setBform: Dispatch<SetStateAction<BusinessForm>>;
+  error: string; busy: boolean;
+  createBusiness: (event: FormEvent) => Promise<void>; signOut: () => void;
+};
+export function OnboardingScreen({
+  bform, setBform, error, busy, createBusiness, signOut,
+}: OnboardingScreenProps) {
+  return (<div className="sl-onboarding-page">
+        <header className="sl-topbar">
+          <Brand />
+          <div className="sl-onboarding-actions">
+            <button onClick={signOut} className="sl-text-button">
+              <LogOut size={15} /> Sign out
+            </button>
+          </div>
+        </header>
+        <div className="sl-onboarding-card">
+          <span className="sl-kicker">BUSINESS SETUP</span>
+          <h1>Tell us about your business.</h1>
+          <p>
+            We'll use this information to suggest the right product fields for
+            your catalogue.
+          </p>
+          <Err text={error} />
+          <form className="sl-form" onSubmit={createBusiness}>
+            <label>
+              Business name
+              <input
+                required
+                minLength={2}
+                value={bform.name}
+                onChange={(e) => setBform({ ...bform, name: e.target.value })}
+                placeholder="e.g. Ganeshaa Sutra"
+              />
+            </label>
+            <div className="sl-form-row">
+              <label>
+                What do you sell?
+                <select
+                  value={bform.productCategory}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setBform({
+                      ...bform,
+                      productCategory: v,
+                      industry: cats.find((c) => c[0] === v)?.[2] || "General",
+                    });
+                  }}
+                >
+                  {cats.map((c) => (
+                    <option key={c[0]} value={c[0]}>
+                      {c[1]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Business model
+                <select
+                  value={bform.businessModel}
+                  onChange={(e) =>
+                    setBform({ ...bform, businessModel: e.target.value })
+                  }
+                >
+                  <option>B2B</option>
+                  <option>B2C</option>
+                  <option>B2B2C</option>
+                </select>
+              </label>
+            </div>
+            <div className="sl-form-row">
+              <label>
+                Phone (optional)
+                <input
+                  value={bform.phone}
+                  onChange={(e) =>
+                    setBform({ ...bform, phone: e.target.value })
+                  }
+                  placeholder="+91…"
+                />
+              </label>
+              <label>
+                Website (optional)
+                <input
+                  type="url"
+                  value={bform.website}
+                  onChange={(e) =>
+                    setBform({ ...bform, website: e.target.value })
+                  }
+                  placeholder="https://…"
+                />
+              </label>
+            </div>
+            <label>
+              Brand colour
+              <div className="sl-color-field">
+                <input
+                  type="color"
+                  value={bform.brandColor}
+                  onChange={(e) =>
+                    setBform({ ...bform, brandColor: e.target.value })
+                  }
+                />
+                <span>{bform.brandColor.toUpperCase()}</span>
+              </div>
+            </label>
+            <div className="sl-field-divider">HOW DO YOU WANT TO SELL?</div>
+            <label
+              className={
+                "sl-mode-option" +
+                (bform.sellingMode === "CATALOG_ONLY" ? " selected" : "")
+              }
+            >
+              <input
+                type="radio"
+                name="onboardingSellingMode"
+                value="CATALOG_ONLY"
+                checked={bform.sellingMode === "CATALOG_ONLY"}
+                onChange={() =>
+                  setBform({ ...bform, sellingMode: "CATALOG_ONLY" })
+                }
+              />
+              <span>
+                <b>
+                  <BookOpen size={18} /> Catalogue only
+                </b>
+                <small>Share products and collect enquiries.</small>
+              </span>
+            </label>
+            <label
+              className={
+                "sl-mode-option" +
+                (bform.sellingMode === "ONLINE_PAYMENTS" ? " selected" : "")
+              }
+            >
+              <input
+                type="radio"
+                name="onboardingSellingMode"
+                value="ONLINE_PAYMENTS"
+                checked={bform.sellingMode === "ONLINE_PAYMENTS"}
+                onChange={() =>
+                  setBform({ ...bform, sellingMode: "ONLINE_PAYMENTS" })
+                }
+              />
+              <span>
+                <b>
+                  <CreditCard size={18} /> Catalogue + online payments
+                </b>
+                <small>
+                  Choose online checkout; you can connect a gateway after setup.
+                  This is the default.
+                </small>
+              </span>
+            </label>
+            <div className="sl-template-preview">
+              <BookOpen size={18} />
+              <span>
+                <b>Suggested fields</b>
+                <small>
+                  {(fallback[bform.productCategory] || fallback.other)
+                    .map((f) => f.label)
+                    .join(" · ")}
+                </small>
+              </span>
+            </div>
+            <Btn type="submit" disabled={busy}>
+              {busy ? "Setting up…" : "Create my workspace"}{" "}
+              <ArrowRight size={16} />
+            </Btn>
+          </form>
+        </div>
+      </div>);
+}
+
+type ProductSectionProps = {
+  category: string; products: Product[];
+  startProduct: (product?: Product) => void;
+  deleteProduct: (product: Product) => Promise<void>;
+};
+export function ProductSection({
+  category, products, startProduct, deleteProduct,
+}: ProductSectionProps) {
+  return (<section className="sl-section-card">
+            <div className="sl-section-head">
+              <div>
+                <h3>Product library</h3>
+                <p>
+                  Suggested fields are tailored to {category.toLowerCase()}.
+                </p>
+              </div>
+              <Btn onClick={() => startProduct()}>
+                <Plus size={16} /> Add product
+              </Btn>
+            </div>
+            {!products.length ? (
+              <div className="sl-empty">
+                <Package size={30} />
+                <h3>Your product library is empty</h3>
+                <p>
+                  Add a product with an image, price and industry-specific
+                  details.
+                </p>
+                <Btn onClick={() => startProduct()}>
+                  <Plus size={15} /> Add your first product
+                </Btn>
+              </div>
+            ) : (
+              products.map((p) => (
+                <article className="sl-product-row" key={p.id}>
+                  <div className="sl-product-thumb">
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt="" />
+                    ) : (
+                      <Package size={22} />
+                    )}
+                  </div>
+                  <div className="sl-product-name">
+                    <b>{p.name}</b>
+                    <small>
+                      {p.sku || "No SKU"} ·{" "}
+                      {Object.entries(p.fields || {})
+                        .filter(([, v]) => v !== "")
+                        .slice(0, 3)
+                        .map(([k, v]) => k + ": " + v)
+                        .join(" · ")}
+                    </small>
+                  </div>
+                  <strong>{money(p.price, p.currency, p.unit)}</strong>
+                  <Btn kind="outline" onClick={() => startProduct(p)}>
+                    Edit
+                  </Btn>
+                  <button
+                    className="sl-icon-action"
+                    onClick={() => void deleteProduct(p)}
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </article>
+              ))
+            )}
+          </section>);
+}
+
+type CatalogueSectionProps = {
+  business: Business; products: Product[]; catalogues: Catalogue[];
+  setCform: Dispatch<SetStateAction<CatalogueForm>>;
+  setEditingCatalogue: (id: string) => void;
+  setError: (value: string) => void; setModal: (value: string) => void;
+  setPreview: (catalogue: Catalogue) => void;
+  editCatalogue: (catalogue: Catalogue) => void;
+  publish: (catalogue: Catalogue) => Promise<void>;
+  share: (catalogue: Catalogue) => Promise<void>;
+  shareWhatsApp: (catalogue: Catalogue) => void;
+};
+export function CatalogueSection({
+  business, products, catalogues, setCform, setEditingCatalogue, setError,
+  setModal, setPreview, editCatalogue, publish, share, shareWhatsApp,
+}: CatalogueSectionProps) {
+  return (<section className="sl-section-card">
+            <div className="sl-section-head">
+              <div>
+                <h3>Digital catalogues</h3>
+                <p>
+                  Create, preview and publish catalogues for your customers.
+                </p>
+              </div>
+              <Btn
+                onClick={() => {
+                  setEditingCatalogue("");
+                  setCform({
+                    title: business.name + " Product Catalogue",
+                    description: "",
+                    productIds: products.map((p) => p.id),
+                  });
+                  setError("");
+                  setModal("catalogue");
+                }}
+              >
+                <Plus size={16} /> New catalogue
+              </Btn>
+            </div>
+            {!catalogues.length ? (
+              <div className="sl-empty">
+                <BookOpen size={30} />
+                <h3>Your first catalogue is one step away</h3>
+                <p>Choose your products and publish a link for customers.</p>
+                <Btn
+                  onClick={() => {
+                    setEditingCatalogue("");
+                    setCform({
+                      title: business.name + " Product Catalogue",
+                      description: "",
+                      productIds: products.map((p) => p.id),
+                    });
+                    setModal("catalogue");
+                  }}
+                >
+                  <Plus size={15} /> Create catalogue
+                </Btn>
+              </div>
+            ) : (
+              <div className="sl-catalogue-grid">
+                {catalogues.map((c) => (
+                  <article className="sl-catalogue-card" key={c.id}>
+                    <div
+                      className="sl-catalogue-cover"
+                      style={{ background: business.brandColor }}
+                    >
+                      <span>{business.name.toUpperCase()}</span>
+                      <BookOpen size={29} />
+                      <b>{c.title}</b>
+                      <small>{c.items.length} PRODUCTS</small>
+                    </div>
+                    <div className="sl-catalogue-card-body">
+                      <div className="sl-catalogue-title">
+                        <b>{c.title}</b>
+                        <span
+                          className={
+                            c.isPublished ? "sl-published" : "sl-draft"
+                          }
+                        >
+                          {c.isPublished ? "Published" : "Draft"}
+                        </span>
+                      </div>
+                      <p>
+                        {c.description || "A catalogue from " + business.name}
+                      </p>
+                      <div className="sl-catalogue-actions">
+                        <Btn kind="outline" onClick={() => setPreview(c)}>
+                          <ExternalLink size={14} /> Preview
+                        </Btn>
+                        <Btn kind="outline" onClick={() => editCatalogue(c)}>
+                          Edit
+                        </Btn>
+                        <Btn onClick={() => void publish(c)}>
+                          {c.isPublished ? "Unpublish" : "Publish"}
+                        </Btn>
+                        {c.isPublished && (
+                          <>
+                            <Btn kind="quiet" onClick={() => void share(c)}>
+                              <Copy size={14} /> Copy link
+                            </Btn>
+                            <Btn kind="quiet" onClick={() => shareWhatsApp(c)}>
+                              <MessageCircle size={14} /> WhatsApp
+                            </Btn>
+                          </>
+                        )}
+                      </div>
+                      {c.isPublished && (
+                        <a
+                          className="sl-public-link"
+                          href={"/c/" + c.slug}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {location.origin}/c/{c.slug} <Copy size={12} />
+                        </a>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>);
+}
