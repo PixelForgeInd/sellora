@@ -249,9 +249,20 @@ export default function SelloraApp() {
     try {
       const result = await api("/workspace/payments/razorpay/connect", {
         method: "POST",
-        body: JSON.stringify({ keyId: keyId.trim(), keySecret: keySecret.trim() }),
+        body: JSON.stringify({
+          keyId: keyId.trim(),
+          keySecret: keySecret.trim(),
+        }),
       });
-      setBusiness((old) => old ? { ...old, paymentGatewayProvider: result.paymentGatewayProvider, paymentGatewayStatus: result.paymentGatewayStatus } : old);
+      setBusiness((old) =>
+        old
+          ? {
+              ...old,
+              paymentGatewayProvider: result.paymentGatewayProvider,
+              paymentGatewayStatus: result.paymentGatewayStatus,
+            }
+          : old,
+      );
       setNotice(result.message || "Razorpay connected.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not connect Razorpay.");
@@ -264,11 +275,23 @@ export default function SelloraApp() {
     setBusy(true);
     setError("");
     try {
-      const result = await api("/workspace/payments/razorpay/disconnect", { method: "POST" });
-      setBusiness((old) => old ? { ...old, paymentGatewayProvider: result.paymentGatewayProvider, paymentGatewayStatus: result.paymentGatewayStatus } : old);
+      const result = await api("/workspace/payments/razorpay/disconnect", {
+        method: "POST",
+      });
+      setBusiness((old) =>
+        old
+          ? {
+              ...old,
+              paymentGatewayProvider: result.paymentGatewayProvider,
+              paymentGatewayStatus: result.paymentGatewayStatus,
+            }
+          : old,
+      );
       setNotice("Razorpay disconnected.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not disconnect Razorpay.");
+      setError(
+        e instanceof Error ? e.message : "Could not disconnect Razorpay.",
+      );
     } finally {
       setBusy(false);
     }
