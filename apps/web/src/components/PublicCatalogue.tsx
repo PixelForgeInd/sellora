@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import { ArrowRight, Check, ExternalLink, MessageCircle, Package, ShoppingCart, X } from "lucide-react";
 import { formatMoney as money } from "../sellora/formatters";
@@ -17,6 +17,7 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
   const [checkout, setCheckout] = useState<CheckoutForm>({ customerName: "", email: "", phone: "", address: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [orderMessage, setOrderMessage] = useState("");
+  const [orderNumber, setOrderNumber] = useState("");
   const [orderError, setOrderError] = useState("");
   const products = data?.products || [];
   const onlineSelling = data?.business.sellingMode === "ONLINE_PAYMENTS";
@@ -29,6 +30,22 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
   const cartTotal = useMemo(() => cart.reduce((sum, line) => sum + Number(line.product.price || 0) * line.quantity, 0), [cart]);
   const currency = cart[0]?.product.currency || "INR";
+  const trackEvent = (eventType: "page_view" | "add_to_cart" | "checkout_started") => {
+    if (!data || demo) return;
+    try {
+      const key = "sellora_analytics_session";
+      let sessionId = sessionStorage.getItem(key);
+      if (!sessionId) {
+        sessionId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2);
+        sessionStorage.setItem(key, sessionId);
+      }
+      void fetch(((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\\/$/, "")) + "/public/catalogues/" + encodeURIComponent(data.slug) + "/events", {
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({eventType,sessionId})
+      }).catch(() => {});
+    } catch { /* Analytics must never block catalogue browsing. */ }
+  };
+  useEffect(() => { if (data && !demo) trackEvent("page_view"); }, [data?.slug, demo]);
   const shareCatalogue = () => window.open("https://wa.me/?text=" + encodeURIComponent(shareText), "_blank", "noopener,noreferrer");
   const copyCatalogue = async () => { try { await navigator.clipboard.writeText(publicUrl); window.alert("Catalogue link copied. Paste it into WhatsApp or any chat."); } catch { window.prompt("Copy your catalogue link", publicUrl); } };
   const addToCart = (product: Product) => {
@@ -38,6 +55,7 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
       return existing ? current.map(line => line.product.id === product.id ? { ...line, quantity: Math.min(1000, line.quantity + 1) } : line) : [...current, { product, quantity: 1 }];
     });
     setCartOpen(true);
+    trackEvent("add_to_cart");
     setOrderError("");
   };
   const updateQuantity = (productId: string, quantity: number) => setCart(current => quantity <= 0 ? current.filter(line => line.product.id !== productId) : current.map(line => line.product.id === productId ? { ...line, quantity: Math.min(1000, quantity) } : line));
@@ -52,13 +70,27 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not submit your order. Please try again.");
-      setOrderMessage("Order request " + result.id + " submitted successfully. The business will contact you to confirm availability and payment.");
+      setOrderNumber(result.orderNumber || result.id);
+      setOrderMessage(result.message || "Your order request has been submitted. The business will contact you to confirm availability and payment.");
       setCart([]); setCheckoutOpen(false); setCartOpen(false);
     } catch (err) { setOrderError(err instanceof Error ? err.message : "Could not submit your order."); }
     finally { setSubmitting(false); }
   };
   if (error) return <div className="sl-public-error"><h1>Catalogue unavailable</h1><p>{error}</p><a href="/">Create your catalogue with Sellora <ArrowRight size={15}/></a></div>;
   if (!data) return <div className="sl-public-loading"><p>Loading catalogue…</p></div>;
+  if (orderMessage) return <div className="sl-storefront" style={{ "--store-brand": data.business.brandColor } as CSSProperties}>
+    <main className="sl-order-confirmation" id="top">
+      <div className="sl-order-confirmation-card">
+        <span className="sl-order-confirmation-icon"><Check size={30}/></span>
+        <span className="sl-store-eyebrow">ORDER REQUEST RECEIVED</span>
+        <h1>Thank you for your order.</h1>
+        <p>{orderMessage}</p>
+        <div className="sl-order-reference"><span>Order reference</span><strong>{orderNumber}</strong></div>
+        <p className="sl-order-confirmation-note">Keep this reference for your records. Payment has not been collected online.</p>
+        <button className="sl-store-quote" onClick={() => { setOrderMessage(""); setOrderNumber(""); window.scrollTo({top:0,behavior:"smooth"}); }}><ArrowRight size={16}/> Back to catalogue</button>
+      </div>
+    </main>
+  </div>;
   return <div className="sl-storefront" style={{ "--store-brand": data.business.brandColor } as CSSProperties}>
     {demo && <div className="sl-demo-ribbon"><span>SELLORA · DEFAULT CATALOGUE PREVIEW</span><a href="/">Create your own catalogue <ArrowRight size={14}/></a></div>}
     <header className="sl-store-header"><a className="sl-store-brand" href="#top"><span className="sl-store-logo">{data.business.logoUrl ? <img src={data.business.logoUrl} alt=""/> : data.business.name.slice(0,1)}</span><span><b>{data.business.name}</b><small>{data.business.industry}</small></span></a><nav><a href="#products">Products</a><a href="#why-us">Why us</a><a href="#contact">Contact</a></nav><div className="sl-store-header-actions"><label className="sl-store-search"><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products…"/></label>{onlineSelling ? <button className="sl-store-quote" onClick={() => setCartOpen(true)}><ShoppingCart size={16}/> Cart ({cartCount})</button> : <a className="sl-store-whatsapp" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={17}/><span>WhatsApp</span></a>}<button className="sl-store-share" onClick={shareCatalogue}>Share</button><a className="sl-store-quote" href="#contact">Contact <ArrowRight size={15}/></a><span className="sl-powered-by"><b>SELLORA</b><small>A product by PixelForge</small></span></div></header>
@@ -74,7 +106,7 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
     </main>
     <footer className="sl-store-footer"><div className="sl-store-footer-brand"><a className="sl-store-brand" href="#top"><span className="sl-store-logo">{data.business.logoUrl ? <img src={data.business.logoUrl} alt=""/> : data.business.name.slice(0,1)}</span><span><b>{data.business.name}</b><small>{data.business.industry}</small></span></a><p>{data.description}</p><small>Digital catalogue powered by Sellora</small></div><div><b>Explore</b><a href="#products">All products</a><a href="#why-us">Why choose us</a><a href="#contact">Contact</a></div><div><b>Get in touch</b>{data.business.phone && <a href={"tel:" + data.business.phone}>{data.business.phone}</a>}{data.business.email && <a href={"mailto:" + data.business.email}>{data.business.email}</a>}{data.business.website && <a href={data.business.website} target="_blank" rel="noreferrer">Website <ExternalLink size={13}/></a>}<small>{data.business.industry}</small></div><div className="sl-store-footer-note"><span>SELLORA</span><b>Digital catalogues.<br/>Smarter sales.</b><a href="/">Create your catalogue <ArrowRight size={14}/></a></div></footer>
     {orderMessage && <div className="sl-checkout-success" role="status"><Check size={19}/><span>{orderMessage}</span><button onClick={() => setOrderMessage("")} aria-label="Dismiss"><X size={17}/></button></div>}
-    {cartOpen && <div className="sl-checkout-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCartOpen(false); }}><section className="sl-checkout-panel" role="dialog" aria-modal="true" aria-label="Shopping cart"><header><div><span className="sl-store-eyebrow">YOUR ORDER</span><h2>Shopping cart <small>({cartCount})</small></h2></div><button onClick={() => setCartOpen(false)} aria-label="Close cart"><X/></button></header>{orderError && <p className="sl-checkout-error">{orderError}</p>}{!cart.length ? <div className="sl-checkout-empty"><ShoppingCart size={30}/><h3>Your cart is empty</h3><p>Add priced products from the catalogue to get started.</p><button onClick={() => setCartOpen(false)}>Continue browsing</button></div> : <><div className="sl-checkout-lines">{cart.map(line => <article key={line.product.id}>{line.product.imageUrl ? <img src={line.product.imageUrl} alt=""/> : <span className="sl-checkout-line-image"><Package/></span>}<div><b>{line.product.name}</b><small>{money(line.product.price,line.product.currency,line.product.unit)}</small><div className="sl-checkout-quantity"><button onClick={() => updateQuantity(line.product.id,line.quantity-1)} aria-label="Decrease quantity">−</button><span>{line.quantity}</span><button onClick={() => updateQuantity(line.product.id,line.quantity+1)} aria-label="Increase quantity">+</button><button className="sl-checkout-remove" onClick={() => updateQuantity(line.product.id,0)}>Remove</button></div></div><strong>{money(Number(line.product.price)*line.quantity,line.product.currency,line.product.unit)}</strong></article>)}</div><div className="sl-checkout-total"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN",{style:"currency",currency,maximumFractionDigits:2}).format(cartTotal)}</strong></div><button className="sl-store-contact-primary sl-checkout-continue" onClick={() => { setOrderError(""); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16}/></button><p className="sl-checkout-note">This submits an order request. The business will confirm payment and delivery separately.</p></>}</section></div>}
+    {cartOpen && <div className="sl-checkout-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCartOpen(false); }}><section className="sl-checkout-panel" role="dialog" aria-modal="true" aria-label="Shopping cart"><header><div><span className="sl-store-eyebrow">YOUR ORDER</span><h2>Shopping cart <small>({cartCount})</small></h2></div><button onClick={() => setCartOpen(false)} aria-label="Close cart"><X/></button></header>{orderError && <p className="sl-checkout-error">{orderError}</p>}{!cart.length ? <div className="sl-checkout-empty"><ShoppingCart size={30}/><h3>Your cart is empty</h3><p>Add priced products from the catalogue to get started.</p><button onClick={() => setCartOpen(false)}>Continue browsing</button></div> : <><div className="sl-checkout-lines">{cart.map(line => <article key={line.product.id}>{line.product.imageUrl ? <img src={line.product.imageUrl} alt=""/> : <span className="sl-checkout-line-image"><Package/></span>}<div><b>{line.product.name}</b><small>{money(line.product.price,line.product.currency,line.product.unit)}</small><div className="sl-checkout-quantity"><button onClick={() => updateQuantity(line.product.id,line.quantity-1)} aria-label="Decrease quantity">−</button><span>{line.quantity}</span><button onClick={() => updateQuantity(line.product.id,line.quantity+1)} aria-label="Increase quantity">+</button><button className="sl-checkout-remove" onClick={() => updateQuantity(line.product.id,0)}>Remove</button></div></div><strong>{money(Number(line.product.price)*line.quantity,line.product.currency,line.product.unit)}</strong></article>)}</div><div className="sl-checkout-total"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN",{style:"currency",currency,maximumFractionDigits:2}).format(cartTotal)}</strong></div><button className="sl-store-contact-primary sl-checkout-continue" onClick={() => { setOrderError(""); trackEvent("checkout_started"); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16}/></button><p className="sl-checkout-note">This submits an order request. The business will confirm payment and delivery separately.</p></>}</section></div>}
     {checkoutOpen && <div className="sl-checkout-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setCheckoutOpen(false); }}><section className="sl-checkout-panel" role="dialog" aria-modal="true" aria-label="Checkout"><header><div><span className="sl-store-eyebrow">CHECKOUT</span><h2>Delivery details</h2></div><button onClick={() => setCheckoutOpen(false)} aria-label="Close checkout"><X/></button></header><form className="sl-checkout-form" onSubmit={submitOrder}><label>Full name<input required minLength={2} maxLength={120} value={checkout.customerName} onChange={e => setCheckout({...checkout,customerName:e.target.value})}/></label><label>Email (optional)<input type="email" maxLength={160} value={checkout.email} onChange={e => setCheckout({...checkout,email:e.target.value})}/></label><label>Phone number<input required minLength={7} maxLength={30} value={checkout.phone} onChange={e => setCheckout({...checkout,phone:e.target.value})}/></label><label>Delivery address<textarea maxLength={1000} value={checkout.address} onChange={e => setCheckout({...checkout,address:e.target.value})}/></label><label>Order notes (optional)<textarea maxLength={1000} value={checkout.notes} onChange={e => setCheckout({...checkout,notes:e.target.value})}/></label>{orderError && <p className="sl-checkout-error">{orderError}</p>}<div className="sl-checkout-total"><span>Order subtotal</span><strong>{new Intl.NumberFormat("en-IN",{style:"currency",currency,maximumFractionDigits:2}).format(cartTotal)}</strong></div><button className="sl-store-contact-primary sl-checkout-continue" type="submit" disabled={submitting}>{submitting ? "Submitting…" : "Place order request"} <ArrowRight size={16}/></button><p className="sl-checkout-note">No online payment is collected by this MVP. The business will contact you to confirm payment and delivery.</p></form></section></div>}
     {details && <div className="sl-store-detail-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setDetails(null); }}><section className="sl-store-detail"><button className="sl-store-detail-close" onClick={() => setDetails(null)} aria-label="Close details"><X/></button><div className="sl-store-detail-image">{details.imageUrl && <img src={details.imageUrl} alt={details.name}/>}</div><div className="sl-store-detail-content"><span className="sl-store-eyebrow">PRODUCT DETAILS</span><h2>{details.name}</h2><p>{details.description}</p><strong>{money(details.price,details.currency,details.unit)}</strong><div className="sl-store-detail-specs">{Object.entries(details.fields||{}).map(([k,v]) => <span key={k}><small>{k.replace(/([A-Z])/g," $1")}</small><b>{String(v)}</b></span>)}</div>{onlineSelling ? <button className="sl-store-contact-primary" disabled={details.price == null || Number(details.price) <= 0} onClick={() => { addToCart(details); setDetails(null); }}><ShoppingCart size={16}/> Add to cart</button> : <a className="sl-store-contact-primary" href={wa === "#contact" ? "#contact" : "https://wa.me/" + data.business.phone!.replace(/\D/g,"") + "?text=" + encodeURIComponent("Hi, I'm interested in " + details.name + ".")} target={wa === "#contact" ? "_self" : "_blank"} rel="noreferrer"><MessageCircle size={16}/> Enquire about this product</a>}</div></section></div>}
   </div>;
