@@ -1,1 +1,1 @@
--- Catalogue checkout now stores multi-item order requests in SelloraOrder; PaymentOrder was never deployed from the earlier branch-only implementation.
+-- Checkout uses the SelloraOrder multi-item order-request flow; no PaymentOrder table was created by this feature branch.
