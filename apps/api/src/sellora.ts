@@ -70,12 +70,7 @@ function safeEqualHex(actual:string,expected:string):boolean {
  const a=Buffer.from(actual,"hex"),b=Buffer.from(expected,"hex");
  return a.length===b.length&&a.length>0&&crypto.timingSafeEqual(a,b);
 }
-async function razorpayRequest(keyId:string,keySecret:string,path:string,init:RequestInit={}) {
- const response=await fetch("https://api.razorpay.com/v1"+path,{...init,headers:{Authorization:"Basic "+Buffer.from(keyId+":"+keySecret).toString("base64"),"Content-Type":"application/json",...(init.headers||{})}});
- const body=await response.json().catch(()=>({})) as {error?:{description?:string};id?:string;amount?:number;currency?:string};
- if(!response.ok) throw new Error(body.error?.description||"Razorpay request failed.");
- return body;
-}
+
 
 
 type AuthedRequest = Request & { userId?: string };
