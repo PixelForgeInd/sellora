@@ -1,11 +1,11 @@
 # Sellora Testing Guide
 
-Use this checklist for each release candidate and before merging changes that affect the workspace. The automated API checks use the same core cases listed below; UI and persistence scenarios remain manual until browser/database test infrastructure is added.
+Use this checklist for each release candidate and before merging changes that affect the workspace. The automated API integration checks use the same core cases listed below against a disposable PostgreSQL database; browser UI interactions remain manual for now.
 
 ## Test environment
 
 1. Use a local development environment or a dedicated staging environment. Do not run destructive tests against production.
-2. Start PostgreSQL and apply the repository's migrations.
+2. Start PostgreSQL and create a dedicated test database. CI creates a fresh disposable PostgreSQL database and applies the Prisma schema with `prisma db push`.
 3. Configure `DATABASE_URL`, `AUTH_SECRET`, `API_PORT=4000`, and `WEB_ORIGIN=http://localhost:5173` in the API environment.
 4. From the repository root, run `npm ci`, `npm run db:generate`, and `npm run build`.
 5. Start the API and frontend using `npm run dev`. Open `http://localhost:5173`.
@@ -22,7 +22,7 @@ npm run build
 npm test
 ```
 
-The GitHub Actions workflow runs the build and API smoke tests automatically for pull requests targeting `develop` and pushes to `develop`.
+The GitHub Actions workflow runs the build and API integration tests against a fresh PostgreSQL database automatically for pull requests targeting `develop` and pushes to `develop`.
 
 | ID | Scenario | Expected result | Automated |
 |---|---|---|---|
@@ -31,7 +31,7 @@ The GitHub Actions workflow runs the build and API smoke tests automatically for
 | API-03 | GET `/api/products` and `/api/products/:id` | HTTP 410; legacy routes stay retired | Yes |
 | API-04 | POST `/api/products` and PATCH `/api/products/:id` | HTTP 410; legacy mutations stay retired | Yes |
 | API-05 | Signup with invalid email / too-short password | HTTP 400 validation error | Yes |
-| API-06 | Login with malformed credentials | HTTP 400 validation error | Yes |
+| API-06 | Login with malformed credentials | HTTP 400 validation error | Yes |\n| API-07 | Signup, login, and authenticated `/auth/me` | Account is created and valid credentials return a token | Yes |\n| API-08 | Create business workspace | HTTP 201 and category-specific fields exist | Yes |\n| API-09 | Create and update a product | Saved values are returned | Yes |\n| API-10 | Create, publish, and open a public catalogue | Public API returns the published product | Yes |\n| API-11 | Access another account's product | Cross-account update/delete is rejected | Yes |\n| API-12 | Unpublish a catalogue | Public endpoint returns HTTP 404 | Yes |
 
 ## B. Manual end-to-end checklist
 
@@ -79,4 +79,4 @@ For every manual test run, record:
 
 ## Scope and limitations
 
-The current automated suite is an API smoke-test baseline, not full browser automation. It does not yet test database-backed signup/login, product CRUD, catalogue publishing, cross-tenant isolation, or real browser interactions. These remain in the manual checklist until a dedicated test database and browser E2E suite are added. A green CI run therefore means build/type-check and the listed API smoke tests passed; it does not mean every UI flow was tested.
+The automated suite now covers database-backed signup/login, workspace setup, product create/update, catalogue publish/public read/unpublish, authentication guards, and a cross-account access check using a disposable PostgreSQL database. It is not full browser automation: clicks, responsive layout, image uploads, WhatsApp sharing, and visual behavior remain manual. A green CI run means the build/type-check and listed API integration tests passed; it does not mean every UI flow was tested.
