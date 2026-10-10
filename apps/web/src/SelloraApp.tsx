@@ -238,6 +238,41 @@ export default function SelloraApp() {
       setBusy(false);
     }
   }
+  async function saveRazorpay(e: FormEvent, keyId: string, keySecret: string) {
+    e.preventDefault();
+    if (!keyId.trim() || !keySecret.trim()) {
+      setError("Enter both the Razorpay Key ID and Key Secret.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api("/workspace/payments/razorpay/connect", {
+        method: "POST",
+        body: JSON.stringify({ keyId: keyId.trim(), keySecret: keySecret.trim() }),
+      });
+      setBusiness((old) => old ? { ...old, paymentGatewayProvider: result.paymentGatewayProvider, paymentGatewayStatus: result.paymentGatewayStatus } : old);
+      setNotice(result.message || "Razorpay connected.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not connect Razorpay.");
+      throw e;
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function disconnectRazorpay() {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api("/workspace/payments/razorpay/disconnect", { method: "POST" });
+      setBusiness((old) => old ? { ...old, paymentGatewayProvider: result.paymentGatewayProvider, paymentGatewayStatus: result.paymentGatewayStatus } : old);
+      setNotice("Razorpay disconnected.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not disconnect Razorpay.");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function saveSellingMode(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -250,7 +285,7 @@ export default function SelloraApp() {
       setBusiness((old) => (old ? { ...old, ...updated } : old));
       setNotice(
         sellingMode === "ONLINE_PAYMENTS"
-          ? "Online payments selected. Connect a gateway before accepting live payments."
+          ? "Online payments enabled. Customers can pay through your connected Razorpay account."
           : "Catalogue-only mode saved.",
       );
     } catch (e) {
@@ -1242,6 +1277,8 @@ export default function SelloraApp() {
             sellingMode={sellingMode}
             setSellingMode={setSellingMode}
             saveSellingMode={saveSellingMode}
+            saveRazorpay={saveRazorpay}
+            disconnectRazorpay={disconnectRazorpay}
             fields={fields}
             fieldForm={fieldForm}
             setFieldForm={setFieldForm}
