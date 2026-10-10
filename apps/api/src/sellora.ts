@@ -532,9 +532,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
       message:"Continue to Razorpay to complete your payment."
     });
   } catch (error) {
-    if (typeof order!=="undefined") {
-      await prisma.selloraOrder.delete({where:{id:order.id}}).catch(()=>{});
-    }
+    if (order) await prisma.selloraOrder.delete({where:{id:order.id}}).catch(()=>{});
     const message = error instanceof Error ? error.message : "Could not start Razorpay checkout.";
     res.status(502).json({error:"Could not start payment. " + message});
   }
