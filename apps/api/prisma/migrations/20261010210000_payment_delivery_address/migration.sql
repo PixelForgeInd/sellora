@@ -1,1 +1,0 @@
--- Checkout uses the SelloraOrder multi-item order-request flow; no PaymentOrder table was created by this feature branch.
