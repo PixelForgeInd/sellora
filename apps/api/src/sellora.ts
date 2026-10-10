@@ -172,7 +172,8 @@ router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
 router.get("/workspace/business", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({
     where:{ownerUserId:req.userId},
-    include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}}
+    include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}},
+    omit:{razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true}
   });
   res.json(business);
 }));
