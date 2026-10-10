@@ -616,7 +616,9 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
   }
   if(currency !== "INR") return res.status(400).json({error:"Razorpay checkout currently supports INR orders only."});
-  const amountPaise = total.mul(100).toDecimalPlaces(0).toNumber();
+  const taxAmount = catalogue.business.taxEnabled ? total.mul(catalogue.business.taxRate).div(100).toDecimalPlaces(2) : new Prisma.Decimal(0);
+  const grandTotal = total.add(taxAmount);
+  const amountPaise = grandTotal.mul(100).toDecimalPlaces(0).toNumber();
   if(!Number.isSafeInteger(amountPaise) || amountPaise < 100) return res.status(400).json({error:"Order total is outside Razorpay's supported amount range."});
   let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date} | null = null;
   try {
@@ -629,7 +631,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
       const orderNumber = prefix + "-" + String(sequence.lastOrderNumber).padStart(5,"0");
       return tx.selloraOrder.create({data:{
         orderNumber,businessId:catalogue.businessId,catalogueId:catalogue.id,customerName:data.customerName,email:data.email||null,
-        phone:data.phone,address:data.address,notes:data.notes||null,currency:"INR",subtotal:total,
+        phone:data.phone,address:data.address,notes:data.notes||null,currency:"INR",subtotal:total,taxAmount,totalAmount:grandTotal,
         items:{create:orderItems}
       },select:{id:true,orderNumber:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
     });
@@ -639,7 +641,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     );
     await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayOrderId:razorpayOrder.id}});
     res.status(201).json({
-      orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),
+      orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),taxAmount:taxAmount.toString(),total:grandTotal.toString(),taxRate:catalogue.business.taxEnabled?catalogue.business.taxRate.toString():"0",
       checkout:{keyId,razorpayOrderId:razorpayOrder.id,amount:amountPaise,currency:"INR",name:catalogue.business.name,description:catalogue.title,prefill:{name:data.customerName,email:data.email||undefined,contact:data.phone}},
       message:"Continue to Razorpay to complete your payment."
     });
@@ -676,7 +678,7 @@ router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
     const payment=await razorpayRequest<{id:string;order_id:string;amount:number;currency:string;status:string}>(
       catalogue.business.razorpayKeyId,keySecret,"/payments/"+encodeURIComponent(data.razorpay_payment_id)
     );
-    const expectedAmount=order.subtotal.mul(100).toDecimalPlaces(0).toNumber();
+    const expectedAmount=order.totalAmount.mul(100).toDecimalPlaces(0).toNumber();
     if(payment.order_id!==data.razorpay_order_id || payment.amount!==expectedAmount || payment.currency!==order.currency) {
       return res.status(400).json({error:"Payment details do not match this order."});
     }
