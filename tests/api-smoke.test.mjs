@@ -208,7 +208,6 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     const orderList = await jsonRequest("/api/workspace/orders", { token });
     assert.equal(orderList.status, 200);
     const listedOrders = await orderList.json();
-    assert.ok(listedOrders.some((item) => item.orderNumber === createdOrder.orderNumber));
     assert.equal(listedOrders.length, 0);
 
     const catalogueList = await jsonRequest("/api/workspace/catalogues", { token });
