@@ -507,6 +507,18 @@ router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=
  res.json(orders.map(order=>({...order,amount:order.amount.toString()})));
 }));
 
+router.get("/workspace/business/tax-settings",requireAuth,authenticated(async(req,res)=>{
+ const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{taxEnabled:true,taxRate:true}});
+ if(!b)return res.status(404).json({error:"Business not found."});
+ res.json({enabled:b.taxEnabled,rate:b.taxRate.toString()});
+}));
+router.put("/workspace/business/tax-settings",requireAuth,authenticated(async(req,res)=>{
+ const d=z.object({enabled:z.boolean(),rate:z.number().min(0).max(100)}).parse(req.body);
+ const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+ if(!b)return res.status(404).json({error:"Business not found."});
+ const updated=await prisma.business.update({where:{id:b.id},data:{taxEnabled:d.enabled,taxRate:d.enabled?new Prisma.Decimal(d.rate.toFixed(2)):new Prisma.Decimal(0)},select:{taxEnabled:true,taxRate:true}});
+ res.json({enabled:updated.taxEnabled,rate:updated.taxRate.toString()});
+}));
 router.get("/workspace/business/payment-gateway",requireAuth,authenticated(async(req,res)=>{
  const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{paymentGatewayProvider:true,paymentGatewayStatus:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true,razorpayTestMode:true}});
  if(!b)return res.status(404).json({error:"Business not found."});
