@@ -359,3 +359,83 @@
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* Public catalogue header actions: balanced cart and share controls */
+.sl-store-header-actions{
+  gap:10px;
+}
+.sl-store-header-actions .sl-store-search{
+  flex:0 1 230px;
+  min-width:180px;
+  height:46px;
+  padding:0 13px;
+  border:1px solid #e1e6de;
+  border-radius:12px;
+  background:#f8f9f6;
+}
+.sl-store-header-actions .sl-store-search input{
+  width:100%;
+  min-width:0;
+  height:42px;
+  padding:0 8px;
+  border:0;
+  outline:0;
+  box-shadow:none;
+  background:transparent;
+}
+.sl-store-header-actions .sl-store-quote,
+.sl-store-header-actions .sl-store-share,
+.sl-store-header-actions .sl-store-whatsapp{
+  flex:0 0 auto;
+  height:46px;
+  min-height:46px;
+  padding:0 17px;
+  border-radius:11px;
+  font-size:12px;
+  font-weight:750;
+  line-height:1;
+  box-shadow:none;
+}
+.sl-store-header-actions button.sl-store-quote{
+  background:var(--sellora-navy,#080f4d);
+  border:1px solid var(--sellora-navy,#080f4d);
+  color:#fff;
+  box-shadow:0 5px 13px rgba(8,15,77,.12);
+}
+.sl-store-header-actions button.sl-store-quote:hover{
+  background:#111c67;
+  box-shadow:0 7px 17px rgba(8,15,77,.16);
+}
+.sl-store-header-actions .sl-store-share{
+  background:#fff;
+  border:1px solid #dfe6dc;
+  color:#315b43;
+  min-width:86px;
+}
+.sl-store-header-actions .sl-store-share:hover{
+  background:#f5f7f2;
+  border-color:#cbd8c7;
+  color:var(--sellora-navy,#080f4d);
+}
+.sl-store-header-actions .sl-store-quote:focus:not(:focus-visible),
+.sl-store-header-actions .sl-store-share:focus:not(:focus-visible){
+  outline:none;
+  box-shadow:0 5px 13px rgba(8,15,77,.12);
+}
+.sl-store-header-actions .sl-powered-by{
+  margin-left:2px;
+}
+@media(max-width:760px){
+  .sl-store-header-actions .sl-store-search{
+    flex:1 1 100%;
+    min-width:0;
+  }
+  .sl-store-header-actions .sl-store-quote,
+  .sl-store-header-actions .sl-store-share,
+  .sl-store-header-actions .sl-store-whatsapp{
+    height:42px;
+    min-height:42px;
+    padding:0 13px;
+  }
+}
