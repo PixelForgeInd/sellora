@@ -7,6 +7,48 @@ import { promisify } from "node:util";
 const router = Router();
 const prisma = new PrismaClient();
 
+function razorpayEncryptionKey(): Buffer {
+  const configured = process.env.RAZORPAY_ENCRYPTION_KEY || "";
+  const key = /^[a-fA-F0-9]{64}$/.test(configured)
+    ? Buffer.from(configured, "hex")
+    : Buffer.from(configured, "base64");
+  if (key.length !== 32) throw new Error("Set RAZORPAY_ENCRYPTION_KEY to a 32-byte base64 or 64-character hex key.");
+  return key;
+}
+function encryptGatewaySecret(value: string): string {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", razorpayEncryptionKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return [iv.toString("base64"), cipher.getAuthTag().toString("base64"), encrypted.toString("base64")].join(".");
+}
+function decryptGatewaySecret(value: string): string {
+  const [ivPart, tagPart, encryptedPart] = value.split(".");
+  if (!ivPart || !tagPart || !encryptedPart) throw new Error("Stored Razorpay credentials are invalid.");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", razorpayEncryptionKey(), Buffer.from(ivPart, "base64"));
+  decipher.setAuthTag(Buffer.from(tagPart, "base64"));
+  return Buffer.concat([decipher.update(Buffer.from(encryptedPart, "base64")), decipher.final()]).toString("utf8");
+}
+async function razorpayRequest<T>(keyId: string, keySecret: string, path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch("https://api.razorpay.com/v1" + path, {
+    ...init,
+    headers: {
+      Authorization: "Basic " + Buffer.from(keyId + ":" + keySecret).toString("base64"),
+      "Content-Type": "application/json",
+      ...(init.headers || {})
+    }
+  });
+  const result = await response.json().catch(() => ({})) as T & { error?: { description?: string } };
+  if (!response.ok) throw new Error(result?.error?.description || "Razorpay request failed.");
+  return result;
+}
+
+const scrypt = promisify(crypto.scrypt);
+const secret = process.env.AUTH_SECRET || "sellora-development-secret-change-before-deployment";
+if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET must be configured before running Sellora in production.");
+}
+const tokenLifetimeSeconds = 60 * 60 * 24 * 7;
+
 type AuthedRequest = Request & { userId?: string };
 function tokenFor(userId: string) {
   const payload = Buffer.from(JSON.stringify({ sub: userId, exp: Math.floor(Date.now() / 1000) + tokenLifetimeSeconds })).toString("base64url");
@@ -497,7 +539,10 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
-  
+  if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
+  if(catalogue.business.paymentGatewayProvider !== "RAZORPAY" || catalogue.business.paymentGatewayStatus !== "ACTIVE" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) {
+    return res.status(409).json({error:"This business has not connected Razorpay payments yet. Please contact the business."});
+  }
   const data = z.object({
     customerName:z.string().trim().min(2).max(120),
     email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
@@ -506,7 +551,10 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     notes:z.string().trim().max(1000).optional(),
     items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(1000)})).min(1).max(100)
   }).parse(req.body);
-  if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
+  const keyId = catalogue.business.razorpayKeyId;
+  let keySecret: string;
+  try { keySecret = decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
+  catch { return res.status(503).json({error:"Payment configuration is unavailable. Please contact the business."}); }
   const requested = new Map<string,number>();
   for(const item of data.items) requested.set(item.productId,(requested.get(item.productId)||0)+item.quantity);
   const available = new Map(catalogue.items.map(({product})=>[product.id,product]));
@@ -524,8 +572,9 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     total=total.add(lineTotal);
     orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
   }
-  if(!currency) return res.status(400).json({error:"Cart is empty."});
-  if(currency !== "INR") return res.status(400).json({error:"Online orders currently support INR pricing only."});
+  if(currency !== "INR") return res.status(400).json({error:"Razorpay checkout currently supports INR orders only."});
+  const amountPaise = total.mul(100).toDecimalPlaces(0).toNumber();
+  if(!Number.isSafeInteger(amountPaise) || amountPaise < 100) return res.status(400).json({error:"Order total is outside Razorpay's supported amount range."});
   let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date} | null = null;
   try {
     order = await prisma.$transaction(async (tx) => {
@@ -541,12 +590,61 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
         items:{create:orderItems}
       },select:{id:true,orderNumber:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
     });
-    await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"order_submitted",metadata:{orderNumber:order.orderNumber}}}).catch(()=>{});
-    res.status(201).json({orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),message:"Order request received. The business will contact you to confirm availability, payment and delivery."});
+    const razorpayOrder = await razorpayRequest<{id:string}>(
+      keyId,keySecret,"/orders",
+      {method:"POST",body:JSON.stringify({amount:amountPaise,currency:"INR",receipt:order.orderNumber,notes:{selloraOrderId:order.id,catalogueSlug:catalogue.slug,businessName:catalogue.business.name}})}
+    );
+    await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayOrderId:razorpayOrder.id}});
+    res.status(201).json({
+      orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),
+      checkout:{keyId,razorpayOrderId:razorpayOrder.id,amount:amountPaise,currency:"INR",name:catalogue.business.name,description:catalogue.title,prefill:{name:data.customerName,email:data.email||undefined,contact:data.phone}},
+      message:"Continue to Razorpay to complete your payment."
+    });
   } catch (error) {
+    if (order) await prisma.selloraOrder.delete({where:{id:order.id}}).catch(()=>{});
+    const message = error instanceof Error ? error.message : "Could not start Razorpay checkout.";
+    res.status(502).json({error:"Could not start payment. " + message});
+  }
+});
 
-    const message = error instanceof Error ? error.message : "Could not submit order request.";
-    res.status(500).json({error:message});
+router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
+  const data = z.object({
+    razorpay_order_id:z.string().min(1).max(100),
+    razorpay_payment_id:z.string().min(1).max(100),
+    razorpay_signature:z.string().min(1).max(200)
+  }).parse(req.body);
+  const catalogue=await prisma.selloraCatalogue.findFirst({
+    where:{slug:String(req.params.slug),isPublished:true},
+    select:{id:true,business:{select:{name:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true,paymentGatewayProvider:true}}}
+  });
+  if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  if(catalogue.business.paymentGatewayProvider!=="RAZORPAY" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) return res.status(409).json({error:"Payment gateway is not configured."});
+  const order = await prisma.selloraOrder.findFirst({where:{catalogueId:catalogue.id,razorpayOrderId:data.razorpay_order_id}});
+  if(!order) return res.status(404).json({error:"Payment order not found."});
+  if(order.paymentStatus==="PAID") return res.json({success:true,orderNumber:order.orderNumber,message:"Payment already verified."});
+  let keySecret: string;
+  try { keySecret=decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
+  catch { return res.status(503).json({error:"Payment configuration is unavailable."}); }
+  const expected=crypto.createHmac("sha256",keySecret).update(data.razorpay_order_id+"|"+data.razorpay_payment_id).digest();
+  let supplied: Buffer;
+  try { supplied=Buffer.from(data.razorpay_signature,"hex"); } catch { return res.status(400).json({error:"Invalid payment signature."}); }
+  if(expected.length!==supplied.length || !crypto.timingSafeEqual(expected,supplied)) return res.status(400).json({error:"Payment signature verification failed."});
+  try {
+    const payment=await razorpayRequest<{id:string;order_id:string;amount:number;currency:string;status:string}>(
+      catalogue.business.razorpayKeyId,keySecret,"/payments/"+encodeURIComponent(data.razorpay_payment_id)
+    );
+    const expectedAmount=order.subtotal.mul(100).toDecimalPlaces(0).toNumber();
+    if(payment.order_id!==data.razorpay_order_id || payment.amount!==expectedAmount || payment.currency!==order.currency) {
+      return res.status(400).json({error:"Payment details do not match this order."});
+    }
+    if(payment.status!=="captured") {
+      return res.status(202).json({success:false,paymentStatus:payment.status,message:"Payment is not captured yet. Please wait for confirmation."});
+    }
+    const updated=await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayPaymentId:payment.id,paymentStatus:"PAID",status:"CONFIRMED"}});
+    await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"payment_confirmed",metadata:{orderNumber:updated.orderNumber}}}).catch(()=>{});
+    res.json({success:true,orderNumber:updated.orderNumber,message:"Payment confirmed successfully."});
+  } catch {
+    res.status(502).json({error:"We could not verify payment right now. Do not pay again; contact the business with your payment reference."});
   }
 });
 
