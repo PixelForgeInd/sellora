@@ -458,6 +458,9 @@ router.post("/public/payments/verify",async(req,res)=>{
  if(!p.business.razorpayKeySecretEncrypted)return res.status(409).json({error:"Payment credentials are unavailable."});
  const expected=crypto.createHmac("sha256",decryptPaymentSecret(p.business.razorpayKeySecretEncrypted)).update(d.razorpayOrderId+"|"+d.razorpayPaymentId).digest("hex");
  if(!safeEqualHex(d.razorpaySignature,expected))return res.status(400).json({error:"Payment signature verification failed."});
+ const paymentDetails=await razorpayRequest(p.business.razorpayKeyId!,decryptPaymentSecret(p.business.razorpayKeySecretEncrypted),"/payments/"+encodeURIComponent(d.razorpayPaymentId)) as {order_id?:string;status?:string;amount?:number;currency?:string};
+ if(paymentDetails.order_id!==p.razorpayOrderId||paymentDetails.amount!==Math.round(Number(p.amount)*100)||paymentDetails.currency!==p.currency)return res.status(400).json({error:"Razorpay payment details do not match this order."});
+ if(paymentDetails.status!=="captured")return res.status(409).json({error:"Payment has not been captured yet. Please wait for confirmation."});
  await prisma.paymentOrder.update({where:{id:p.id},data:{status:"PAID",razorpayPaymentId:d.razorpayPaymentId,paidAt:new Date()}});
  res.json({status:"PAID",reference:p.id});
 });
