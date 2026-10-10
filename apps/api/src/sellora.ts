@@ -504,7 +504,7 @@ router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=
  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
  if(!business)return res.status(404).json({error:"Business not found."});
  const [legacyPayments,checkoutOrders]=await Promise.all([
-  prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:500,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayOrderId:true,razorpayPaymentId:true,createdAt:true,paidAt:true,updatedAt:true}}),
+  prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayOrderId:true,razorpayPaymentId:true,createdAt:true,paidAt:true,updatedAt:true}}),
   prisma.selloraOrder.findMany({where:{businessId:business.id},include:{items:true,catalogue:{select:{title:true,slug:true}}},orderBy:{createdAt:"desc"},take:500})
  ]);
  const legacy=legacyPayments.map(order=>({...order,recordType:"PAYMENT_ORDER",orderNumber:order.id,items:[{productName:order.productName,sku:null,quantity:order.quantity,unit:order.unit,unitPrice:order.amount.toString(),lineTotal:order.amount.toString()}],amount:order.amount.toString(),subtotal:order.amount.toString(),taxAmount:"0",totalAmount:order.amount.toString(),address:null,notes:null,paymentStatus:order.status}));
@@ -727,9 +727,9 @@ router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
   const orders=await prisma.selloraOrder.findMany({
     where:{businessId:business.id},
     include:{catalogue:{select:{id:true,title:true,slug:true}},items:true},
-    orderBy:{createdAt:"desc"},take:200
+    orderBy:{createdAt:"desc"}
   });
-  res.json(orders.map(order=>({...order,subtotal:order.subtotal.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))})));
+  res.json(orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))})));
 }));
 
 router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(async (req,res) => {
