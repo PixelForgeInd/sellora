@@ -1089,6 +1089,8 @@ const demoCatalogue: PublicData = {
     email: "info@ganeshaasutra.in",
     website: "https://ganeshaasutra.in",
     brandColor: "#147b46",
+    sellingMode: "CATALOG_ONLY",
+    paymentGatewayStatus: "NOT_CONNECTED",
   },
   products: [
     {
