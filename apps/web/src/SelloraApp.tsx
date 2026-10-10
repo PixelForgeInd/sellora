@@ -654,6 +654,9 @@ export default function SelloraApp() {
               onClick={() => {
                 setPage(item.id);
                 setError("");
+                if (item.id === "orders") {
+                  api("/workspace/orders").then(setOrders).catch((e) => setError(e instanceof Error ? e.message : "Could not load orders"));
+                }
               }}
             >
               <item.icon size={17} />
