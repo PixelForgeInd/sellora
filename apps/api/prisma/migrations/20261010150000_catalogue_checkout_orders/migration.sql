@@ -37,7 +37,13 @@ ALTER TABLE "SelloraOrderItem" ADD CONSTRAINT "SelloraOrderItem_orderId_fkey" FO
 
 ALTER TABLE "Business" ADD COLUMN "lastOrderNumber" INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE "SelloraOrder" ADD COLUMN "orderNumber" TEXT;
-UPDATE "SelloraOrder" SET "orderNumber" = 'ORDER-' || LPAD(ROW_NUMBER() OVER (ORDER BY "createdAt", "id")::TEXT, 5, '0') WHERE "orderNumber" IS NULL;
+WITH numbered AS (
+  SELECT "id", ROW_NUMBER() OVER (ORDER BY "createdAt", "id") AS "sequence"
+  FROM "SelloraOrder" WHERE "orderNumber" IS NULL
+)
+UPDATE "SelloraOrder" AS orders
+SET "orderNumber" = 'ORDER-' || LPAD(numbered."sequence"::TEXT, 5, '0')
+FROM numbered WHERE orders."id" = numbered."id";
 ALTER TABLE "SelloraOrder" ALTER COLUMN "orderNumber" SET NOT NULL;
 CREATE UNIQUE INDEX "SelloraOrder_orderNumber_key" ON "SelloraOrder"("orderNumber");
 CREATE TABLE "CatalogueAnalyticsEvent" (
