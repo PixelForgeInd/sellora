@@ -28,6 +28,35 @@ function decryptGatewaySecret(value: string): string {
   decipher.setAuthTag(Buffer.from(tagPart, "base64"));
   return Buffer.concat([decipher.update(Buffer.from(encryptedPart, "base64")), decipher.final()]).toString("utf8");
 }
+function paymentEncryptionKey(): Buffer {
+  const raw = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
+  const key = /^[a-fA-F0-9]{64}$/.test(raw)
+    ? Buffer.from(raw, "hex")
+    : Buffer.from(raw, "base64");
+  if (key.length !== 32) {
+    throw new Error("Configure PAYMENT_ENCRYPTION_KEY on the Sellora API server as a 32-byte key.");
+  }
+  return key;
+}
+function encryptPaymentSecret(value: string): string {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", paymentEncryptionKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return [iv.toString("hex"), cipher.getAuthTag().toString("hex"), encrypted.toString("hex")].join(":");
+}
+function decryptPaymentSecret(value: string): string {
+  const [iv, tag, encrypted] = value.split(":");
+  if (!iv || !tag || !encrypted) throw new Error("Stored payment credential is invalid.");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", paymentEncryptionKey(), Buffer.from(iv, "hex"));
+  decipher.setAuthTag(Buffer.from(tag, "hex"));
+  return Buffer.concat([decipher.update(Buffer.from(encrypted, "hex")), decipher.final()]).toString("utf8");
+}
+function safeEqualHex(actual: string, expected: string): boolean {
+  const a = Buffer.from(actual, "hex");
+  const b = Buffer.from(expected, "hex");
+  return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
+}
+
 async function razorpayRequest<T>(keyId: string, keySecret: string, path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch("https://api.razorpay.com/v1" + path, {
     ...init,
@@ -553,7 +582,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   }).parse(req.body);
   const keyId = catalogue.business.razorpayKeyId;
   let keySecret: string;
-  try { keySecret = decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
+  try { keySecret = decryptPaymentSecret(catalogue.business.razorpayKeySecretEncrypted); }
   catch { return res.status(503).json({error:"Payment configuration is unavailable. Please contact the business."}); }
   const requested = new Map<string,number>();
   for(const item of data.items) requested.set(item.productId,(requested.get(item.productId)||0)+item.quantity);
@@ -623,7 +652,7 @@ router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
   if(!order) return res.status(404).json({error:"Payment order not found."});
   if(order.paymentStatus==="PAID") return res.json({success:true,orderNumber:order.orderNumber,message:"Payment already verified."});
   let keySecret: string;
-  try { keySecret=decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
+  try { keySecret=decryptPaymentSecret(catalogue.business.razorpayKeySecretEncrypted); }
   catch { return res.status(503).json({error:"Payment configuration is unavailable."}); }
   const expected=crypto.createHmac("sha256",keySecret).update(data.razorpay_order_id+"|"+data.razorpay_payment_id).digest();
   let supplied: Buffer;
