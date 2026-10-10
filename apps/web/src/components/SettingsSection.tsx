@@ -65,7 +65,8 @@ export function SettingsSection({
  const [webhookSaved,setWebhookSaved]=useState(false);
  const [gatewayBusy,setGatewayBusy]=useState(false);
  const [gatewayMessage,setGatewayMessage]=useState("");
- useEffect(()=>{api("/workspace/business/payment-gateway").then(v=>{setGatewayKeyId(v.keyId||"");setGatewayTestMode(v.testMode!==false);setGatewayStatus(v.status||"NOT_CONNECTED");setGatewaySecretSaved(Boolean(v.keySecretConfigured));setWebhookSaved(Boolean(v.webhookSecretConfigured));}).catch(()=>{});},[business.id]);
+ const [paymentOrders,setPaymentOrders]=useState<Array<{id:string;productName:string;quantity:number;unit:string;amount:string;currency:string;customerName:string;status:string;createdAt:string}>>([]);
+ useEffect(()=>{Promise.all([api("/workspace/business/payment-gateway"),api("/workspace/payment-orders")]).then(([v,orders])=>{setGatewayKeyId(v.keyId||"");setGatewayTestMode(v.testMode!==false);setGatewayStatus(v.status||"NOT_CONNECTED");setGatewaySecretSaved(Boolean(v.keySecretConfigured));setWebhookSaved(Boolean(v.webhookSecretConfigured));setPaymentOrders(orders);}).catch(()=>{});},[business.id]);
  async function saveGateway(e:FormEvent){e.preventDefault();setGatewayBusy(true);setGatewayMessage("");try{const v=await api("/workspace/business/payment-gateway",{method:"PUT",body:JSON.stringify({keyId:gatewayKeyId,keySecret:gatewayKeySecret,webhookSecret:gatewayWebhookSecret,testMode:gatewayTestMode})});setGatewayStatus(v.status);setGatewaySecretSaved(Boolean(v.keySecretConfigured));setWebhookSaved(Boolean(v.webhookSecretConfigured));setGatewayKeySecret("");setGatewayWebhookSecret("");setSellingMode("ONLINE_PAYMENTS");setGatewayMessage("Razorpay credentials verified and saved.");}catch(err){setGatewayMessage(err instanceof Error?err.message:"Could not connect Razorpay.");}finally{setGatewayBusy(false);}}
  async function disconnectGateway(){if(!window.confirm("Disconnect Razorpay and disable online payments?"))return;setGatewayBusy(true);try{await api("/workspace/business/payment-gateway",{method:"DELETE"});setGatewayStatus("NOT_CONNECTED");setSellingMode("CATALOG_ONLY");setGatewayKeyId("");setGatewaySecretSaved(false);setWebhookSaved(false);setGatewayMessage("Razorpay disconnected.");}catch(err){setGatewayMessage(err instanceof Error?err.message:"Could not disconnect Razorpay.");}finally{setGatewayBusy(false);}}
  return (
@@ -347,6 +348,12 @@ export function SettingsSection({
           <div className="sl-modal-actions"><Btn type="submit" disabled={gatewayBusy}>{gatewayBusy?"Verifying…":"Verify and save Razorpay"} <CreditCard size={15}/></Btn>{gatewayStatus==="ACTIVE"&&<Btn type="button" kind="outline" disabled={gatewayBusy} onClick={()=>void disconnectGateway()}>Disconnect</Btn>}</div>
         </form>
         <p className="sl-gateway-note">Webhook URL: <b>{(import.meta.env.VITE_API_URL||"http://localhost:4000/api").replace(/\/$/,"")}/webhooks/razorpay</b>. Configure payment.captured, payment.failed and order.paid events in Razorpay Dashboard.</p>
+      </section>
+
+      <section className="sl-section-card sl-settings-page">
+        <span className="sl-kicker">PAYMENT ACTIVITY</span><h3>Recent payments</h3>
+        <p>Payments recorded for this business. Refresh the page to see the latest updates.</p>
+        {paymentOrders.length===0?<p className="sl-muted">No payment orders yet. Completed checkout attempts will appear here.</p>:<div className="sl-industry-fields">{paymentOrders.map(order=><div className="sl-industry-field" key={order.id}><span><b>{order.productName} · {order.quantity} {order.unit}</b><small>{order.customerName} · {new Date(order.createdAt).toLocaleString()} · Ref {order.id.slice(-8)}</small></span><span><b>{order.currency} {order.amount}</b><small className={order.status==="PAID"?"sl-published":"sl-draft"}>{order.status}</small></span></div>)}</div>}
       </section>
       <section className="sl-section-card sl-settings-page">
         <span className="sl-kicker">SELLING PREFERENCES</span>
