@@ -58,6 +58,8 @@ export type PublicData = {
     brandColor: string;
     email?: string | null;
     logoUrl?: string | null;
+    sellingMode: "CATALOG_ONLY" | "ONLINE_PAYMENTS";
+    paymentGatewayStatus?: string | null;
   };
   products: Product[];
   checkoutReady?: boolean;
