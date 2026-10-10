@@ -1,5 +1,7 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { Check, ImagePlus, Package, Trash2, X } from "lucide-react";
+import { ArrowRight, Check, ImagePlus, Package, Trash2, X } from "lucide-react";
+import { ErrorMessage as Err } from "./ui";
+import { formatMoney as money } from "../sellora/formatters";
 import { Button as Btn } from "./ui";
 import type { Field, Product } from "../sellora/types";
 
@@ -21,6 +23,8 @@ type CatalogueForm = {
 
 type ProductModalProps = {
   editing: string;
+  category: string;
+  error: string;
   pform: ProductForm;
   setPform: Dispatch<SetStateAction<ProductForm>>;
   fields: Field[];
@@ -31,6 +35,8 @@ type ProductModalProps = {
 };
 export function ProductModal({
   editing,
+  category,
+  error,
   pform,
   setPform,
   fields,
@@ -277,6 +283,7 @@ export function ProductModal({
 
 type CatalogueModalProps = {
   editingCatalogue: string;
+  error: string;
   cform: CatalogueForm;
   setCform: Dispatch<SetStateAction<CatalogueForm>>;
   products: Product[];
@@ -286,6 +293,7 @@ type CatalogueModalProps = {
 };
 export function CatalogueModal({
   editingCatalogue,
+  error,
   cform,
   setCform,
   products,
