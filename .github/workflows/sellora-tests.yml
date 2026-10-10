@@ -1,0 +1,65 @@
+name: Sellora automated tests
+
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sellora-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-api-smoke:
+    name: Build and API smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NODE_ENV: test
+      API_PORT: 4000
+      WEB_ORIGIN: http://127.0.0.1:5173
+      AUTH_SECRET: test-only-secret-not-for-production
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/sellora_test?schema=public
+      API_BASE_URL: http://127.0.0.1:4000
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Build API and frontend
+        run: npm run build
+
+      - name: Start API for smoke tests
+        run: |
+          node apps/api/dist/index.js > /tmp/sellora-api.log 2>&1 &
+          echo $! > /tmp/sellora-api.pid
+
+      - name: Run automated API smoke tests
+        run: npm test
+
+      - name: Show API logs if a previous step failed
+        if: failure()
+        run: cat /tmp/sellora-api.log || true
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f /tmp/sellora-api.pid ]; then
+            kill "$(cat /tmp/sellora-api.pid)" || true
+          fi
