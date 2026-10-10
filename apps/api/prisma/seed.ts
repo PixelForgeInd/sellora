@@ -24,11 +24,12 @@ async function main() {
     throw new Error("Set PLATFORM_OWNER_EMAIL and PLATFORM_OWNER_PASSWORD (minimum 12 characters) before running db:seed.");
   }
 
-  const passwordHash = await hashPassword(ownerPassword);
-  const owner = await prisma.user.upsert({
-    where: { email: ownerEmail },
-    update: { role: "PLATFORM_OWNER" },
-    create: { email: ownerEmail, passwordHash, role: "PLATFORM_OWNER" },
+  const existingOwner = await prisma.user.findUnique({ where: { email: ownerEmail } });
+  if (existingOwner && existingOwner.role !== "PLATFORM_OWNER") {
+    throw new Error("The configured owner email already belongs to a non-owner account. Do not promote it automatically; use a verified owner account or update the role through a trusted database-admin procedure.");
+  }
+  const owner = existingOwner || await prisma.user.create({
+    data: { email: ownerEmail, passwordHash: await hashPassword(ownerPassword), role: "PLATFORM_OWNER" },
   });
 
   await prisma.business.upsert({
@@ -38,7 +39,7 @@ async function main() {
   });
 
   console.log("Seeded yarn reference data and PixelForge platform owner.");
-  console.log("If the owner account already existed, its password was not changed.");
+  console.log("Existing owner password is preserved.");
 }
 
 main().catch((error) => {
