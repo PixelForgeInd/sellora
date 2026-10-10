@@ -229,3 +229,52 @@ model CatalogueProduct {
   @@unique([catalogueId, productId])
   @@index([catalogueId, sortOrder])
 }
+
+
+// Version 3: customer checkout orders. Prices and product names are snapshotted
+// at submission time so later catalogue edits do not rewrite past orders.
+model SelloraOrder {
+  id              String              @id @default(cuid())
+  reference       String              @unique
+  businessId      String
+  business        Business            @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  catalogueId     String
+  catalogue       SelloraCatalogue    @relation(fields: [catalogueId], references: [id], onDelete: Restrict)
+  customerName    String
+  customerEmail   String?
+  customerPhone   String
+  addressLine1    String
+  addressLine2    String?
+  city            String
+  state           String
+  postalCode      String
+  country         String              @default("India")
+  notes           String?
+  currency        String              @default("INR")
+  subtotal        Decimal             @db.Decimal(12, 2)
+  shippingAmount  Decimal             @default(0) @db.Decimal(12, 2)
+  total           Decimal             @db.Decimal(12, 2)
+  status          String              @default("PENDING")
+  paymentStatus   String              @default("UNPAID")
+  items           SelloraOrderItem[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  @@index([businessId, createdAt])
+  @@index([catalogueId, createdAt])
+  @@index([status, createdAt])
+}
+
+model SelloraOrderItem {
+  id          String       @id @default(cuid())
+  orderId     String
+  order       SelloraOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  productName String
+  sku         String?
+  unit        String
+  quantity    Int
+  unitPrice   Decimal      @db.Decimal(12, 2)
+  lineTotal   Decimal      @db.Decimal(12, 2)
+  createdAt   DateTime     @default(now())
+  @@index([orderId])
+}
