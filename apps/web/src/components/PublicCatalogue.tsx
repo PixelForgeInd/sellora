@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { Brand } from "./ui";
 import { ArrowRight, Check, ExternalLink, MessageCircle, Package, X } from "lucide-react";
 import { formatMoney as money } from "../sellora/formatters";
