@@ -3,6 +3,8 @@ import type { FormEvent, CSSProperties } from "react";
 import {
   ArrowRight,
   BookOpen,
+  BarChart3,
+  ClipboardList,
   Check,
   CheckCircle2,
   Copy,
@@ -50,6 +52,9 @@ export default function SelloraApp() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<Record<string, any>>({});
+  const [analyticsBusy, setAnalyticsBusy] = useState("");
 
   // Authentication screen state
   const [email, setEmail] = useState("");
@@ -638,6 +643,8 @@ export default function SelloraApp() {
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
+            { id: "orders", label: "Orders", icon: ClipboardList },
+            { id: "analytics", label: "Analytics", icon: BarChart3 },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
@@ -823,6 +830,19 @@ export default function SelloraApp() {
             share={share}
             shareWhatsApp={shareWhatsApp}
           />
+        )}
+        {page === "orders" && (
+          <section className="sl-section-card sl-orders-page">
+            <div className="sl-section-head"><div><h3>Customer orders</h3><p>Order requests, customer details and item-level breakdowns.</p></div><Btn onClick={async()=>{try{setOrders(await api("/workspace/orders"));}catch(e){setError(e instanceof Error?e.message:"Could not load orders");}}}><ArrowRight size={15}/> Refresh orders</Btn></div>
+            {!orders.length ? <div className="sl-orders-empty"><ClipboardList size={32}/><h3>No orders yet</h3><p>Orders submitted through your published online catalogue will appear here.</p></div> : <div className="sl-orders-list">{orders.map(order=><details className="sl-order-card" key={order.id}><summary><span><b>{order.orderNumber || order.id}</b><small>{order.customerName} · {new Date(order.createdAt).toLocaleString()}</small></span><span><b>{money(order.subtotal,order.currency)}</b><small>{order.status} · {order.paymentStatus}</small></span><ArrowRight size={16}/></summary><div className="sl-order-detail"><div className="sl-order-customer"><p><b>Customer</b><br/>{order.customerName}</p><p><b>Phone</b><br/>{order.phone}</p><p><b>Email</b><br/>{order.email || "Not provided"}</p><p><b>Catalogue</b><br/>{order.catalogue?.title || "—"}</p><p><b>Delivery address</b><br/>{order.address || "Not provided"}</p><p><b>Notes</b><br/>{order.notes || "None"}</p></div><h4>Ordered items</h4>{order.items.map((item:any)=><div className="sl-order-item" key={item.id}><span><b>{item.productName}</b><small>{item.quantity} × {money(item.unitPrice,order.currency,item.unit)}</small></span><strong>{money(item.lineTotal,order.currency,item.unit)}</strong></div>)}<p className="sl-order-payment-note">Payment is not verified by Sellora yet. Marking payment complete requires a connected payment gateway.</p></div></details>)}</div>}
+          </section>
+        )}
+        {page === "analytics" && (
+          <section className="sl-section-card sl-analytics-page">
+            <div className="sl-section-head"><div><h3>Performance by catalogue</h3><p>Views, add-to-cart actions, checkout starts and submitted orders.</p></div></div>
+            {!catalogues.length ? <p>Create a catalogue to start seeing analytics.</p> : <div className="sl-analytics-grid">{catalogues.map(c=>{const m=analytics[c.id];return <article className="sl-analytics-card" key={c.id}><div><span className="sl-kicker">{c.isPublished?"PUBLISHED":"DRAFT"}</span><h4>{c.title}</h4><small>{c.slug}</small></div><button disabled={analyticsBusy===c.id} onClick={async()=>{setAnalyticsBusy(c.id);try{const result=await api("/workspace/catalogues/"+c.id+"/analytics");setAnalytics(old=>({...old,[c.id]:result}));}catch(e){setError(e instanceof Error?e.message:"Could not load analytics");}finally{setAnalyticsBusy("");}}}>{analyticsBusy===c.id?"Loading…":m?"Refresh metrics":"View analytics"} <ArrowRight size={14}/></button>{m&&<div className="sl-analytics-metrics"><span><small>Catalogue opens</small><b>{m.views}</b></span><span><small>Add to cart</small><b>{m.addToCart}</b></span><span><small>Checkout starts</small><b>{m.checkoutStarted}</b></span><span><small>Orders submitted</small><b>{m.ordersSubmitted}</b></span><span><small>Orders recorded</small><b>{m.orders}</b></span><span><small>Payments confirmed</small><b>{m.paymentsConfirmed}</b></span></div>}<a href={"/c/"+c.slug} target="_blank" rel="noreferrer">Open public catalogue <ExternalLink size={13}/></a></article>})}</div>}
+            <p className="sl-analytics-disclaimer">Analytics begin after tracking is deployed. Payment completion stays at zero until a payment provider verifies successful transactions.</p>
+          </section>
         )}
         {page === "launch" && (
           <section className="sl-launch-page">
