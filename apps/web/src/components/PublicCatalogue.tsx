@@ -145,7 +145,7 @@ export function PublicCatalogue({ data, error, demo = false }: { data: PublicDat
         <h1>Thank you for your order.</h1>
         <p>{orderMessage}</p>
         <div className="sl-order-reference"><span>Order reference</span><strong>{orderNumber}</strong></div>
-        <p className="sl-order-confirmation-note">Keep this reference for your records. Payment has not been collected online.</p>
+        <p className="sl-order-confirmation-note">Keep this reference for your records. Your payment was verified by Razorpay.</p>
         <button className="sl-store-quote" onClick={() => { setOrderMessage(""); setOrderNumber(""); window.scrollTo({top:0,behavior:"smooth"}); }}><ArrowRight size={16}/> Back to catalogue</button>
       </div>
     </main>
