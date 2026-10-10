@@ -32,10 +32,12 @@ The previous yarn-specific data models remain. Generic Sellora models are additi
    npm install
    npm run db:generate
 
-5. Apply migrations and seed reference data:
+5. Apply migrations and seed reference data. Before seeding, set `PLATFORM_OWNER_EMAIL` to your own email and `PLATFORM_OWNER_PASSWORD` to a unique password of at least 12 characters in `.env`:
 
    npm run db:migrate
    npm run db:seed
+
+The seed creates the PixelForge platform-owner account and workspace. It will not automatically promote an existing non-owner account.
 
 6. Start the apps:
 
