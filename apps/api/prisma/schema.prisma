@@ -157,10 +157,7 @@ model Business {
   sellingMode     String           @default("CATALOG_ONLY")
   paymentGatewayProvider String?
   paymentGatewayStatus   String    @default("NOT_CONNECTED")
-  razorpayKeyId String?
-  razorpayKeySecretEncrypted String?
 
-  razorpayTestMode Boolean @default(true)
   lastOrderNumber Int @default(0)
 
   catalogueFields CatalogueField[]
