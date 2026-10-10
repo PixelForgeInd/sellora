@@ -34,6 +34,7 @@ import {
   ProductSection,
 } from "./components/WorkspaceSections";
 import { SettingsSection } from "./components/SettingsSection";
+import { PaymentsSection } from "./components/PaymentsSection";
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
@@ -638,6 +639,7 @@ export default function SelloraApp() {
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
+            { id: "payments", label: "Payments", icon: CreditCard },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
@@ -676,7 +678,9 @@ export default function SelloraApp() {
                       ? "Launch checklist"
                       : page === "settings"
                         ? "Business settings"
-                        : "Workspace"}
+                        : page === "payments"
+                          ? "Payments"
+                          : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -945,6 +949,9 @@ export default function SelloraApp() {
               </Btn>
             </section>
           </section>
+        )}
+        {page === "payments" && (
+          <PaymentsSection onSettings={() => setPage("settings")} />
         )}
         {page === "settings" && (
           <SettingsSection
