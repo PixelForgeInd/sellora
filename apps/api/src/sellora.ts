@@ -7,74 +7,6 @@ import { promisify } from "node:util";
 const router = Router();
 const prisma = new PrismaClient();
 
-function razorpayEncryptionKey(): Buffer {
-  // Use the same server-managed key for both payment credential formats.
-  // Keep the legacy variable as a fallback for existing local environments.
-  const configured = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
-  const key = /^[a-fA-F0-9]{64}$/.test(configured)
-    ? Buffer.from(configured, "hex")
-    : Buffer.from(configured, "base64");
-  if (key.length !== 32) throw new Error("Configure PAYMENT_ENCRYPTION_KEY (or the legacy RAZORPAY_ENCRYPTION_KEY) as a 32-byte key in the API environment.");
-  return key;
-}
-function encryptGatewaySecret(value: string): string {
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", razorpayEncryptionKey(), iv);
-  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
-  return [iv.toString("base64"), cipher.getAuthTag().toString("base64"), encrypted.toString("base64")].join(".");
-}
-function decryptGatewaySecret(value: string): string {
-  const [ivPart, tagPart, encryptedPart] = value.split(".");
-  if (!ivPart || !tagPart || !encryptedPart) throw new Error("Stored Razorpay credentials are invalid.");
-  const decipher = crypto.createDecipheriv("aes-256-gcm", razorpayEncryptionKey(), Buffer.from(ivPart, "base64"));
-  decipher.setAuthTag(Buffer.from(tagPart, "base64"));
-  return Buffer.concat([decipher.update(Buffer.from(encryptedPart, "base64")), decipher.final()]).toString("utf8");
-}
-async function razorpayRequest<T>(keyId: string, keySecret: string, path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch("https://api.razorpay.com/v1" + path, {
-    ...init,
-    headers: {
-      Authorization: "Basic " + Buffer.from(keyId + ":" + keySecret).toString("base64"),
-      "Content-Type": "application/json",
-      ...(init.headers || {})
-    }
-  });
-  const result = await response.json().catch(() => ({})) as T & { error?: { description?: string } };
-  if (!response.ok) throw new Error(result?.error?.description || "Razorpay request failed.");
-  return result;
-}
-
-const scrypt = promisify(crypto.scrypt);
-const secret = process.env.AUTH_SECRET || "sellora-development-secret-change-before-deployment";
-if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
-  throw new Error("AUTH_SECRET must be configured before running Sellora in production.");
-}
-const tokenLifetimeSeconds = 60 * 60 * 24 * 7;
-
-function paymentEncryptionKey(): Buffer {
- // Sellora manages this key centrally; customers never configure it.
- // Keep the legacy variable as a fallback for existing deployments.
- const raw = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
- const key = /^[a-fA-F0-9]{64}$/.test(raw)
-  ? Buffer.from(raw, "hex")
-  : Buffer.from(raw, "base64");
- if (key.length !== 32) {
-  throw new Error("Configure PAYMENT_ENCRYPTION_KEY (or the legacy RAZORPAY_ENCRYPTION_KEY) on the Sellora API server as a 32-byte key.");
- }
- return key;
-}
-function encryptPaymentSecret(value:string):string {
- const iv=crypto.randomBytes(12), cipher=crypto.createCipheriv("aes-256-gcm",paymentEncryptionKey(),iv);
- const encrypted=Buffer.concat([cipher.update(value,"utf8"),cipher.final()]);
- return [iv.toString("hex"),cipher.getAuthTag().toString("hex"),encrypted.toString("hex")].join(":");
-}
-function decryptPaymentSecret(value:string):string {
- const [iv,tag,encrypted]=value.split(":");
- if(!iv||!tag||!encrypted) throw new Error("Stored payment credential is invalid.");
- const decipher=crypto.createDecipheriv("aes-256-gcm",paymentEncryptionKey(),Buffer.from(iv,"hex"));
- decipher.setAuthTag(Buffer.from(tag,"hex"));
- return Buffer.concat([decipher.update(Buffer.from(encrypted,"hex")),decipher.final()]).toString("utf8");
-}
 function safeEqualHex(actual:string,expected:string):boolean {
  const a=Buffer.from(actual,"hex"),b=Buffer.from(expected,"hex");
  return a.length===b.length&&a.length>0&&crypto.timingSafeEqual(a,b);
@@ -533,21 +465,6 @@ router.delete("/workspace/business/payment-gateway",requireAuth,authenticated(as
  if(!b)return res.status(404).json({error:"Business not found."});
  await prisma.business.update({where:{id:b.id},data:{paymentGatewayProvider:null,paymentGatewayStatus:"NOT_CONNECTED",razorpayKeyId:null,razorpayKeySecretEncrypted:null,razorpayWebhookSecretEncrypted:null,sellingMode:"CATALOG_ONLY"}});
  res.json({status:"NOT_CONNECTED"});
-}));
-router.post("/public/catalogues/:slug/payment-orders",publicAsync(async(req,res)=>{
- const d=z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(10000).default(1),customerName:z.string().trim().min(2).max(120),customerEmail:z.string().trim().email().max(160).optional().or(z.literal("")),customerPhone:z.string().trim().min(8).max(30),customerAddress:z.string().trim().min(8).max(500)}).parse(req.body);
- const c=await prisma.selloraCatalogue.findFirst({where:{slug:String(req.params.slug),isPublished:true},include:{business:true,items:{where:{productId:d.productId,product:{isActive:true}},include:{product:true}}}});
- if(!c)return res.status(404).json({error:"Catalogue or product not found."});
- const b=c.business;
- if(b.sellingMode!=="ONLINE_PAYMENTS"||b.paymentGatewayStatus!=="ACTIVE"||b.paymentGatewayProvider!=="RAZORPAY")return res.status(403).json({error:"This business has not enabled online payments."});
- const p=c.items[0]?.product;
- if(!p||p.price===null)return res.status(400).json({error:"This product does not have a fixed price. Please enquire with the business."});
- if(!b.razorpayKeyId||!b.razorpayKeySecretEncrypted)return res.status(409).json({error:"Payment gateway credentials are incomplete."});
- const amountPaise=Math.round(Number(p.price)*d.quantity*100);
- if(!Number.isSafeInteger(amountPaise)||amountPaise<100||amountPaise>1000000000)return res.status(400).json({error:"Order amount is outside the supported range."});
- const order=await razorpayRequest(b.razorpayKeyId,decryptPaymentSecret(b.razorpayKeySecretEncrypted),"/orders",{method:"POST",body:JSON.stringify({amount:amountPaise,currency:p.currency||"INR",receipt:("sl_"+crypto.randomUUID()).slice(0,40),notes:{selloraCatalogueId:c.id,selloraBusinessId:b.id,productId:p.id,quantity:String(d.quantity)}})}) as {id:string;amount:number;currency:string};
- const payment=await prisma.paymentOrder.create({data:{businessId:b.id,catalogueId:c.id,productId:p.id,productName:p.name,quantity:d.quantity,unit:p.unit,amount:new Prisma.Decimal((amountPaise/100).toFixed(2)),currency:p.currency||"INR",customerName:d.customerName,customerEmail:d.customerEmail||null,customerPhone:d.customerPhone,customerAddress:d.customerAddress,razorpayOrderId:order.id,status:"CREATED"}});
- res.status(201).json({paymentOrderId:payment.id,orderId:order.id,amount:order.amount,currency:order.currency,keyId:b.razorpayKeyId,name:b.name,description:p.name,themeColor:b.brandColor,testMode:b.razorpayTestMode});
 }));
 router.post("/public/payments/verify",async(req,res)=>{
  const d=z.object({paymentOrderId:z.string().min(1),razorpayPaymentId:z.string().min(1),razorpayOrderId:z.string().min(1),razorpaySignature:z.string().min(1)}).parse(req.body);
