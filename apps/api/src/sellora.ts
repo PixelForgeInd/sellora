@@ -181,7 +181,9 @@ router.get("/workspace/business", requireAuth, authenticated(async (req,res) => 
     where:{ownerUserId:req.userId},
     include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}}
   });
-  res.json(business);
+  if (!business) return res.json(null);
+  const { razorpayKeySecretEncrypted: _secretNeverReturn, ...safeBusiness } = business;
+  res.json(safeBusiness);
 }));
 
 // Industry-specific field schema management. All operations are scoped to the authenticated business.
