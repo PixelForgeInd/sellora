@@ -1,10 +1,10 @@
 ALTER TABLE "Business"
-  ADD COLUMN "razorpayKeyId" TEXT,
-  ADD COLUMN "razorpayKeySecretEncrypted" TEXT,
-  ADD COLUMN "razorpayWebhookSecretEncrypted" TEXT,
-  ADD COLUMN "razorpayTestMode" BOOLEAN NOT NULL DEFAULT true;
+  ADD COLUMN IF NOT EXISTS "razorpayKeyId" TEXT,
+  ADD COLUMN IF NOT EXISTS "razorpayKeySecretEncrypted" TEXT,
+  ADD COLUMN IF NOT EXISTS "razorpayWebhookSecretEncrypted" TEXT,
+  ADD COLUMN IF NOT EXISTS "razorpayTestMode" BOOLEAN NOT NULL DEFAULT true;
 
-CREATE TABLE "PaymentOrder" (
+CREATE TABLE IF NOT EXISTS "PaymentOrder" (
   "id" TEXT NOT NULL,
   "businessId" TEXT NOT NULL,
   "catalogueId" TEXT NOT NULL,
@@ -26,11 +26,18 @@ CREATE TABLE "PaymentOrder" (
   CONSTRAINT "PaymentOrder_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "PaymentOrder_razorpayOrderId_key" ON "PaymentOrder"("razorpayOrderId");
-CREATE INDEX "PaymentOrder_businessId_createdAt_idx" ON "PaymentOrder"("businessId", "createdAt");
-CREATE INDEX "PaymentOrder_status_createdAt_idx" ON "PaymentOrder"("status", "createdAt");
+CREATE UNIQUE INDEX IF NOT EXISTS "PaymentOrder_razorpayOrderId_key" ON "PaymentOrder"("razorpayOrderId");
+CREATE INDEX IF NOT EXISTS "PaymentOrder_businessId_createdAt_idx" ON "PaymentOrder"("businessId", "createdAt");
+CREATE INDEX IF NOT EXISTS "PaymentOrder_status_createdAt_idx" ON "PaymentOrder"("status", "createdAt");
 
-ALTER TABLE "PaymentOrder"
-  ADD CONSTRAINT "PaymentOrder_businessId_fkey"
-  FOREIGN KEY ("businessId") REFERENCES "Business"("id")
-  ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'PaymentOrder_businessId_fkey'
+  ) THEN
+    ALTER TABLE "PaymentOrder"
+      ADD CONSTRAINT "PaymentOrder_businessId_fkey"
+      FOREIGN KEY ("businessId") REFERENCES "Business"("id")
+      ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+END $$;
