@@ -248,7 +248,7 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
 router.post("/workspace/business", requireAuth, authenticated(async (req,res) => {
   const data = z.object({
     name:z.string().trim().min(2).max(120), industry:z.string().trim().min(2).max(100),
-    productCategory:z.enum(["yarn-textiles","clothing","furniture","electronics","other"]),
+    productCategory:z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]),
     businessModel:z.enum(["B2B","B2C","B2B2C"]), phone:z.string().trim().max(30).optional(),
     website:z.union([z.string().trim().url().max(200),z.literal("")]).optional(),
     brandColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56"),
