@@ -578,3 +578,38 @@
   color:var(--store-accent,var(--store-brand,#599c56))!important;
   -webkit-text-fill-color:var(--store-accent,var(--store-brand,#599c56));
 }
+
+
+/* Single-page order confirmation, matching the customer's brand */
+.sl-order-confirmation{
+  min-height:100svh;
+  display:grid;
+  place-items:center;
+  padding:clamp(20px,5vw,64px);
+  background:linear-gradient(145deg,#f8f8f1,#fff 55%,color-mix(in srgb,var(--store-brand,#599c56) 12%,#fff));
+}
+.sl-order-confirmation-card{
+  width:min(100%,620px);
+  padding:clamp(26px,5vw,52px);
+  border:1px solid #e6ebe1;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 24px 70px rgba(24,59,49,.09);
+  text-align:center;
+}
+.sl-order-confirmation-icon{
+  width:68px;height:68px;
+  display:grid;place-items:center;
+  margin:0 auto 24px;
+  border-radius:50%;
+  background:color-mix(in srgb,var(--store-brand,#599c56) 13%,#fff);
+  color:var(--store-brand,#599c56);
+}
+.sl-order-confirmation-card .sl-store-eyebrow{display:block;letter-spacing:2px;font-size:10px;font-weight:800}
+.sl-order-confirmation-card h1{font:600 clamp(32px,5vw,48px)/1.05 Georgia,serif;letter-spacing:-1px;color:var(--sellora-ink,#183b31);margin:15px 0}
+.sl-order-confirmation-card>p{max-width:460px;margin:0 auto;color:#69776a;font-size:14px;line-height:1.8}
+.sl-order-reference{display:flex;flex-direction:column;gap:8px;margin:28px 0 15px;padding:18px;border:1px dashed color-mix(in srgb,var(--store-brand,#599c56) 40%,#fff);border-radius:12px;background:#fafbf8}
+.sl-order-reference span{font-size:11px;color:#758074}
+.sl-order-reference strong{font-size:clamp(16px,3vw,23px);letter-spacing:.5px;overflow-wrap:anywhere;color:var(--sellora-ink,#183b31)}
+.sl-order-confirmation-card .sl-order-confirmation-note{font-size:11px;margin-bottom:25px}
+.sl-order-confirmation-card .sl-store-quote{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 22px;background:var(--store-brand,#599c56);border:1px solid var(--store-brand,#599c56);color:#fff}
