@@ -432,27 +432,7 @@ export function SettingsSection({
               autoComplete="new-password"
             />
           </label>
-          <details className="sl-gateway-advanced">
-            <summary>Advanced setup (optional)</summary>
-            <p className="sl-gateway-note">
-              Most customers can start by entering their Key ID and Key Secret.
-              Configure a webhook for automatic payment event updates.
-            </p>
-            <label>
-              Razorpay Webhook Secret
-              <input
-                type="password"
-                value={gatewayWebhookSecret}
-                onChange={(e) => setGatewayWebhookSecret(e.target.value)}
-                placeholder={
-                  webhookSaved
-                    ? "Saved securely — leave blank to keep"
-                    : "Optional: webhook secret from Razorpay"
-                }
-                autoComplete="new-password"
-              />
-            </label>
-          </details>
+
           <label className="sl-field-required-toggle">
             <input
               type="checkbox"
