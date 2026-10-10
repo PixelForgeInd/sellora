@@ -45,11 +45,18 @@ export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;er
   setCheckoutBusy(true);setCheckoutError("");
   try{
    const result=await api("/public/catalogues/"+encodeURIComponent(data.slug)+"/orders",{method:"POST",body:JSON.stringify({customerName:customerName.trim(),email:customerEmail.trim(),phone:customerPhone.trim(),address:customerAddress.trim(),notes:checkoutNotes.trim(),items:cartProducts.map(p=>({productId:p.id,quantity:cart[p.id]}))})},"");
-   
-   setOrderConfirmation({orderNumber:result.orderNumber,total:result.subtotal,currency:cartProducts[0]?.currency||"INR"});
-   setCart({});
-   setCheckoutStep("success");
-   setCheckoutBusy(false);
+   if(!result?.checkout?.keyId||!result?.checkout?.razorpayOrderId)throw new Error("Checkout could not be initialized. Please contact the business.");
+   if(!(window as any).Razorpay)await new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://checkout.razorpay.com/v1/checkout.js";script.onload=()=>resolve();script.onerror=()=>reject(new Error("Could not load secure checkout."));document.body.appendChild(script);});
+   const RazorpayCtor=(window as any).Razorpay;if(!RazorpayCtor)throw new Error("Razorpay Checkout did not load.");
+   const checkout=new RazorpayCtor({key:result.checkout.keyId,amount:result.checkout.amount,currency:result.checkout.currency,name:result.checkout.name,description:result.checkout.description,order_id:result.checkout.razorpayOrderId,prefill:result.checkout.prefill,theme:{color:data.business.brandColor},modal:{ondismiss:()=>setCheckoutBusy(false)},handler:async(response:any)=>{
+    try{
+     const verified=await api("/public/catalogues/"+encodeURIComponent(data.slug)+"/payments/verify",{method:"POST",body:JSON.stringify({razorpay_order_id:response.razorpay_order_id,razorpay_payment_id:response.razorpay_payment_id,razorpay_signature:response.razorpay_signature})},"");
+     if(!verified.success)throw new Error(verified.message||"Payment is still processing. Please check with the business before retrying.");
+     setOrderConfirmation({orderNumber:verified.orderNumber||result.orderNumber,total:result.subtotal,currency:result.checkout.currency});
+     setCart({});setCheckoutStep("success");setCheckoutBusy(false);
+    }catch(err){setCheckoutError(err instanceof Error?err.message:"Payment verification failed. Contact the business before retrying.");setCheckoutBusy(false);}
+   }});
+   checkout.open();
   }catch(err){setCheckoutError(err instanceof Error?err.message:"Could not start checkout.");setCheckoutBusy(false);}
  };
  if(error)return <div className="sl-public-error"><Brand/><h1>Catalogue unavailable</h1><p>{error}</p><a href="/">Create your catalogue with Sellora <ArrowRight size={15}/></a></div>;
