@@ -262,7 +262,7 @@ export function ProductModal({
             </form>
           </section>
         </div>
-      )});
+      );
 }
 
 type CatalogueModalProps = {
@@ -361,5 +361,5 @@ export function CatalogueModal({
             </form>
           </section>
         </div>
-      )});
+      );
 }
