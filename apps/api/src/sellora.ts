@@ -503,8 +503,23 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
 router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=>{
  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
  if(!business)return res.status(404).json({error:"Business not found."});
- const orders=await prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:500,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayOrderId:true,razorpayPaymentId:true,createdAt:true,paidAt:true,updatedAt:true}});
- res.json(orders.map(order=>({...order,amount:order.amount.toString()})));
+ const [legacyPayments,checkoutOrders]=await Promise.all([
+  prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:500,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayOrderId:true,razorpayPaymentId:true,createdAt:true,paidAt:true,updatedAt:true}}),
+  prisma.selloraOrder.findMany({where:{businessId:business.id},include:{items:true,catalogue:{select:{title:true,slug:true}}},orderBy:{createdAt:"desc"},take:500})
+ ]);
+ const legacy=legacyPayments.map(order=>({...order,recordType:"PAYMENT_ORDER",orderNumber:order.id,items:[{productName:order.productName,sku:null,quantity:order.quantity,unit:order.unit,unitPrice:order.amount.toString(),lineTotal:order.amount.toString()}],amount:order.amount.toString(),subtotal:order.amount.toString(),taxAmount:"0",totalAmount:order.amount.toString(),address:null,notes:null,paymentStatus:order.status}));
+ const checkout=checkoutOrders.map(order=>({
+  id:order.id,recordType:"CATALOGUE_ORDER",orderNumber:order.orderNumber,catalogueTitle:order.catalogue.title,
+  productName:order.items.map(item=>item.productName).join(", ")||"Catalogue order",
+  quantity:order.items.reduce((sum,item)=>sum+item.quantity,0),unit:"items",
+  amount:order.totalAmount.toString(),subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),
+  currency:order.currency,customerName:order.customerName,customerEmail:order.email,customerPhone:order.phone,address:order.address,notes:order.notes,
+  status:order.paymentStatus==="PAID"?"PAID":order.status==="CANCELLED"?"CANCELLED":order.paymentStatus==="FAILED"?"FAILED":"PENDING",
+  paymentStatus:order.paymentStatus,razorpayOrderId:order.razorpayOrderId||"",razorpayPaymentId:order.razorpayPaymentId,
+  createdAt:order.createdAt,paidAt:order.paymentStatus==="PAID"?order.updatedAt:null,updatedAt:order.updatedAt,
+  items:order.items.map(item=>({productName:item.productName,sku:item.sku,quantity:item.quantity,unit:item.unit,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))
+ }));
+ res.json([...legacy,...checkout].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime()));
 }));
 
 router.get("/workspace/business/tax-settings",requireAuth,authenticated(async(req,res)=>{
