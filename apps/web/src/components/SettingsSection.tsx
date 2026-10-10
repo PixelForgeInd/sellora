@@ -697,7 +697,9 @@ export function SettingsSection({
                   type="password"
                   autoComplete="new-password"
                   value={gatewayWebhookSecret}
-                  onChange={(event) => setGatewayWebhookSecret(event.target.value)}
+                  onChange={(event) =>
+                    setGatewayWebhookSecret(event.target.value)
+                  }
                   placeholder={
                     webhookSaved
                       ? "Saved securely — enter only to replace"
@@ -714,17 +716,27 @@ export function SettingsSection({
                 Use Razorpay test mode
               </label>
               <p className="sl-gateway-note">
-                Secrets are encrypted before storage and never returned to this page.
-                Configure PAYMENT_ENCRYPTION_KEY on the API server before connecting.
+                Secrets are encrypted before storage and never returned to this
+                page. Configure PAYMENT_ENCRYPTION_KEY on the API server before
+                connecting.
               </p>
-              {gatewayMessage && <p role="status" className="sl-gateway-note">{gatewayMessage}</p>}
+              {gatewayMessage && (
+                <p role="status" className="sl-gateway-note">
+                  {gatewayMessage}
+                </p>
+              )}
               <div className="sl-modal-actions">
                 <Btn type="submit" disabled={gatewayBusy}>
                   {gatewayBusy ? "Verifying…" : "Verify & connect Razorpay"}{" "}
                   <Check size={15} />
                 </Btn>
                 {business.paymentGatewayStatus === "ACTIVE" && (
-                  <Btn kind="outline" type="button" disabled={gatewayBusy} onClick={() => void disconnectGateway()}>
+                  <Btn
+                    kind="outline"
+                    type="button"
+                    disabled={gatewayBusy}
+                    onClick={() => void disconnectGateway()}
+                  >
                     Disconnect
                   </Btn>
                 )}
