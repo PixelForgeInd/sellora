@@ -29,14 +29,7 @@ app.post("/api/catalogues/upload", (_req, res) => res.status(410).json({ error: 
 app.get("/api/enquiries", (_req, res) => res.status(410).json({ error: "Legacy global enquiry administration is retired." }));
 app.patch("/api/enquiries/:id/status", (_req, res) => res.status(410).json({ error: "Legacy global enquiry administration is retired." }));
 
-const upload = multer({
-  dest: uploadDir,
-  limits: { fileSize: 25 * 1024 * 1024, files: 1 },
-  fileFilter: (_req, file, callback) => {
-    if (file.mimetype !== "application/pdf") return callback(new Error("Only PDF files are accepted."));
-    callback(null, true);
-  }
-});
+
 
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, service: "sellora-api" }));
