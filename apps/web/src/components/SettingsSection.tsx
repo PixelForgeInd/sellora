@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { BookOpen, Check, CreditCard, Plus, Trash2 } from "lucide-react";
 import { Button as Btn } from "./ui";
 import { categories as cats } from "../sellora/catalogue-fields";
 import type { Business, Field } from "../sellora/types";
+import { api } from "../sellora/api-client";
 
 type ProfileForm = {
   name: string;
@@ -54,7 +56,19 @@ export function SettingsSection({
   restoreIndustryFields,
   busy,
 }: SettingsSectionProps) {
-  return (
+ const [gatewayKeyId,setGatewayKeyId]=useState("");
+ const [gatewayKeySecret,setGatewayKeySecret]=useState("");
+ const [gatewayWebhookSecret,setGatewayWebhookSecret]=useState("");
+ const [gatewayTestMode,setGatewayTestMode]=useState(true);
+ const [gatewayStatus,setGatewayStatus]=useState(business.paymentGatewayStatus||"NOT_CONNECTED");
+ const [gatewaySecretSaved,setGatewaySecretSaved]=useState(false);
+ const [webhookSaved,setWebhookSaved]=useState(false);
+ const [gatewayBusy,setGatewayBusy]=useState(false);
+ const [gatewayMessage,setGatewayMessage]=useState("");
+ useEffect(()=>{api("/workspace/business/payment-gateway").then(v=>{setGatewayKeyId(v.keyId||"");setGatewayTestMode(v.testMode!==false);setGatewayStatus(v.status||"NOT_CONNECTED");setGatewaySecretSaved(Boolean(v.keySecretConfigured));setWebhookSaved(Boolean(v.webhookSecretConfigured));}).catch(()=>{});},[business.id]);
+ async function saveGateway(e:FormEvent){e.preventDefault();setGatewayBusy(true);setGatewayMessage("");try{const v=await api("/workspace/business/payment-gateway",{method:"PUT",body:JSON.stringify({keyId:gatewayKeyId,keySecret:gatewayKeySecret,webhookSecret:gatewayWebhookSecret,testMode:gatewayTestMode})});setGatewayStatus(v.status);setGatewaySecretSaved(Boolean(v.keySecretConfigured));setWebhookSaved(Boolean(v.webhookSecretConfigured));setGatewayKeySecret("");setGatewayWebhookSecret("");setGatewayMessage("Razorpay credentials verified and saved.");}catch(err){setGatewayMessage(err instanceof Error?err.message:"Could not connect Razorpay.");}finally{setGatewayBusy(false);}}
+ async function disconnectGateway(){if(!window.confirm("Disconnect Razorpay and disable online payments?"))return;setGatewayBusy(true);try{await api("/workspace/business/payment-gateway",{method:"DELETE"});setGatewayStatus("NOT_CONNECTED");setGatewayKeyId("");setGatewaySecretSaved(false);setWebhookSaved(false);setGatewayMessage("Razorpay disconnected.");}catch(err){setGatewayMessage(err instanceof Error?err.message:"Could not disconnect Razorpay.");}finally{setGatewayBusy(false);}}
+ return (
     <div className="sl-settings-stack">
       <section className="sl-section-card sl-settings-page">
         <span className="sl-kicker">BUSINESS PROFILE</span>
@@ -318,6 +332,22 @@ export function SettingsSection({
           </div>
         </form>
       </section>
+
+      <section className="sl-section-card sl-settings-page">
+        <span className="sl-kicker">PAYMENT INTEGRATION</span>
+        <h3>Connect Razorpay</h3>
+        <p>Connect your Razorpay account for catalogue checkout. Secrets are encrypted on the server and never displayed again.</p>
+        <form className="sl-form" onSubmit={saveGateway}>
+          <label>Razorpay Key ID<input required value={gatewayKeyId} onChange={e=>setGatewayKeyId(e.target.value)} placeholder="rzp_test_…" autoComplete="off"/></label>
+          <label>Razorpay Key Secret<input type="password" value={gatewayKeySecret} onChange={e=>setGatewayKeySecret(e.target.value)} placeholder={gatewaySecretSaved?"Saved securely — leave blank to keep":"Enter Key Secret"} autoComplete="new-password"/></label>
+          <label>Razorpay Webhook Secret<input type="password" value={gatewayWebhookSecret} onChange={e=>setGatewayWebhookSecret(e.target.value)} placeholder={webhookSaved?"Saved securely — leave blank to keep":"Webhook secret from Razorpay"} autoComplete="new-password"/></label>
+          <label className="sl-field-required-toggle"><input type="checkbox" checked={gatewayTestMode} onChange={e=>setGatewayTestMode(e.target.checked)}/> Test mode (recommended)</label>
+          <div className="sl-gateway-status"><div><b>Connection status</b><small>{gatewayStatus==="ACTIVE"?"Credentials verified":"Not connected"}{gatewaySecretSaved?" · Key Secret stored":""}{webhookSaved?" · Webhook configured":""}</small></div><span className={gatewayStatus==="ACTIVE"?"sl-published":"sl-draft"}>{gatewayStatus==="ACTIVE"?"Connected":"Not active"}</span></div>
+          {gatewayMessage&&<p role="status" className="sl-gateway-note">{gatewayMessage}</p>}
+          <div className="sl-modal-actions"><Btn type="submit" disabled={gatewayBusy}>{gatewayBusy?"Verifying…":"Verify and save Razorpay"} <CreditCard size={15}/></Btn>{gatewayStatus==="ACTIVE"&&<Btn type="button" kind="outline" disabled={gatewayBusy} onClick={()=>void disconnectGateway()}>Disconnect</Btn>}</div>
+        </form>
+        <p className="sl-gateway-note">Webhook URL: <b>{(import.meta.env.VITE_API_URL||"http://localhost:4000/api").replace(/\/$/,"")}/webhooks/razorpay</b>. Configure payment.captured, payment.failed and order.paid events in Razorpay Dashboard.</p>
+      </section>
       <section className="sl-section-card sl-settings-page">
         <span className="sl-kicker">SELLING PREFERENCES</span>
         <h3>Choose how customers buy from you</h3>
@@ -403,10 +433,7 @@ export function SettingsSection({
           {sellingMode === "ONLINE_PAYMENTS" &&
             business.paymentGatewayStatus !== "ACTIVE" && (
               <p className="sl-gateway-note">
-                Selecting online payments does not activate a gateway by itself.
-                Gateway onboarding and secure checkout are not yet connected, so
-                live payments will remain unavailable until those features are
-                implemented.
+                Connect and verify Razorpay above before accepting payments. Only fixed-price products can be purchased online.
               </p>
             )}
           <div className="sl-modal-actions">
