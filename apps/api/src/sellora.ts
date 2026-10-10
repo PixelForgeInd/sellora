@@ -532,8 +532,8 @@ router.delete("/workspace/business/payment-gateway",requireAuth,authenticated(as
  await prisma.business.update({where:{id:b.id},data:{paymentGatewayProvider:null,paymentGatewayStatus:"NOT_CONNECTED",razorpayKeyId:null,razorpayKeySecretEncrypted:null,razorpayWebhookSecretEncrypted:null,sellingMode:"CATALOG_ONLY"}});
  res.json({status:"NOT_CONNECTED"});
 }));
-router.post("/public/catalogues/:slug/payment-orders",authenticated(async(req,res)=>{
- const d=z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(10000).default(1),customerName:z.string().trim().min(2).max(120),customerEmail:z.string().trim().email().max(160).optional().or(z.literal("")),customerPhone:z.string().trim().min(8).max(30)}).parse(req.body);
+router.post("/public/catalogues/:slug/payment-orders",async(req,res)=>{
+ const d=z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(10000).default(1),customerName:z.string().trim().min(2).max(120),customerEmail:z.string().trim().email().max(160).optional().or(z.literal("")),customerPhone:z.string().trim().min(8).max(30),customerAddress:z.string().trim().min(8).max(500)}).parse(req.body);
  const c=await prisma.selloraCatalogue.findFirst({where:{slug:String(req.params.slug),isPublished:true},include:{business:true,items:{where:{productId:d.productId,product:{isActive:true}},include:{product:true}}}});
  if(!c)return res.status(404).json({error:"Catalogue or product not found."});
  const b=c.business;
@@ -544,9 +544,9 @@ router.post("/public/catalogues/:slug/payment-orders",authenticated(async(req,re
  const amountPaise=Math.round(Number(p.price)*d.quantity*100);
  if(!Number.isSafeInteger(amountPaise)||amountPaise<100||amountPaise>1000000000)return res.status(400).json({error:"Order amount is outside the supported range."});
  const order=await razorpayRequest(b.razorpayKeyId,decryptPaymentSecret(b.razorpayKeySecretEncrypted),"/orders",{method:"POST",body:JSON.stringify({amount:amountPaise,currency:p.currency||"INR",receipt:("sl_"+crypto.randomUUID()).slice(0,40),notes:{selloraCatalogueId:c.id,selloraBusinessId:b.id,productId:p.id,quantity:String(d.quantity)}})}) as {id:string;amount:number;currency:string};
- const payment=await prisma.paymentOrder.create({data:{businessId:b.id,catalogueId:c.id,productId:p.id,productName:p.name,quantity:d.quantity,unit:p.unit,amount:new Prisma.Decimal((amountPaise/100).toFixed(2)),currency:p.currency||"INR",customerName:d.customerName,customerEmail:d.customerEmail||null,customerPhone:d.customerPhone,razorpayOrderId:order.id,status:"CREATED"}});
+ const payment=await prisma.paymentOrder.create({data:{businessId:b.id,catalogueId:c.id,productId:p.id,productName:p.name,quantity:d.quantity,unit:p.unit,amount:new Prisma.Decimal((amountPaise/100).toFixed(2)),currency:p.currency||"INR",customerName:d.customerName,customerEmail:d.customerEmail||null,customerPhone:d.customerPhone,customerAddress:d.customerAddress,razorpayOrderId:order.id,status:"CREATED"}});
  res.status(201).json({paymentOrderId:payment.id,orderId:order.id,amount:order.amount,currency:order.currency,keyId:b.razorpayKeyId,name:b.name,description:p.name,themeColor:b.brandColor,testMode:b.razorpayTestMode});
-}));
+});
 router.post("/public/payments/verify",async(req,res)=>{
  const d=z.object({paymentOrderId:z.string().min(1),razorpayPaymentId:z.string().min(1),razorpayOrderId:z.string().min(1),razorpaySignature:z.string().min(1)}).parse(req.body);
  const p=await prisma.paymentOrder.findUnique({where:{id:d.paymentOrderId},include:{business:true}});
