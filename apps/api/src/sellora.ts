@@ -227,6 +227,24 @@ router.get("/workspace/products", requireAuth, authenticated(async (req,res) => 
   const products = await prisma.selloraProduct.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"}});
   res.json(products);
 }));
+function validateProductFields(fields: Record<string, string | number | boolean>, definitions: Array<{key:string;label:string;type:string;required:boolean;options:unknown}>) {
+  for (const field of definitions) {
+    const value = fields[field.key];
+    const empty = value === undefined || value === null || value === "";
+    if (field.required && empty) return `${field.label} is required.`;
+    if (empty) continue;
+    if (field.type === "number" && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) return `${field.label} must be a valid non-negative number.`;
+    if (["text", "textarea", "select"].includes(field.type) && typeof value !== "string") return `${field.label} must be text.`;
+    if (field.type === "boolean" && typeof value !== "boolean") return `${field.label} must be true or false.`;
+    if (field.type === "select" && Array.isArray(field.options) && !field.options.includes(value)) return `Choose a valid option for ${field.label}.`;
+    if (field.type === "multiselect") {
+      if (!Array.isArray(value) || value.some(v => typeof v !== "string")) return `${field.label} must contain a list of options.`;
+      if (Array.isArray(field.options) && value.some(v => !field.options.includes(v))) return `Choose valid options for ${field.label}.`;
+    }
+  }
+  return null;
+}
+
 router.post("/workspace/products", requireAuth, authenticated(async (req,res) => {
   const data = z.object({
     name:z.string().trim().min(2).max(160), sku:z.string().trim().max(64).optional(),
@@ -237,6 +255,9 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const definitions = await prisma.catalogueField.findMany({where:{businessId:business.id},select:{key:true,label:true,type:true,required:true,options:true}});
+  const fieldError = validateProductFields(data.fields, definitions);
+  if (fieldError) return res.status(400).json({error:fieldError});
   const product = await prisma.selloraProduct.create({data:{
     businessId:business.id,name:data.name,sku:data.sku || null,description:data.description || null,
     price:data.price === undefined ? null : new Prisma.Decimal(data.price),currency:data.currency,unit:data.unit,
@@ -254,6 +275,13 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
+  if (data.fields) {
+    const definitions = await prisma.catalogueField.findMany({where:{businessId:business.id},select:{key:true,label:true,type:true,required:true,options:true}});
+    const currentFields = (await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{fields:true}}))?.fields;
+    const mergedFields = {...(currentFields && typeof currentFields === "object" && !Array.isArray(currentFields) ? currentFields as Record<string,string|number|boolean> : {}), ...data.fields};
+    const fieldError = validateProductFields(mergedFields, definitions);
+    if (fieldError) return res.status(400).json({error:fieldError});
+  }
   const owned = await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id}});
   if (!owned) return res.status(404).json({error:"Product not found."});
   const {price,...rest}=data;
