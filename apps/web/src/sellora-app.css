@@ -786,3 +786,11 @@
 .sl-checkout-success-total b{color:#183b31;white-space:nowrap}
 .sl-checkout-success-total.grand{margin-top:3px;padding-top:13px;border-top:1px solid #dfe7da;font-size:14px;font-weight:800;color:#11194f}
 .sl-checkout-success-total.grand b{font-size:16px;color:#11194f}
+
+
+/* Itemized order totals in workspace order cards */
+.sl-order-totals{max-width:420px;margin:14px 0 18px auto;padding:12px 15px;border:1px solid #e4e9e1;border-radius:10px;background:#fafbf8}
+.sl-order-totals p{display:flex;justify-content:space-between;gap:16px;margin:0;padding:7px 0;color:#68776b;font-size:12px}
+.sl-order-totals p b{color:#183b31;white-space:nowrap}
+.sl-order-totals p.grand{border-top:1px solid #e2e8de;margin-top:4px;padding-top:11px;color:#11194f;font-weight:800}
+.sl-order-totals p.grand b{color:#11194f;font-size:14px}
