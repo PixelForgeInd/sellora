@@ -201,7 +201,7 @@
   color:var(--sellora-forest);
 }
 .sl-quiet{background:#eef4e9;color:var(--sellora-forest);border-color:#e0ead8}
-.sl-nav button{border-radius:9px;min-height:42px;transition:background .18s ease,color .18s ease}
+.sl-nav button{border-radius:9px;min-height:42px;transition:background .18s ease,color .18s ease;font-size:15px;}
 .sl-nav button.active{background:var(--sellora-navy);color:#fff;box-shadow:0 5px 14px rgba(8,15,77,.12)}
 .sl-nav button:hover:not(.active){background:#f1f3ec;color:var(--sellora-ink)}
 .sl-sidebar{box-shadow:4px 0 24px rgba(22,42,29,.025)}
