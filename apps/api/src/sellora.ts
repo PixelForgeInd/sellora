@@ -525,9 +525,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     total=total.add(lineTotal);
     orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
   }
-  if(currency !== "INR") return res.status(400).json({error:"Razorpay checkout currently supports INR orders only."});
-  const amountPaise = total.mul(100).toDecimalPlaces(0).toNumber();
-  if(!Number.isSafeInteger(amountPaise) || amountPaise < 100) return res.status(400).json({error:"Order total is outside Razorpay's supported amount range."});
+  if(!currency) return res.status(400).json({error:"Cart is empty."});
   let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date} | null = null;
   try {
     order = await prisma.$transaction(async (tx) => {
@@ -550,8 +548,8 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     });
   } catch (error) {
 
-    const message = error instanceof Error ? error.message : "Could not start Razorpay checkout.";
-    res.status(502).json({error:"Could not start payment. " + message});
+    const message = error instanceof Error ? error.message : "Could not submit order request.";
+    res.status(500).json({error:message});
   }
 });
 
