@@ -1,6 +1,7 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { BookOpen, Check, CreditCard, Plus, Trash2 } from "lucide-react";
 import { Button as Btn } from "./ui";
+import { categories as cats } from "../sellora/catalogue-fields";
 import type { Business, Field } from "../sellora/types";
 
 type ProfileForm = {
