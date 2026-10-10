@@ -510,10 +510,6 @@ export function SettingsSection({
             {platformSettingsError && <p role="alert" className="sl-gateway-note">{platformSettingsError}</p>}
             {platformPaymentSettings && (
               <>
-                <div className="sl-gateway-status">
-                  <div><b>Payment encryption key</b><small>{platformPaymentSettings.encryptionKeyConfigured ? "Configured on API server" : "Missing or invalid — configure the API environment"}</small></div>
-                  <span className={platformPaymentSettings.encryptionKeyConfigured ? "sl-published" : "sl-draft"}>{platformPaymentSettings.encryptionKeyConfigured ? "Ready" : "Action needed"}</span>
-                </div>
                 <label>
                   Razorpay webhook endpoint
                   <input readOnly value={platformPaymentSettings.webhookUrl || "Set PUBLIC_API_URL on the API server to display the public webhook URL"} />
@@ -523,7 +519,7 @@ export function SettingsSection({
                     <Btn type="button" kind="outline" onClick={() => void navigator.clipboard.writeText(platformPaymentSettings.webhookUrl)}>Copy webhook URL</Btn>
                   </div>
                 )}
-                <p className="sl-gateway-note">Configure this endpoint in the Razorpay account used for Sellora platform operations. Customer workspaces do not see this panel.</p>
+                <p className="sl-gateway-note">The encryption key is managed only through the API environment file. Customer workspaces do not see this panel.</p>
               </>
             )}
           </section>
