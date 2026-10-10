@@ -31,8 +31,8 @@
 @media(max-width:620px){.onboarding-panel{padding:20px 16px;max-height:95vh}.onboarding-form .form-grid{grid-template-columns:1fr}.onboarding-actions .button{flex:1}.onboarding-subtitle{font-size:11px}}
 
 /* Workspace sidebar navigation: clearer, stronger hierarchy. */
-.sl-sidebar .sl-nav button {
-  font-size: 20px;
+.sl-nav button {
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.4;
 }
