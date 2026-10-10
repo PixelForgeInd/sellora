@@ -157,6 +157,8 @@ model Business {
   sellingMode     String           @default("CATALOG_ONLY")
   paymentGatewayProvider String?
   paymentGatewayStatus   String    @default("NOT_CONNECTED")
+  razorpayKeyId String?
+  razorpayKeySecretEncrypted String?
   lastOrderNumber Int @default(0)
   catalogueFields CatalogueField[]
   ownerUserId     String?
@@ -239,6 +241,8 @@ model CatalogueProduct {
 model SelloraOrder {
   id           String   @id @default(cuid())
   orderNumber  String   @unique
+  razorpayOrderId String? @unique
+  razorpayPaymentId String? @unique
   businessId   String
   catalogueId  String
   business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
