@@ -92,3 +92,18 @@
 .sl-settings-page .sl-form .sl-color-field input{min-height:32px}
 .sl-settings-page .sl-modal-actions{justify-content:flex-start}
 .sl-settings-stack .sl-settings-page{padding:clamp(18px,3vw,28px)}
+
+/* Version 1: configurable industry-specific product fields */
+.sl-industry-fields{display:grid;gap:0;border:1px solid #e8ece4;border-radius:12px;overflow:hidden;margin:18px 0}
+.sl-industry-field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #edf0e9}
+.sl-industry-field:last-child{border-bottom:0}
+.sl-industry-field>span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sl-industry-field b{font-size:12px;font-weight:650}
+.sl-industry-field small{font-size:10px;color:#7a8376;overflow-wrap:anywhere}
+.sl-field-remove{display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;border:1px solid #f0ded9;border-radius:8px;color:#a64236;background:#fff;cursor:pointer}
+.sl-field-remove:hover{background:#fff5f2}
+.sl-add-field-form{padding:16px;border-radius:12px;background:#f7f9f5;border:1px solid #edf0e9}
+.sl-field-required-toggle{display:flex!important;flex-direction:row!important;align-items:center;gap:9px!important;min-height:42px}
+.sl-field-required-toggle input{width:16px;height:16px;accent-color:#599c56}
+.sl-dynamic-fields select[multiple]{min-height:100px;padding:8px}
+@media(max-width:640px){.sl-add-field-form{padding:12px}.sl-industry-field{padding:11px}}
