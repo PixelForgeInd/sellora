@@ -34,3 +34,21 @@ CREATE INDEX "SelloraOrderItem_orderId_idx" ON "SelloraOrderItem"("orderId");
 ALTER TABLE "SelloraOrder" ADD CONSTRAINT "SelloraOrder_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "SelloraOrder" ADD CONSTRAINT "SelloraOrder_catalogueId_fkey" FOREIGN KEY ("catalogueId") REFERENCES "SelloraCatalogue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "SelloraOrderItem" ADD CONSTRAINT "SelloraOrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "SelloraOrder"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "Business" ADD COLUMN "lastOrderNumber" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "SelloraOrder" ADD COLUMN "orderNumber" TEXT;
+UPDATE "SelloraOrder" SET "orderNumber" = 'ORDER-' || LPAD(ROW_NUMBER() OVER (ORDER BY "createdAt", "id")::TEXT, 5, '0') WHERE "orderNumber" IS NULL;
+ALTER TABLE "SelloraOrder" ALTER COLUMN "orderNumber" SET NOT NULL;
+CREATE UNIQUE INDEX "SelloraOrder_orderNumber_key" ON "SelloraOrder"("orderNumber");
+CREATE TABLE "CatalogueAnalyticsEvent" (
+  "id" TEXT NOT NULL,
+  "catalogueId" TEXT NOT NULL,
+  "eventType" TEXT NOT NULL,
+  "sessionId" TEXT,
+  "metadata" JSONB,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "CatalogueAnalyticsEvent_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "CatalogueAnalyticsEvent_catalogueId_eventType_createdAt_idx" ON "CatalogueAnalyticsEvent"("catalogueId", "eventType", "createdAt");
+CREATE INDEX "CatalogueAnalyticsEvent_catalogueId_sessionId_eventType_idx" ON "CatalogueAnalyticsEvent"("catalogueId", "sessionId", "eventType");
+ALTER TABLE "CatalogueAnalyticsEvent" ADD CONSTRAINT "CatalogueAnalyticsEvent_catalogueId_fkey" FOREIGN KEY ("catalogueId") REFERENCES "SelloraCatalogue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
