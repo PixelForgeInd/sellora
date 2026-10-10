@@ -227,7 +227,7 @@ router.get("/workspace/products", requireAuth, authenticated(async (req,res) => 
   const products = await prisma.selloraProduct.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"}});
   res.json(products);
 }));
-function validateProductFields(fields: Record<string, string | number | boolean>, definitions: Array<{key:string;label:string;type:string;required:boolean;options:unknown}>) {
+function validateProductFields(fields: Record<string, string | number | boolean | string[]>, definitions: Array<{key:string;label:string;type:string;required:boolean;options:unknown}>) {
   for (const field of definitions) {
     const value = fields[field.key];
     const empty = value === undefined || value === null || value === "";
@@ -251,7 +251,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     description:z.string().trim().max(2000).optional(), price:z.number().positive().optional(),
     currency:z.string().length(3).default("INR"), unit:z.string().trim().min(1).max(20).default("piece"),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).optional(),
-    fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean()])).default({})
+    fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).default({})
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
@@ -275,15 +275,15 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
+  const owned = await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id}});
+  if (!owned) return res.status(404).json({error:"Product not found."});
   if (data.fields) {
     const definitions = await prisma.catalogueField.findMany({where:{businessId:business.id},select:{key:true,label:true,type:true,required:true,options:true}});
-    const currentFields = (await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{fields:true}}))?.fields;
-    const mergedFields = {...(currentFields && typeof currentFields === "object" && !Array.isArray(currentFields) ? currentFields as Record<string,string|number|boolean> : {}), ...data.fields};
+    const currentFields = owned.fields;
+    const mergedFields = {...(currentFields && typeof currentFields === "object" && !Array.isArray(currentFields) ? currentFields as Record<string,string|number|boolean|string[]> : {}), ...data.fields};
     const fieldError = validateProductFields(mergedFields, definitions);
     if (fieldError) return res.status(400).json({error:fieldError});
   }
-  const owned = await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id}});
-  if (!owned) return res.status(404).json({error:"Product not found."});
   const {price,...rest}=data;
   const product=await prisma.selloraProduct.update({where:{id:owned.id},data:{
     ...rest,imageUrl:rest.imageUrl === "" ? null : rest.imageUrl,
