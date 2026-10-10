@@ -180,6 +180,30 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     const publicCatalogue = await publicResponse.json();
     assert.equal(publicCatalogue.products.length, 1);
     assert.equal(publicCatalogue.products[0].name, `Updated Yarn ${suffix}`);
+    assert.equal(publicCatalogue.business.sellingMode, "CATALOG_ONLY");
+
+    const disabledCheckout = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/orders`, {
+      method: "POST",
+      body: { customerName: "Test Customer", phone: "+919876543210", items: [{ productId, quantity: 2 }] },
+    });
+    assert.equal(disabledCheckout.status, 403, "catalogue-only mode must not allow checkout");
+
+    const enableCheckout = await jsonRequest("/api/workspace/business/settings", {
+      method: "PATCH", token, body: { sellingMode: "ONLINE_PAYMENTS" },
+    });
+    assert.equal(enableCheckout.status, 200);
+
+    const updatedPublic = await request(`/api/public/catalogues/${catalogueSlug}`);
+    assert.equal((await updatedPublic.json()).business.sellingMode, "ONLINE_PAYMENTS");
+
+    const order = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/orders`, {
+      method: "POST",
+      body: { customerName: "Test Customer", email: "buyer@example.test", phone: "+919876543210", address: "Test address", items: [{ productId, quantity: 2 }] },
+    });
+    assert.equal(order.status, 201);
+    const createdOrder = await order.json();
+    assert.equal(createdOrder.subtotal, "310");
+    assert.equal(createdOrder.paymentStatus, "UNPAID");
   });
 
   await t.test("isolates another account from the first account's products", async () => {
