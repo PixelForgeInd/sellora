@@ -41,7 +41,7 @@ export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;er
  const startCheckout=()=>{if(!cartProducts.length){setCheckoutError("Add at least one product to your cart.");return;}setCheckoutStep("details");setCheckoutError("");recordEvent("checkout_started");};
  const buyNow=async()=>{
   if(!data||!data.checkoutReady||demo)return;
-  if(customerName.trim().length<2||customerPhone.replace(/\\D/g,"").length<7||customerAddress.trim().length<5){setCheckoutError("Enter your name, valid phone number and delivery address.");return;}
+  if(customerName.trim().length<2||customerPhone.replace(/\D/g,"").length<7||customerAddress.trim().length<5){setCheckoutError("Enter your name, valid phone number and delivery address.");return;}
   setCheckoutBusy(true);setCheckoutError("");
   try{
    const result=await api("/public/catalogues/"+encodeURIComponent(data.slug)+"/orders",{method:"POST",body:JSON.stringify({customerName:customerName.trim(),email:customerEmail.trim(),phone:customerPhone.trim(),address:customerAddress.trim(),notes:checkoutNotes.trim(),items:cartProducts.map(p=>({productId:p.id,quantity:cart[p.id]}))})},"");
