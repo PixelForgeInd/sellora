@@ -413,6 +413,14 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
   res.json(updated);
 }));
 
+
+router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=>{
+ const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+ if(!business)return res.status(404).json({error:"Business not found."});
+ const orders=await prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"},take:100,select:{id:true,productName:true,quantity:true,unit:true,amount:true,currency:true,customerName:true,customerEmail:true,customerPhone:true,status:true,razorpayPaymentId:true,createdAt:true,paidAt:true}});
+ res.json(orders.map(order=>({...order,amount:order.amount.toString()})));
+}));
+
 router.get("/workspace/business/payment-gateway",requireAuth,authenticated(async(req,res)=>{
  const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{paymentGatewayProvider:true,paymentGatewayStatus:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true,razorpayTestMode:true}});
  if(!b)return res.status(404).json({error:"Business not found."});
