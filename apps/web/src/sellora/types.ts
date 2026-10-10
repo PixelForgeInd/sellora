@@ -62,4 +62,5 @@ export type PublicData = {
     paymentGatewayStatus?: string | null;
   };
   products: Product[];
+  checkoutReady?: boolean;
 };
