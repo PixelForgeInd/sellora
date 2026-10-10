@@ -542,3 +542,39 @@
 .sl-storefront .sl-checkout-panel a{
   text-shadow:none;
 }
+
+
+/* Contrast fix for WhatsApp contact action on dark contact panel and header */
+.sl-storefront .sl-store-whatsapp,
+.sl-storefront .sl-store-whatsapp:visited{
+  background:var(--store-accent,var(--store-brand,#599c56));
+  border:1px solid var(--store-accent,var(--store-brand,#599c56));
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+  font-weight:750;
+  opacity:1;
+}
+.sl-storefront .sl-store-whatsapp svg,
+.sl-storefront .sl-store-whatsapp span{
+  color:#fff!important;
+  fill:currentColor;
+  -webkit-text-fill-color:#fff;
+}
+.sl-storefront .sl-store-whatsapp:hover,
+.sl-storefront .sl-store-whatsapp:focus-visible{
+  background:color-mix(in srgb,var(--store-accent,var(--store-brand,#599c56)) 84%,#000);
+  border-color:color-mix(in srgb,var(--store-accent,var(--store-brand,#599c56)) 84%,#000);
+  color:#fff!important;
+  -webkit-text-fill-color:#fff;
+}
+.sl-storefront .sl-store-contact .sl-store-whatsapp{
+  background:#fff;
+  border-color:#fff;
+  color:var(--store-accent,var(--store-brand,#599c56))!important;
+  -webkit-text-fill-color:var(--store-accent,var(--store-brand,#599c56));
+}
+.sl-storefront .sl-store-contact .sl-store-whatsapp svg,
+.sl-storefront .sl-store-contact .sl-store-whatsapp span{
+  color:var(--store-accent,var(--store-brand,#599c56))!important;
+  -webkit-text-fill-color:var(--store-accent,var(--store-brand,#599c56));
+}
