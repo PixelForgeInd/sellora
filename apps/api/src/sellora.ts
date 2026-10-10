@@ -164,7 +164,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     name:z.string().trim().min(2).max(160), sku:z.string().trim().max(64).optional(),
     description:z.string().trim().max(2000).optional(), price:z.number().positive().optional(),
     currency:z.string().length(3).default("INR"), unit:z.string().trim().min(1).max(20).default("piece"),
-    imageUrl:z.union([z.string().url().max(500),z.literal("")]).optional(),
+    imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean()])).default({})
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
@@ -181,7 +181,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     name:z.string().trim().min(2).max(160).optional(),sku:z.string().trim().max(64).nullable().optional(),
     description:z.string().trim().max(2000).nullable().optional(),price:z.number().positive().nullable().optional(),
     currency:z.string().length(3).optional(),unit:z.string().trim().min(1).max(20).optional(),
-    imageUrl:z.union([z.string().url().max(500),z.literal("")]).nullable().optional(),
+    imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean()])).optional()
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
