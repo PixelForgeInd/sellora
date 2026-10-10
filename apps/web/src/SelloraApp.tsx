@@ -27,7 +27,12 @@ import {
 } from "./sellora/catalogue-fields";
 import { formatMoney as money } from "./sellora/formatters";
 import { PublicCatalogue } from "./components/PublicCatalogue";
-import { AuthScreen, CatalogueSection, OnboardingScreen, ProductSection } from "./components/WorkspaceSections";
+import {
+  AuthScreen,
+  CatalogueSection,
+  OnboardingScreen,
+  ProductSection,
+} from "./components/WorkspaceSections";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
   Business,
@@ -488,8 +493,34 @@ export default function SelloraApp() {
   }
   if (slug || isDemo)
     return <PublicCatalogue data={pub} error={pubError} demo={isDemo} />;
-  if (!access || !user) return <AuthScreen email={email} setEmail={setEmail} password={password} setPassword={setPassword} showPassword={showPassword} setShowPassword={setShowPassword} mode={mode} setMode={setMode} error={error} setError={setError} busy={busy} auth={auth} />;
-  if (!business) return <OnboardingScreen bform={bform} setBform={setBform} error={error} busy={busy} createBusiness={createBusiness} signOut={signOut} />;
+  if (!access || !user)
+    return (
+      <AuthScreen
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        mode={mode}
+        setMode={setMode}
+        error={error}
+        setError={setError}
+        busy={busy}
+        auth={auth}
+      />
+    );
+  if (!business)
+    return (
+      <OnboardingScreen
+        bform={bform}
+        setBform={setBform}
+        error={error}
+        busy={busy}
+        createBusiness={createBusiness}
+        signOut={signOut}
+      />
+    );
   const category =
     cats.find((c) => c[0] === business.productCategory)?.[1] || "Products";
   const launchKey = "sellora_launch_checks_" + business.id;
@@ -756,8 +787,30 @@ export default function SelloraApp() {
             </section>
           </>
         )}
-        {page === "products" && <ProductSection category={category} products={products} startProduct={startProduct} deleteProduct={deleteProduct} />}
-        {page === "catalogues" && <CatalogueSection business={business} products={products} catalogues={catalogues} setCform={setCform} setEditingCatalogue={setEditingCatalogue} setError={setError} setModal={setModal} setPreview={setPreview} editCatalogue={editCatalogue} publish={publish} share={share} shareWhatsApp={shareWhatsApp} />}
+        {page === "products" && (
+          <ProductSection
+            category={category}
+            products={products}
+            startProduct={startProduct}
+            deleteProduct={deleteProduct}
+          />
+        )}
+        {page === "catalogues" && (
+          <CatalogueSection
+            business={business}
+            products={products}
+            catalogues={catalogues}
+            setCform={setCform}
+            setEditingCatalogue={setEditingCatalogue}
+            setError={setError}
+            setModal={setModal}
+            setPreview={setPreview}
+            editCatalogue={editCatalogue}
+            publish={publish}
+            share={share}
+            shareWhatsApp={shareWhatsApp}
+          />
+        )}
         {page === "launch" && (
           <section className="sl-launch-page">
             <section className="sl-section-card sl-launch-summary">
