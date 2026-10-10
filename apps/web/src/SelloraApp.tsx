@@ -33,6 +33,8 @@ import {
   OnboardingScreen,
   ProductSection,
 } from "./components/WorkspaceSections";
+import { SettingsSection } from "./components/SettingsSection";
+import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
   Business,
