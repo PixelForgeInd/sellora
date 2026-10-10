@@ -50,9 +50,16 @@ if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
 const tokenLifetimeSeconds = 60 * 60 * 24 * 7;
 
 function paymentEncryptionKey(): Buffer {
- const raw=process.env.PAYMENT_ENCRYPTION_KEY||"";
- if(!/^[a-fA-F0-9]{64}$/.test(raw)) throw new Error("PAYMENT_ENCRYPTION_KEY must be a 32-byte (64-character hex) key.");
- return Buffer.from(raw,"hex");
+ // Sellora manages this key centrally; customers never configure it.
+ // Keep the legacy variable as a fallback for existing deployments.
+ const raw = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
+ const key = /^[a-fA-F0-9]{64}$/.test(raw)
+  ? Buffer.from(raw, "hex")
+  : Buffer.from(raw, "base64");
+ if (key.length !== 32) {
+  throw new Error("Configure PAYMENT_ENCRYPTION_KEY (or the legacy RAZORPAY_ENCRYPTION_KEY) on the Sellora API server as a 32-byte key.");
+ }
+ return key;
 }
 function encryptPaymentSecret(value:string):string {
  const iv=crypto.randomBytes(12), cipher=crypto.createCipheriv("aes-256-gcm",paymentEncryptionKey(),iv);
@@ -493,7 +500,7 @@ router.put("/workspace/business/payment-gateway",requireAuth,authenticated(async
  const d=z.object({keyId:z.string().trim().min(8).max(100),keySecret:z.string().trim().min(8).max(200).optional().or(z.literal("")),webhookSecret:z.string().trim().min(1).max(200).optional().or(z.literal("")),testMode:z.boolean().default(true)}).parse(req.body);
  const b=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,razorpayKeySecretEncrypted:true,razorpayWebhookSecretEncrypted:true}});
  if(!b)return res.status(404).json({error:"Business not found."});
- try{paymentEncryptionKey();}catch{return res.status(503).json({error:"PAYMENT_ENCRYPTION_KEY must be configured on the API server before connecting Razorpay."});}
+ try{paymentEncryptionKey();}catch(error){return res.status(503).json({error:error instanceof Error?error.message:"Payment encryption is not configured on the Sellora API server."});}
  if(d.testMode&&!d.keyId.startsWith("rzp_test_"))return res.status(400).json({error:"Test mode requires a Razorpay test Key ID (rzp_test_…)."});
  if(!d.testMode&&!d.keyId.startsWith("rzp_live_"))return res.status(400).json({error:"Live mode requires a Razorpay live Key ID (rzp_live_…)."});
  const secretValue=d.keySecret||(b.razorpayKeySecretEncrypted?decryptPaymentSecret(b.razorpayKeySecretEncrypted):"");
