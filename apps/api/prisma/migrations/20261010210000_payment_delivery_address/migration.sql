@@ -1,1 +1,1 @@
-ALTER TABLE "PaymentOrder" ADD COLUMN "customerAddress" TEXT NOT NULL DEFAULT '';
+-- Catalogue checkout now stores multi-item order requests in SelloraOrder; PaymentOrder was never deployed from the earlier branch-only implementation.
