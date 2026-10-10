@@ -3,6 +3,8 @@ import type { FormEvent, CSSProperties } from "react";
 import {
   ArrowRight,
   BookOpen,
+  BarChart3,
+  ClipboardList,
   Check,
   CheckCircle2,
   Copy,
@@ -50,6 +52,10 @@ export default function SelloraApp() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<Record<string, any>>({});
+  const [analyticsBusy, setAnalyticsBusy] = useState("");
+  const [catalogueActionMessage, setCatalogueActionMessage] = useState("");
 
   // Authentication screen state
   const [email, setEmail] = useState("");
@@ -232,6 +238,63 @@ export default function SelloraApp() {
       setBusy(false);
     }
   }
+  async function saveRazorpay(e: FormEvent, keyId: string, keySecret: string) {
+    e.preventDefault();
+    if (!keyId.trim() || !keySecret.trim()) {
+      setError("Enter both the Razorpay Key ID and Key Secret.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api("/workspace/payments/razorpay/connect", {
+        method: "POST",
+        body: JSON.stringify({
+          keyId: keyId.trim(),
+          keySecret: keySecret.trim(),
+        }),
+      });
+      setBusiness((old) =>
+        old
+          ? {
+              ...old,
+              paymentGatewayProvider: result.paymentGatewayProvider,
+              paymentGatewayStatus: result.paymentGatewayStatus,
+            }
+          : old,
+      );
+      setNotice(result.message || "Razorpay connected.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not connect Razorpay.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function disconnectRazorpay() {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await api("/workspace/payments/razorpay/disconnect", {
+        method: "POST",
+      });
+      setBusiness((old) =>
+        old
+          ? {
+              ...old,
+              paymentGatewayProvider: result.paymentGatewayProvider,
+              paymentGatewayStatus: result.paymentGatewayStatus,
+            }
+          : old,
+      );
+      setNotice("Razorpay disconnected.");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not disconnect Razorpay.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   async function saveSellingMode(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -244,7 +307,7 @@ export default function SelloraApp() {
       setBusiness((old) => (old ? { ...old, ...updated } : old));
       setNotice(
         sellingMode === "ONLINE_PAYMENTS"
-          ? "Online payments selected. Connect a gateway before accepting live payments."
+          ? "Online payments enabled. Customers can pay through your connected Razorpay account."
           : "Catalogue-only mode saved.",
       );
     } catch (e) {
@@ -638,6 +701,8 @@ export default function SelloraApp() {
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
+            { id: "orders", label: "Orders", icon: ClipboardList },
+            { id: "analytics", label: "Analytics", icon: BarChart3 },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
@@ -647,6 +712,17 @@ export default function SelloraApp() {
               onClick={() => {
                 setPage(item.id);
                 setError("");
+                if (item.id === "orders") {
+                  api("/workspace/orders")
+                    .then(setOrders)
+                    .catch((e) =>
+                      setError(
+                        e instanceof Error
+                          ? e.message
+                          : "Could not load orders",
+                      ),
+                    );
+                }
               }}
             >
               <item.icon size={17} />
@@ -824,6 +900,274 @@ export default function SelloraApp() {
             shareWhatsApp={shareWhatsApp}
           />
         )}
+        {page === "orders" && (
+          <section className="sl-section-card sl-orders-page">
+            <div className="sl-section-head">
+              <div>
+                <h3>Customer orders</h3>
+                <p>
+                  Order requests, customer details and item-level breakdowns.
+                </p>
+              </div>
+              <Btn
+                onClick={async () => {
+                  try {
+                    setOrders(await api("/workspace/orders"));
+                  } catch (e) {
+                    setError(
+                      e instanceof Error ? e.message : "Could not load orders",
+                    );
+                  }
+                }}
+              >
+                <ArrowRight size={15} /> Refresh orders
+              </Btn>
+            </div>
+            {!orders.length ? (
+              <div className="sl-orders-empty">
+                <ClipboardList size={32} />
+                <h3>No orders yet</h3>
+                <p>
+                  Orders submitted through your published online catalogue will
+                  appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="sl-orders-list">
+                {orders.map((order) => (
+                  <details className="sl-order-card" key={order.id}>
+                    <summary>
+                      <span>
+                        <b>{order.orderNumber || order.id}</b>
+                        <small>
+                          {order.customerName} ·{" "}
+                          {new Date(order.createdAt).toLocaleString()}
+                        </small>
+                      </span>
+                      <span>
+                        <b>{money(order.subtotal, order.currency)}</b>
+                        <small>
+                          {order.status} · {order.paymentStatus}
+                        </small>
+                      </span>
+                      <ArrowRight size={16} />
+                    </summary>
+                    <div className="sl-order-detail">
+                      <div className="sl-order-customer">
+                        <p>
+                          <b>Customer</b>
+                          <br />
+                          {order.customerName}
+                        </p>
+                        <p>
+                          <b>Phone</b>
+                          <br />
+                          {order.phone}
+                        </p>
+                        <p>
+                          <b>Email</b>
+                          <br />
+                          {order.email || "Not provided"}
+                        </p>
+                        <p>
+                          <b>Catalogue</b>
+                          <br />
+                          {order.catalogue?.title || "—"}
+                        </p>
+                        <p>
+                          <b>Delivery address</b>
+                          <br />
+                          {order.address || "Not provided"}
+                        </p>
+                        <p>
+                          <b>Notes</b>
+                          <br />
+                          {order.notes || "None"}
+                        </p>
+                      </div>
+                      <h4>Ordered items</h4>
+                      {order.items.map((item: any) => (
+                        <div className="sl-order-item" key={item.id}>
+                          <span>
+                            <b>{item.productName}</b>
+                            <small>
+                              {item.quantity} ×{" "}
+                              {money(item.unitPrice, order.currency, item.unit)}
+                            </small>
+                          </span>
+                          <strong>
+                            {money(item.lineTotal, order.currency, item.unit)}
+                          </strong>
+                        </div>
+                      ))}
+                      <p className="sl-order-payment-note">
+                        Payment is not verified by Sellora yet. Marking payment
+                        complete requires a connected payment gateway.
+                      </p>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+        {page === "analytics" && (
+          <section className="sl-section-card sl-analytics-page">
+            <div className="sl-section-head">
+              <div>
+                <h3>Performance by catalogue</h3>
+                <p>
+                  Views, add-to-cart actions, checkout starts and submitted
+                  orders.
+                </p>
+              </div>
+            </div>
+            {!catalogues.length ? (
+              <p>Create a catalogue to start seeing analytics.</p>
+            ) : (
+              <div className="sl-analytics-grid">
+                {catalogues.map((c) => {
+                  const m = analytics[c.id];
+                  return (
+                    <article className="sl-analytics-card" key={c.id}>
+                      <div>
+                        <span className="sl-kicker">
+                          {c.isPublished ? "PUBLISHED" : "DRAFT"}
+                        </span>
+                        <h4>{c.title}</h4>
+                        <small>{c.slug}</small>
+                      </div>
+                      <button
+                        disabled={analyticsBusy === c.id}
+                        onClick={async () => {
+                          setAnalyticsBusy(c.id);
+                          try {
+                            const result = await api(
+                              "/workspace/catalogues/" + c.id + "/analytics",
+                            );
+                            setAnalytics((old) => ({ ...old, [c.id]: result }));
+                          } catch (e) {
+                            setError(
+                              e instanceof Error
+                                ? e.message
+                                : "Could not load analytics",
+                            );
+                          } finally {
+                            setAnalyticsBusy("");
+                          }
+                        }}
+                      >
+                        {analyticsBusy === c.id
+                          ? "Loading…"
+                          : m
+                            ? "Refresh metrics"
+                            : "View analytics"}{" "}
+                        <ArrowRight size={14} />
+                      </button>
+                      {m && (
+                        <div className="sl-analytics-metrics">
+                          <span>
+                            <small>Catalogue opens</small>
+                            <b>{m.views}</b>
+                          </span>
+                          <span>
+                            <small>Add to cart</small>
+                            <b>{m.addToCart}</b>
+                          </span>
+                          <span>
+                            <small>Checkout starts</small>
+                            <b>{m.checkoutStarted}</b>
+                          </span>
+                          <span>
+                            <small>Orders submitted</small>
+                            <b>{m.ordersSubmitted}</b>
+                          </span>
+                          <span>
+                            <small>Orders recorded</small>
+                            <b>{m.orders}</b>
+                          </span>
+                          <span>
+                            <small>Payments confirmed</small>
+                            <b>{m.paymentsConfirmed}</b>
+                          </span>
+                        </div>
+                      )}
+                      <div className="sl-analytics-share-actions">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const url = window.location.origin + "/c/" + c.slug;
+                            try {
+                              if (navigator.share) {
+                                await navigator.share({ title: c.title, url });
+                                setCatalogueActionMessage(
+                                  "Share dialog opened.",
+                                );
+                              } else {
+                                await navigator.clipboard.writeText(url);
+                                setCatalogueActionMessage(
+                                  "Catalogue link copied.",
+                                );
+                              }
+                            } catch (e) {
+                              if (e instanceof Error && e.name === "AbortError")
+                                return;
+                              setError(
+                                "Could not share the catalogue. Try copying the link instead.",
+                              );
+                            }
+                          }}
+                        >
+                          <Share2 size={14} /> Share catalogue
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const url = window.location.origin + "/c/" + c.slug;
+                            try {
+                              await navigator.clipboard.writeText(url);
+                              setCatalogueActionMessage(
+                                "Catalogue link copied.",
+                              );
+                            } catch {
+                              setError(
+                                "Could not copy the link. Open the catalogue and copy its URL from your browser.",
+                              );
+                            }
+                          }}
+                        >
+                          <Copy size={14} /> Copy link
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            window.open(
+                              "/c/" + c.slug,
+                              "_blank",
+                              "noopener,noreferrer",
+                            )
+                          }
+                        >
+                          <ExternalLink size={14} /> Open in new tab
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+            {catalogueActionMessage && (
+              <p className="sl-analytics-action-message" role="status">
+                {catalogueActionMessage}
+              </p>
+            )}
+            <p className="sl-analytics-disclaimer">
+              Analytics begin after tracking is deployed. Payment completion
+              stays at zero until a payment provider verifies successful
+              transactions.
+            </p>
+          </section>
+        )}
         {page === "launch" && (
           <section className="sl-launch-page">
             <section className="sl-section-card sl-launch-summary">
@@ -955,6 +1299,8 @@ export default function SelloraApp() {
             sellingMode={sellingMode}
             setSellingMode={setSellingMode}
             saveSellingMode={saveSellingMode}
+            saveRazorpay={saveRazorpay}
+            disconnectRazorpay={disconnectRazorpay}
             fields={fields}
             fieldForm={fieldForm}
             setFieldForm={setFieldForm}
@@ -1089,6 +1435,8 @@ const demoCatalogue: PublicData = {
     email: "info@ganeshaasutra.in",
     website: "https://ganeshaasutra.in",
     brandColor: "#147b46",
+    sellingMode: "CATALOG_ONLY",
+    paymentGatewayStatus: "NOT_CONNECTED",
   },
   products: [
     {

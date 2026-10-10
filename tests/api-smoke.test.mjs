@@ -180,6 +180,46 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     const publicCatalogue = await publicResponse.json();
     assert.equal(publicCatalogue.products.length, 1);
     assert.equal(publicCatalogue.products[0].name, `Updated Yarn ${suffix}`);
+    assert.equal(publicCatalogue.business.sellingMode, "CATALOG_ONLY");
+
+    const disabledCheckout = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/orders`, {
+      method: "POST",
+      body: { customerName: "Test Customer", phone: "+919876543210", items: [{ productId, quantity: 2 }] },
+    });
+    assert.equal(disabledCheckout.status, 403, "catalogue-only mode must not allow checkout");
+
+    // Online payments must remain disabled until Razorpay is connected and verified.
+    const enableCheckout = await jsonRequest("/api/workspace/business/settings", {
+      method: "PATCH", token, body: { sellingMode: "ONLINE_PAYMENTS" },
+    });
+    assert.equal(enableCheckout.status, 409);
+    assert.match((await enableCheckout.json()).error, /connect and verify Razorpay/i);
+
+    const stillCatalogueOnly = await request(`/api/public/catalogues/${catalogueSlug}`);
+    const publicAfterRejectedEnable = await stillCatalogueOnly.json();
+    assert.equal(publicAfterRejectedEnable.business.sellingMode, "CATALOG_ONLY");
+
+    for (const eventType of ["page_view", "add_to_cart", "checkout_started"]) {
+      const event = await jsonRequest(`/api/public/catalogues/${catalogueSlug}/events`, {
+        method: "POST", body: { eventType, sessionId: `test-session-${suffix}` },
+      });
+      assert.equal(event.status, 202);
+    }
+    const orderList = await jsonRequest("/api/workspace/orders", { token });
+    assert.equal(orderList.status, 200);
+    const listedOrders = await orderList.json();
+    assert.equal(listedOrders.length, 0);
+
+    const catalogueList = await jsonRequest("/api/workspace/catalogues", { token });
+    const currentCatalogue = (await catalogueList.json()).find((item) => item.slug === catalogueSlug);
+    const analytics = await jsonRequest(`/api/workspace/catalogues/${currentCatalogue.id}/analytics`, { token });
+    assert.equal(analytics.status, 200);
+    const metrics = await analytics.json();
+    assert.equal(metrics.views, 1);
+    assert.equal(metrics.addToCart, 1);
+    assert.equal(metrics.checkoutStarted, 1);
+    assert.equal(metrics.ordersSubmitted, 0);
+    assert.equal(metrics.paymentsConfirmed, 0);
   });
 
   await t.test("isolates another account from the first account's products", async () => {

@@ -6,6 +6,42 @@ import { promisify } from "node:util";
 
 const router = Router();
 const prisma = new PrismaClient();
+
+function razorpayEncryptionKey(): Buffer {
+  const configured = process.env.RAZORPAY_ENCRYPTION_KEY || "";
+  const key = /^[a-fA-F0-9]{64}$/.test(configured)
+    ? Buffer.from(configured, "hex")
+    : Buffer.from(configured, "base64");
+  if (key.length !== 32) throw new Error("Set RAZORPAY_ENCRYPTION_KEY to a 32-byte base64 or 64-character hex key.");
+  return key;
+}
+function encryptGatewaySecret(value: string): string {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", razorpayEncryptionKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return [iv.toString("base64"), cipher.getAuthTag().toString("base64"), encrypted.toString("base64")].join(".");
+}
+function decryptGatewaySecret(value: string): string {
+  const [ivPart, tagPart, encryptedPart] = value.split(".");
+  if (!ivPart || !tagPart || !encryptedPart) throw new Error("Stored Razorpay credentials are invalid.");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", razorpayEncryptionKey(), Buffer.from(ivPart, "base64"));
+  decipher.setAuthTag(Buffer.from(tagPart, "base64"));
+  return Buffer.concat([decipher.update(Buffer.from(encryptedPart, "base64")), decipher.final()]).toString("utf8");
+}
+async function razorpayRequest<T>(keyId: string, keySecret: string, path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch("https://api.razorpay.com/v1" + path, {
+    ...init,
+    headers: {
+      Authorization: "Basic " + Buffer.from(keyId + ":" + keySecret).toString("base64"),
+      "Content-Type": "application/json",
+      ...(init.headers || {})
+    }
+  });
+  const result = await response.json().catch(() => ({})) as T & { error?: { description?: string } };
+  if (!response.ok) throw new Error(result?.error?.description || "Razorpay request failed.");
+  return result;
+}
+
 const scrypt = promisify(crypto.scrypt);
 const secret = process.env.AUTH_SECRET || "sellora-development-secret-change-before-deployment";
 if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET) {
@@ -145,7 +181,9 @@ router.get("/workspace/business", requireAuth, authenticated(async (req,res) => 
     where:{ownerUserId:req.userId},
     include:{catalogueFields:{orderBy:{sortOrder:"asc"}},_count:{select:{products:true,catalogues:true}}}
   });
-  res.json(business);
+  if (!business) return res.json(null);
+  const { razorpayKeySecretEncrypted: _secretNeverReturn, ...safeBusiness } = business;
+  res.json(safeBusiness);
 }));
 
 // Industry-specific field schema management. All operations are scoped to the authenticated business.
@@ -215,6 +253,34 @@ router.post("/workspace/fields/restore-defaults", requireAuth, authenticated(asy
   res.json(await prisma.catalogueField.findMany({where:{businessId:business.id},orderBy:{sortOrder:"asc"}}));
 }));
 
+router.post("/workspace/payments/razorpay/connect", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({
+    keyId: z.string().trim().min(8).max(100).regex(/^rzp_(test|live)_/, "Enter a Razorpay test or live Key ID."),
+    keySecret: z.string().trim().min(8).max(200)
+  }).parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  try {
+    await razorpayRequest(data.keyId, data.keySecret, "/orders?count=1");
+    const updated = await prisma.business.update({
+      where:{id:business.id},
+      data:{paymentGatewayProvider:"RAZORPAY",paymentGatewayStatus:"ACTIVE",razorpayKeyId:data.keyId,razorpayKeySecretEncrypted:encryptGatewaySecret(data.keySecret)},
+      select:{id:true,paymentGatewayProvider:true,paymentGatewayStatus:true}
+    });
+    res.json({...updated,message:"Razorpay credentials verified and saved securely."});
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not validate Razorpay credentials.";
+    res.status(400).json({error:message});
+  }
+}));
+
+router.post("/workspace/payments/razorpay/disconnect", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(404).json({error:"Business not found."});
+  await prisma.business.update({where:{id:business.id},data:{paymentGatewayProvider:null,paymentGatewayStatus:"DISABLED",razorpayKeyId:null,razorpayKeySecretEncrypted:null}});
+  res.json({paymentGatewayProvider:null,paymentGatewayStatus:"DISABLED"});
+}));
+
 router.patch("/workspace/business/settings", requireAuth, authenticated(async (req,res) => {
   const data = z.object({
     sellingMode: z.enum(["CATALOG_ONLY", "ONLINE_PAYMENTS"]).optional(),
@@ -226,8 +292,9 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
     brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional()
   }).refine((value) => Object.values(value).some((item) => item !== undefined), { message: "Provide at least one setting to update." }).parse(req.body);
-  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,paymentGatewayStatus:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
+  if (data.sellingMode === "ONLINE_PAYMENTS" && (business.paymentGatewayStatus !== "ACTIVE" || !business.razorpayKeyId || !business.razorpayKeySecretEncrypted)) return res.status(409).json({error:"Connect and verify Razorpay before enabling online payments."});
   const updated = await prisma.business.update({
     where:{id:business.id},
     data:{...data,website:data.website === "" ? null : data.website},
@@ -391,9 +458,174 @@ router.get("/public/catalogues/:slug", async (req,res) => {
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,
-    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,website:catalogue.business.website,brandColor:catalogue.business.brandColor},
+    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,email:catalogue.business.email,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode === "ONLINE_PAYMENTS" && catalogue.business.paymentGatewayStatus === "ACTIVE" ? "ONLINE_PAYMENTS" : "CATALOG_ONLY",paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
     products:catalogue.items.map(({product})=>({...product,price:product.price?.toString() ?? null}))
   });
 });
+
+
+router.post("/public/catalogues/:slug/orders", async (req,res) => {
+
+  const catalogue=await prisma.selloraCatalogue.findFirst({
+    where:{slug:String(req.params.slug),isPublished:true},
+    include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
+  });
+  if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
+  if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
+  if(catalogue.business.paymentGatewayProvider !== "RAZORPAY" || catalogue.business.paymentGatewayStatus !== "ACTIVE" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) {
+    return res.status(409).json({error:"This business has not connected Razorpay payments yet. Please contact the business."});
+  }
+  const data = z.object({
+    customerName:z.string().trim().min(2).max(120),
+    email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
+    phone:z.string().trim().min(7).max(30),
+    address:z.string().trim().min(5).max(1000),
+    notes:z.string().trim().max(1000).optional(),
+    items:z.array(z.object({productId:z.string().min(1),quantity:z.number().int().min(1).max(1000)})).min(1).max(100)
+  }).parse(req.body);
+  const keyId = catalogue.business.razorpayKeyId;
+  let keySecret: string;
+  try { keySecret = decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
+  catch { return res.status(503).json({error:"Payment configuration is unavailable. Please contact the business."}); }
+  const requested = new Map<string,number>();
+  for(const item of data.items) requested.set(item.productId,(requested.get(item.productId)||0)+item.quantity);
+  const available = new Map(catalogue.items.map(({product})=>[product.id,product]));
+  const orderItems: Prisma.SelloraOrderItemCreateWithoutOrderInput[] = [];
+  let currency: string | null = null;
+  let total = new Prisma.Decimal(0);
+  for(const [productId,quantity] of requested.entries()){
+    const product=available.get(productId);
+    if(!product) return res.status(400).json({error:"One or more cart items are unavailable. Refresh the catalogue and try again."});
+    if(product.price === null || !product.price.isFinite() || product.price.lte(0)) return res.status(400).json({error:`Price is unavailable for ${product.name}. Please enquire with the business.`});
+    if(currency && currency !== product.currency) return res.status(400).json({error:"Products with different currencies cannot be checked out together."});
+    currency=product.currency;
+    const unitPrice=product.price;
+    const lineTotal=unitPrice.mul(quantity);
+    total=total.add(lineTotal);
+    orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
+  }
+  if(currency !== "INR") return res.status(400).json({error:"Razorpay checkout currently supports INR orders only."});
+  const amountPaise = total.mul(100).toDecimalPlaces(0).toNumber();
+  if(!Number.isSafeInteger(amountPaise) || amountPaise < 100) return res.status(400).json({error:"Order total is outside Razorpay's supported amount range."});
+  let order: {id:string;orderNumber:string;status:string;paymentStatus:string;currency:string;subtotal:Prisma.Decimal;createdAt:Date} | null = null;
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      const sequence = await tx.business.update({
+        where:{id:catalogue.businessId},data:{lastOrderNumber:{increment:1}},
+        select:{lastOrderNumber:true,slug:true}
+      });
+      const prefix = sequence.slug.toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,32) || "COMPANY";
+      const orderNumber = prefix + "-" + String(sequence.lastOrderNumber).padStart(5,"0");
+      return tx.selloraOrder.create({data:{
+        orderNumber,businessId:catalogue.businessId,catalogueId:catalogue.id,customerName:data.customerName,email:data.email||null,
+        phone:data.phone,address:data.address,notes:data.notes||null,currency:"INR",subtotal:total,
+        items:{create:orderItems}
+      },select:{id:true,orderNumber:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
+    });
+    const razorpayOrder = await razorpayRequest<{id:string}>(
+      keyId,keySecret,"/orders",
+      {method:"POST",body:JSON.stringify({amount:amountPaise,currency:"INR",receipt:order.orderNumber,notes:{selloraOrderId:order.id,catalogueSlug:catalogue.slug,businessName:catalogue.business.name}})}
+    );
+    await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayOrderId:razorpayOrder.id}});
+    res.status(201).json({
+      orderId:order.id,orderNumber:order.orderNumber,subtotal:order.subtotal.toString(),
+      checkout:{keyId,razorpayOrderId:razorpayOrder.id,amount:amountPaise,currency:"INR",name:catalogue.business.name,description:catalogue.title,prefill:{name:data.customerName,email:data.email||undefined,contact:data.phone}},
+      message:"Continue to Razorpay to complete your payment."
+    });
+  } catch (error) {
+    if (order) await prisma.selloraOrder.delete({where:{id:order.id}}).catch(()=>{});
+    const message = error instanceof Error ? error.message : "Could not start Razorpay checkout.";
+    res.status(502).json({error:"Could not start payment. " + message});
+  }
+});
+
+router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
+  const data = z.object({
+    razorpay_order_id:z.string().min(1).max(100),
+    razorpay_payment_id:z.string().min(1).max(100),
+    razorpay_signature:z.string().min(1).max(200)
+  }).parse(req.body);
+  const catalogue=await prisma.selloraCatalogue.findFirst({
+    where:{slug:String(req.params.slug),isPublished:true},
+    select:{id:true,business:{select:{name:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true,paymentGatewayProvider:true}}}
+  });
+  if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  if(catalogue.business.paymentGatewayProvider!=="RAZORPAY" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) return res.status(409).json({error:"Payment gateway is not configured."});
+  const order = await prisma.selloraOrder.findFirst({where:{catalogueId:catalogue.id,razorpayOrderId:data.razorpay_order_id}});
+  if(!order) return res.status(404).json({error:"Payment order not found."});
+  if(order.paymentStatus==="PAID") return res.json({success:true,orderNumber:order.orderNumber,message:"Payment already verified."});
+  let keySecret: string;
+  try { keySecret=decryptGatewaySecret(catalogue.business.razorpayKeySecretEncrypted); }
+  catch { return res.status(503).json({error:"Payment configuration is unavailable."}); }
+  const expected=crypto.createHmac("sha256",keySecret).update(data.razorpay_order_id+"|"+data.razorpay_payment_id).digest();
+  let supplied: Buffer;
+  try { supplied=Buffer.from(data.razorpay_signature,"hex"); } catch { return res.status(400).json({error:"Invalid payment signature."}); }
+  if(expected.length!==supplied.length || !crypto.timingSafeEqual(expected,supplied)) return res.status(400).json({error:"Payment signature verification failed."});
+  try {
+    const payment=await razorpayRequest<{id:string;order_id:string;amount:number;currency:string;status:string}>(
+      catalogue.business.razorpayKeyId,keySecret,"/payments/"+encodeURIComponent(data.razorpay_payment_id)
+    );
+    const expectedAmount=order.subtotal.mul(100).toDecimalPlaces(0).toNumber();
+    if(payment.order_id!==data.razorpay_order_id || payment.amount!==expectedAmount || payment.currency!==order.currency) {
+      return res.status(400).json({error:"Payment details do not match this order."});
+    }
+    if(payment.status!=="captured") {
+      return res.status(202).json({success:false,paymentStatus:payment.status,message:"Payment is not captured yet. Please wait for confirmation."});
+    }
+    const updated=await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayPaymentId:payment.id,paymentStatus:"PAID",status:"CONFIRMED"}});
+    await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"payment_confirmed",metadata:{orderNumber:updated.orderNumber}}}).catch(()=>{});
+    res.json({success:true,orderNumber:updated.orderNumber,message:"Payment confirmed successfully."});
+  } catch {
+    res.status(502).json({error:"We could not verify payment right now. Do not pay again; contact the business with your payment reference."});
+  }
+});
+
+// Lightweight public funnel tracking; never accepts payment-completed events from browsers.
+router.post("/public/catalogues/:slug/events", async (req,res) => {
+  const data=z.object({
+    eventType:z.enum(["page_view","add_to_cart","checkout_started"]),
+    sessionId:z.string().trim().min(8).max(100).optional(),
+    metadata:z.record(z.string(),z.union([z.string().max(200),z.number(),z.boolean()])).optional()
+  }).parse(req.body);
+  const catalogue=await prisma.selloraCatalogue.findFirst({where:{slug:String(req.params.slug),isPublished:true},select:{id:true}});
+  if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:data.eventType,sessionId:data.sessionId,metadata:data.metadata}});
+  res.status(202).json({accepted:true});
+});
+
+router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if(!business) return res.status(409).json({error:"Complete business setup first."});
+  const orders=await prisma.selloraOrder.findMany({
+    where:{businessId:business.id},
+    include:{catalogue:{select:{id:true,title:true,slug:true}},items:true},
+    orderBy:{createdAt:"desc"},take:200
+  });
+  res.json(orders.map(order=>({...order,subtotal:order.subtotal.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))})));
+}));
+
+router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(async (req,res) => {
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if(!business) return res.status(409).json({error:"Complete business setup first."});
+  const catalogue=await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true}});
+  if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  const [events,orders]=await Promise.all([
+    prisma.catalogueAnalyticsEvent.groupBy({by:["eventType"],where:{catalogueId:catalogue.id},_count:{_all:true}}),
+    prisma.selloraOrder.groupBy({by:["paymentStatus"],where:{catalogueId:catalogue.id},_count:{_all:true},_sum:{subtotal:true}})
+  ]);
+  const counts=Object.fromEntries(events.map(event=>[event.eventType,event._count._all]));
+  const orderCount=orders.reduce((sum,item)=>sum+item._count._all,0);
+  const paymentCount=orders.filter(item=>item.paymentStatus==="PAID").reduce((sum,item)=>sum+item._count._all,0);
+  res.json({
+    catalogueId:catalogue.id,
+    views:counts.page_view||0,
+    addToCart:counts.add_to_cart||0,
+    checkoutStarted:counts.checkout_started||0,
+    ordersSubmitted:counts.order_submitted||0,
+    orders:orderCount,
+    paymentsConfirmed:paymentCount,
+    revenue:orders.filter(item=>item.paymentStatus==="PAID").reduce((sum,item)=>sum+Number(item._sum.subtotal||0),0)
+  });
+}));
 
 export default router;
