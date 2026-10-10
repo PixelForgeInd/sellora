@@ -73,7 +73,7 @@ app.post("/api/businesses", requireAuth, async (req, res, next) => {
 app.get("/api/businesses", requireAuth, async (req, res, next) => {
   try {
     const businesses = await prisma.business.findMany({
-      where: { ownerUserId: (req as any).userId },
+      where: { ownerUserId: (req as express.Request & { userId: string }).userId },
       include: { catalogueFields: { orderBy: { sortOrder: "asc" } } },
       orderBy: { createdAt: "desc" }, take: 100
     });
