@@ -956,8 +956,29 @@ export default function SelloraApp() {
           <span>Phase 1–6 MVP + selling mode</span>
         </footer>
       </main>
-      {modal === "product" && <ProductModal editing={editing} pform={pform} setPform={setPform} fields={fields} busy={busy} setModal={setModal} uploadProductPhoto={uploadProductPhoto} saveProduct={saveProduct} />}
-      {modal === "catalogue" && <CatalogueModal editingCatalogue={editingCatalogue} cform={cform} setCform={setCform} products={products} busy={busy} setModal={setModal} saveCatalogue={saveCatalogue} />}
+      {modal === "product" && (
+        <ProductModal
+          editing={editing}
+          pform={pform}
+          setPform={setPform}
+          fields={fields}
+          busy={busy}
+          setModal={setModal}
+          uploadProductPhoto={uploadProductPhoto}
+          saveProduct={saveProduct}
+        />
+      )}
+      {modal === "catalogue" && (
+        <CatalogueModal
+          editingCatalogue={editingCatalogue}
+          cform={cform}
+          setCform={setCform}
+          products={products}
+          busy={busy}
+          setModal={setModal}
+          saveCatalogue={saveCatalogue}
+        />
+      )}
       {preview && (
         <div
           className="sl-modal-backdrop"
