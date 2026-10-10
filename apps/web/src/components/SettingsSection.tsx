@@ -75,34 +75,6 @@ export function SettingsSection({
   const [webhookSaved, setWebhookSaved] = useState(false);
   const [gatewayBusy, setGatewayBusy] = useState(false);
   const [gatewayMessage, setGatewayMessage] = useState("");
-  const [paymentOrders, setPaymentOrders] = useState<
-    Array<{
-      id: string;
-      productName: string;
-      quantity: number;
-      unit: string;
-      amount: string;
-      currency: string;
-      customerName: string;
-      status: string;
-      createdAt: string;
-    }>
-  >([]);
-  useEffect(() => {
-    Promise.all([
-      api("/workspace/business/payment-gateway"),
-      api("/workspace/payment-orders"),
-    ])
-      .then(([v, orders]) => {
-        setGatewayKeyId(v.keyId || "");
-        setGatewayTestMode(v.testMode !== false);
-        setGatewayStatus(v.status || "NOT_CONNECTED");
-        setGatewaySecretSaved(Boolean(v.keySecretConfigured));
-        setWebhookSaved(Boolean(v.webhookSecretConfigured));
-        setPaymentOrders(orders);
-      })
-      .catch(() => {});
-  }, [business.id]);
   async function saveGateway(e: FormEvent) {
     e.preventDefault();
     setGatewayBusy(true);
@@ -525,48 +497,6 @@ export function SettingsSection({
         </p>
       </section>
 
-      <section className="sl-section-card sl-settings-page">
-        <span className="sl-kicker">PAYMENT ACTIVITY</span>
-        <h3>Recent payments</h3>
-        <p>
-          Payments recorded for this business. Refresh the page to see the
-          latest updates.
-        </p>
-        {paymentOrders.length === 0 ? (
-          <p className="sl-muted">
-            No payment orders yet. Completed checkout attempts will appear here.
-          </p>
-        ) : (
-          <div className="sl-industry-fields">
-            {paymentOrders.map((order) => (
-              <div className="sl-industry-field" key={order.id}>
-                <span>
-                  <b>
-                    {order.productName} · {order.quantity} {order.unit}
-                  </b>
-                  <small>
-                    {order.customerName} ·{" "}
-                    {new Date(order.createdAt).toLocaleString()} · Ref{" "}
-                    {order.id.slice(-8)}
-                  </small>
-                </span>
-                <span>
-                  <b>
-                    {order.currency} {order.amount}
-                  </b>
-                  <small
-                    className={
-                      order.status === "PAID" ? "sl-published" : "sl-draft"
-                    }
-                  >
-                    {order.status}
-                  </small>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
       <section className="sl-section-card sl-settings-page">
         <span className="sl-kicker">SELLING PREFERENCES</span>
         <h3>Choose how customers buy from you</h3>
