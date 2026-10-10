@@ -214,7 +214,7 @@ router.get("/platform/admin/payment-settings", requireAuth, authenticated(async 
   if (!user || user.role !== "PLATFORM_OWNER" || !ownerEmail || user.email.toLowerCase() !== ownerEmail) {
     return res.status(403).json({error:"Platform owner access required."});
   }
-  const apiBase = (process.env.PUBLIC_API_URL || "").replace(/\\/$/, "");
+  const apiBase = (process.env.PUBLIC_API_URL || "").replace(/\/$/, "");
   const rawKey = process.env.PAYMENT_ENCRYPTION_KEY || process.env.RAZORPAY_ENCRYPTION_KEY || "";
   const keyBytes = /^[a-fA-F0-9]{64}$/.test(rawKey) ? Buffer.from(rawKey,"hex") : Buffer.from(rawKey,"base64");
   res.json({
