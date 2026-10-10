@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode, CSSProperties } from "react";
 import { ArrowRight, BookOpen, Check, CheckCircle2, Copy, CreditCard, ExternalLink, Eye, EyeOff, LayoutDashboard, LogOut, Package, Plus, Settings, Share2, Trash2, X, MessageCircle } from "lucide-react";
-import { api } from "./sellora/api-client";
+import { api, getSessionToken } from "./sellora/api-client";
 import { categories as cats, fallbackFields as fallback } from "./sellora/catalogue-fields";
 import { formatMoney as money } from "./sellora/formatters";
 import type { Business, Catalogue, Field, Product, PublicData } from "./sellora/types";
@@ -9,7 +9,7 @@ function Brand(){return <a className="sl-brand" href="/" aria-label="Sellora by 
 function Btn({children,onClick,kind="primary",type="button",disabled=false}:{children:ReactNode;onClick?:()=>void;kind?:"primary"|"outline"|"quiet"|"danger";type?:"button"|"submit";disabled?:boolean}){return <button type={type} className={"sl-button sl-"+kind} onClick={onClick} disabled={disabled}>{children}</button>}
 function Err({text}:{text:string}){return text?<div className="sl-error">{text}</div>:null}
 export default function SelloraApp(){
- const [access,setAccess]=useState(token()),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[showPassword,setShowPassword]=useState(false),[mode,setMode]=useState("signup"),[user,setUser]=useState(""),[business,setBusiness]=useState<Business|null>(null),[products,setProducts]=useState<Product[]>([]),[catalogues,setCatalogues]=useState<Catalogue[]>([]),[page,setPage]=useState("overview"),[error,setError]=useState(""),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[sellingMode,setSellingMode]=useState<"CATALOG_ONLY"|"ONLINE_PAYMENTS">("CATALOG_ONLY");
+ const [access,setAccess]=useState(getSessionToken()),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[showPassword,setShowPassword]=useState(false),[mode,setMode]=useState("signup"),[user,setUser]=useState(""),[business,setBusiness]=useState<Business|null>(null),[products,setProducts]=useState<Product[]>([]),[catalogues,setCatalogues]=useState<Catalogue[]>([]),[page,setPage]=useState("overview"),[error,setError]=useState(""),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false),[sellingMode,setSellingMode]=useState<"CATALOG_ONLY"|"ONLINE_PAYMENTS">("CATALOG_ONLY");
  const [bform,setBform]=useState({name:"",industry:"Textiles",productCategory:"yarn-textiles",businessModel:"B2B",phone:"",website:"",brandColor:"#599c56",sellingMode:"ONLINE_PAYMENTS" as "CATALOG_ONLY"|"ONLINE_PAYMENTS"});
  const [profileForm,setProfileForm]=useState({name:"",industry:"Textiles",productCategory:"yarn-textiles",businessModel:"B2B",phone:"",website:"",brandColor:"#599c56"});
  const [fieldForm,setFieldForm]=useState({key:"",label:"",type:"text",required:false,options:""});
