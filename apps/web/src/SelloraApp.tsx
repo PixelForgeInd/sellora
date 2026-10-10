@@ -955,7 +955,7 @@ export default function SelloraApp() {
                         </small>
                       </span>
                       <span>
-                        <b>{money(order.subtotal, order.currency)}</b>
+                        <b>{money(order.totalAmount ?? order.subtotal, order.currency)}</b>
                         <small>
                           {order.status} · {order.paymentStatus}
                         </small>
@@ -995,6 +995,7 @@ export default function SelloraApp() {
                           {order.notes || "None"}
                         </p>
                       </div>
+                      <div className="sl-order-totals"><p><span>Subtotal</span><b>{money(order.subtotal, order.currency)}</b></p>{Number(order.taxAmount || 0) > 0 && <p><span>Tax</span><b>{money(order.taxAmount, order.currency)}</b></p>}<p className="grand"><span>Total</span><b>{money(order.totalAmount ?? order.subtotal, order.currency)}</b></p></div>
                       <h4>Ordered items</h4>
                       {order.items.map((item: any) => (
                         <div className="sl-order-item" key={item.id}>
