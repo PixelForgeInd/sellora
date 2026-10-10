@@ -134,7 +134,7 @@ router.post("/auth/login", async (req, res) => {
   if (!user || !(await verifyPassword(data.password,user.passwordHash))) return res.status(401).json({error:"Email or password is incorrect."});
   res.json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
-router.get("/auth/me", authenticated(async (req,res) => {
+router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
   const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,createdAt:true}});
   if (!user) return res.status(401).json({error:"Account not found."});
   res.json(user);

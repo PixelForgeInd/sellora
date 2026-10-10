@@ -2,13 +2,16 @@
   "name": "ganeshaa-sutra-sales",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"npm run dev --workspace @ganeshaa/api\" \"npm run dev --workspace @ganeshaa/web\"",
     "build": "npm run build --workspace @ganeshaa/api && npm run build --workspace @ganeshaa/web",
     "db:generate": "npm run db:generate --workspace @ganeshaa/api",
     "db:migrate": "npm run db:migrate --workspace @ganeshaa/api",
-    "db:seed": "npm run db:seed --workspace @ganeshaa/api"
+    "db:seed": "npm run db:seed --workspace @ganeshaa/api",
+    "test": "node --test tests/api-smoke.test.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
