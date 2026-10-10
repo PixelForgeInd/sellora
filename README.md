@@ -59,7 +59,7 @@ Workspace routes require Authorization: Bearer <token>. Product and catalogue op
 
 ## Razorpay setup
 
-1. Configure `PAYMENT_ENCRYPTION_KEY` on the API server as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable.
+1. Configure `PAYMENT_ENCRYPTION_KEY` once in the Sellora API host environment as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable. Existing deployments with `RAZORPAY_ENCRYPTION_KEY` can use it as a fallback. This is a Sellora-managed server secret, not a value customers enter.
 2. Apply the included migration with `npm run db:migrate` after configuring `DATABASE_URL`. Test it against a backed-up staging database before production deployment. For a disposable development database, `npx prisma db push --schema apps/api/prisma/schema.prisma` is also available.
 3. In Sellora Settings, enter the Razorpay Key ID and Key Secret. Start with test credentials; Sellora checks the credentials with Razorpay before connecting.
 4. Add the webhook URL shown in Settings to Razorpay Dashboard and enter the same webhook secret in Sellora. Subscribe to `payment.captured`, `payment.failed` and `order.paid`.
