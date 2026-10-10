@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Default product fields shown when a business creates a catalogue.
-export const catalogueFieldTemplates: Record<string, Array<{ key: string; label: string; type: string; required?: boolean; options?: string[] }>> = const catalogueFieldTemplates: Record<string, Array<{ key: string; label: string; type: string; required?: boolean; options?: string[] }>> = {
+export const catalogueFieldTemplates: Record<string, Array<{ key: string; label: string; type: string; required?: boolean; options?: string[] }>> = {
   "yarn-textiles": [
     { key: "count", label: "Yarn count", type: "select", required: true, options: ["10s", "18s", "20s OE", "2/20s", "24s", "2/40s"] },
     { key: "yarnType", label: "Yarn type", type: "select", required: true, options: ["Recycled OE", "Kora CP", "Modal", "Excel", "Cotton", "Polyester"] },
