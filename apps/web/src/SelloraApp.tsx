@@ -266,7 +266,6 @@ export default function SelloraApp() {
       setNotice(result.message || "Razorpay connected.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not connect Razorpay.");
-      throw e;
     } finally {
       setBusy(false);
     }
