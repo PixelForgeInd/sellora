@@ -429,12 +429,71 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     total=total.add(lineTotal);
     orderItems.push({productId:product.id,productName:product.name,sku:product.sku,unit:product.unit,quantity,unitPrice,lineTotal});
   }
-  const order=await prisma.selloraOrder.create({data:{
-    businessId:catalogue.businessId,catalogueId:catalogue.id,customerName:data.customerName,email:data.email||null,
-    phone:data.phone,address:data.address||null,notes:data.notes||null,currency:currency||"INR",subtotal:total,
-    items:{create:orderItems}
-  },select:{id:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
+  const order = await prisma.$transaction(async (tx) => {
+    const sequence = await tx.business.update({
+      where:{id:catalogue.businessId},
+      data:{lastOrderNumber:{increment:1}},
+      select:{lastOrderNumber:true,slug:true,name:true}
+    });
+    const prefix = sequence.slug.toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,32) || "COMPANY";
+    const orderNumber = prefix + "-" + String(sequence.lastOrderNumber).padStart(5,"0");
+    return tx.selloraOrder.create({data:{
+      orderNumber,businessId:catalogue.businessId,catalogueId:catalogue.id,customerName:data.customerName,email:data.email||null,
+      phone:data.phone,address:data.address||null,notes:data.notes||null,currency:currency||"INR",subtotal:total,
+      items:{create:orderItems}
+    },select:{id:true,orderNumber:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
+  });
+  await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"order_submitted"}});
   res.status(201).json({...order,subtotal:order.subtotal.toString(),message:"Order request submitted. The business will contact you to confirm availability and payment."});
 });
+
+
+// Lightweight public funnel tracking; never accepts payment-completed events from browsers.
+router.post("/public/catalogues/:slug/events", async (req,res) => {
+  const data=z.object({
+    eventType:z.enum(["page_view","add_to_cart","checkout_started"]),
+    sessionId:z.string().trim().min(8).max(100).optional(),
+    metadata:z.record(z.string(),z.union([z.string().max(200),z.number(),z.boolean()])).optional()
+  }).parse(req.body);
+  const catalogue=await prisma.selloraCatalogue.findFirst({where:{slug:String(req.params.slug),isPublished:true},select:{id:true}});
+  if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:data.eventType,sessionId:data.sessionId,metadata:data.metadata}});
+  res.status(202).json({accepted:true});
+});
+
+router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if(!business) return res.status(409).json({error:"Complete business setup first."});
+  const orders=await prisma.selloraOrder.findMany({
+    where:{businessId:business.id},
+    include:{catalogue:{select:{id:true,title:true,slug:true}},items:true},
+    orderBy:{createdAt:"desc"},take:200
+  });
+  res.json(orders.map(order=>({...order,subtotal:order.subtotal.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))})));
+}));
+
+router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(async (req,res) => {
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if(!business) return res.status(409).json({error:"Complete business setup first."});
+  const catalogue=await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true}});
+  if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  const [events,orders]=await Promise.all([
+    prisma.catalogueAnalyticsEvent.groupBy({by:["eventType"],where:{catalogueId:catalogue.id},_count:{_all:true}}),
+    prisma.selloraOrder.groupBy({by:["paymentStatus"],where:{catalogueId:catalogue.id},_count:{_all:true},_sum:{subtotal:true}})
+  ]);
+  const counts=Object.fromEntries(events.map(event=>[event.eventType,event._count._all]));
+  const orderCount=orders.reduce((sum,item)=>sum+item._count._all,0);
+  const paymentCount=orders.filter(item=>item.paymentStatus==="PAID").reduce((sum,item)=>sum+item._count._all,0);
+  res.json({
+    catalogueId:catalogue.id,
+    views:counts.page_view||0,
+    addToCart:counts.add_to_cart||0,
+    checkoutStarted:counts.checkout_started||0,
+    ordersSubmitted:counts.order_submitted||0,
+    orders:orderCount,
+    paymentsConfirmed:paymentCount,
+    revenue:orders.filter(item=>item.paymentStatus==="PAID").reduce((sum,item)=>sum+Number(item._sum.subtotal||0),0)
+  });
+}));
 
 export default router;
