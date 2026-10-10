@@ -1,14 +1,16 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { Brand } from "./ui";
-import { ArrowRight, Check, ExternalLink, MessageCircle, Package, X } from "lucide-react";
+import { ArrowRight, Check, CreditCard, ExternalLink, MessageCircle, Package, X } from "lucide-react";
 import { formatMoney as money } from "../sellora/formatters";
+import { api } from "../sellora/api-client";
 import type { Product, PublicData } from "../sellora/types";
 
 export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;error:string;demo?:boolean}){
  const [query,setQuery]=useState("");
  const [category,setCategory]=useState("All products");
  const [details,setDetails]=useState<Product|null>(null);
+ const [checkoutBusy,setCheckoutBusy]=useState(false);
  const products=data?.products||[];
  const productCategory=(p:Product)=>String(p.fields?.category||p.fields?.collection||p.fields?.type||p.fields?.yarnType||data?.business.industry||"Products");
  const categories=Array.from(new Set(["All products",...products.map(productCategory)]));
@@ -18,6 +20,24 @@ export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;er
  const shareText="Explore "+(data?.business.name||"our")+" catalogue: "+publicUrl;
  const shareCatalogue=()=>{window.open("https://wa.me/?text="+encodeURIComponent(shareText),"_blank","noopener,noreferrer");};
  const copyCatalogue=async()=>{try{await navigator.clipboard.writeText(publicUrl);window.alert("Catalogue link copied. Paste it into WhatsApp or any chat.");}catch{window.prompt("Copy your catalogue link",publicUrl);}};
+
+ const buyNow=async(product:Product)=>{
+  if(!data?.checkoutReady||demo){window.alert("Online checkout is not enabled.");return;}
+  const customerName=window.prompt("Your full name");if(!customerName||customerName.trim().length<2)return;
+  const customerPhone=window.prompt("Your phone number");if(!customerPhone||customerPhone.replace(/\D/g,"").length<8)return;
+  const customerEmail=window.prompt("Your email (optional)")||"";
+  setCheckoutBusy(true);
+  try{
+   const order=await api("/public/catalogues/"+encodeURIComponent(data.slug)+"/payment-orders",{method:"POST",body:JSON.stringify({productId:product.id,quantity:1,customerName:customerName.trim(),customerPhone:customerPhone.trim(),customerEmail:customerEmail.trim()})},"");
+   if(!(window as any).Razorpay)await new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://checkout.razorpay.com/v1/checkout.js";script.onload=()=>resolve();script.onerror=()=>reject(new Error("Could not load Razorpay Checkout."));document.body.appendChild(script);});
+   const RazorpayCtor=(window as any).Razorpay;if(!RazorpayCtor)throw new Error("Razorpay Checkout did not load.");
+   const checkout=new RazorpayCtor({key:order.keyId,amount:order.amount,currency:order.currency,name:order.name,description:order.description,order_id:order.orderId,theme:{color:order.themeColor},handler:async(response:any)=>{
+    try{await api("/public/payments/verify",{method:"POST",body:JSON.stringify({paymentOrderId:order.paymentOrderId,razorpayPaymentId:response.razorpay_payment_id,razorpayOrderId:response.razorpay_order_id,razorpaySignature:response.razorpay_signature})},"");window.alert("Payment verified. Reference: "+order.paymentOrderId);}
+    catch(err){window.alert(err instanceof Error?err.message:"Payment verification failed. Contact the business before retrying.");}
+   }});
+   checkout.open();
+  }catch(err){window.alert(err instanceof Error?err.message:"Could not start checkout.");}finally{setCheckoutBusy(false);}
+ };
  if(error)return <div className="sl-public-error"><Brand/><h1>Catalogue unavailable</h1><p>{error}</p><a href="/">Create your catalogue with Sellora <ArrowRight size={15}/></a></div>;
  if(!data)return <div className="sl-public-loading"><Brand/><p>Loading catalogue…</p></div>;
  return <div className="sl-storefront" style={{"--store-brand":data.business.brandColor} as CSSProperties}>
@@ -34,6 +54,6 @@ export function PublicCatalogue({data,error,demo=false}:{data:PublicData|null;er
    <section className="sl-store-contact" id="contact"><div><span className="sl-store-eyebrow">LET'S WORK TOGETHER</span><h2>Have a requirement?<br/><em>Let's talk.</em></h2><p>Contact us for pricing, bulk orders, availability or custom requirements.</p><div className="sl-store-hero-actions"><a href={wa} target="_blank" rel="noreferrer" className="sl-store-contact-primary"><MessageCircle size={17}/> Chat on WhatsApp</a>{data.business.phone&&<a href={"tel:"+data.business.phone} className="sl-store-contact-secondary">Call our team <ArrowRight size={15}/></a>}</div></div><div className="sl-store-contact-art"><span>{data.business.name.toUpperCase()}</span><b>Let’s find<br/>the right fit.</b><div><Check size={16}/> Browse <Check size={16}/> Enquire <Check size={16}/> Connect</div></div></section>
   </main>
   <footer className="sl-store-footer"><div className="sl-store-footer-brand"><a className="sl-store-brand" href="#top"><span className="sl-store-logo">{data.business.logoUrl?<img src={data.business.logoUrl} alt=""/>:data.business.name.slice(0,1)}</span><span><b>{data.business.name}</b><small>{data.business.industry}</small></span></a><p>{data.description}</p><small>Digital catalogue powered by Sellora</small></div><div><b>Explore</b><a href="#products">All products</a><a href="#why-us">Why choose us</a><a href="#contact">Contact</a></div><div><b>Get in touch</b>{data.business.phone&&<a href={"tel:"+data.business.phone}>{data.business.phone}</a>}{data.business.email&&<a href={"mailto:"+data.business.email}>{data.business.email}</a>}{data.business.website&&<a href={data.business.website} target="_blank" rel="noreferrer">Website <ExternalLink size={13}/></a>}<small>{data.business.industry}</small></div><div className="sl-store-footer-note"><span>SELLORA</span><b>Digital catalogues.<br/>Smarter sales.</b><a href="/">Create your catalogue <ArrowRight size={14}/></a></div></footer>
-  {details&&<div className="sl-store-detail-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setDetails(null)}}><section className="sl-store-detail"><button className="sl-store-detail-close" onClick={()=>setDetails(null)} aria-label="Close details"><X/></button><div className="sl-store-detail-image">{details.imageUrl&&<img src={details.imageUrl} alt={details.name}/>}</div><div className="sl-store-detail-content"><span className="sl-store-eyebrow">PRODUCT DETAILS</span><h2>{details.name}</h2><p>{details.description}</p><strong>{money(details.price,details.currency,details.unit)}</strong><div className="sl-store-detail-specs">{Object.entries(details.fields||{}).map(([k,v])=><span key={k}><small>{k.replace(/([A-Z])/g," $1")}</small><b>{String(v)}</b></span>)}</div><a className="sl-store-contact-primary" href={wa==="#contact"?"#contact":"https://wa.me/"+data.business.phone!.replace(/\D/g,"")+"?text="+encodeURIComponent("Hi, I'm interested in "+details.name+".")} target={wa==="#contact"?"_self":"_blank"} rel="noreferrer"><MessageCircle size={16}/> Enquire about this product</a></div></section></div>}
+  {details&&<div className="sl-store-detail-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setDetails(null)}}><section className="sl-store-detail"><button className="sl-store-detail-close" onClick={()=>setDetails(null)} aria-label="Close details"><X/></button><div className="sl-store-detail-image">{details.imageUrl&&<img src={details.imageUrl} alt={details.name}/>}</div><div className="sl-store-detail-content"><span className="sl-store-eyebrow">PRODUCT DETAILS</span><h2>{details.name}</h2><p>{details.description}</p><strong>{money(details.price,details.currency,details.unit)}</strong><div className="sl-store-detail-specs">{Object.entries(details.fields||{}).map(([k,v])=><span key={k}><small>{k.replace(/([A-Z])/g," $1")}</small><b>{String(v)}</b></span>)}</div><a className="sl-store-contact-primary" href={wa==="#contact"?"#contact":"https://wa.me/"+data.business.phone!.replace(/\D/g,"")+"?text="+encodeURIComponent("Hi, I'm interested in "+details.name+".")} target={wa==="#contact"?"_self":"_blank"} rel="noreferrer"><MessageCircle size={16}/> Enquire about this product</a>{data.checkoutReady&&!demo&&details.price!=null&&<button className="sl-store-contact-primary" disabled={checkoutBusy} onClick={()=>void buyNow(details)}><CreditCard size={16}/>{checkoutBusy?"Preparing checkout…":"Buy now"}</button></div></section></div>}
  </div>;
 }
