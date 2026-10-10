@@ -660,3 +660,15 @@
   .sl-order-detail{padding:13px}
   .sl-analytics-card{padding:15px}
 }
+
+
+/* Keep the selected mobile workspace item crisp without an oversized focus halo */
+.sl-nav button:focus-visible{
+  outline:2px solid rgba(8,15,77,.42);
+  outline-offset:2px;
+  box-shadow:0 0 0 2px #fff;
+}
+.sl-nav button.active:focus-visible{
+  outline-color:rgba(8,15,77,.35);
+  outline-offset:2px;
+}
