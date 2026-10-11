@@ -741,6 +741,32 @@ router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
   res.json([...catalogueOrders,...legacyOrders].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime()));
 }));
 
+// Fulfilment status is separate from payment status. Payment can only be confirmed by verified gateway callbacks.
+router.patch("/workspace/orders/:id/status", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({
+    status: z.enum(["PENDING", "CONFIRMED", "PROCESSING", "DISPATCHED", "DELIVERED", "CANCELLED"])
+  }).parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const order = await prisma.selloraOrder.findFirst({
+    where:{id:String(req.params.id),businessId:business.id},
+    select:{id:true,status:true,paymentStatus:true,orderNumber:true}
+  });
+  if (!order) return res.status(404).json({error:"Order not found."});
+  if (order.status === "CANCELLED" || order.status === "DELIVERED") {
+    return res.status(409).json({error:"This order is already in a final fulfilment state."});
+  }
+  if (data.status === "CANCELLED" && order.paymentStatus === "PAID") {
+    return res.status(409).json({error:"This order has a verified payment. Process the refund before cancelling it."});
+  }
+  const updated = await prisma.selloraOrder.update({
+    where:{id:order.id},
+    data:{status:data.status},
+    select:{id:true,orderNumber:true,status:true,paymentStatus:true,updatedAt:true}
+  });
+  res.json(updated);
+}));
+
 router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(async (req,res) => {
   const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if(!business) return res.status(409).json({error:"Complete business setup first."});
