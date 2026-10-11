@@ -549,10 +549,21 @@ export default function SelloraApp() {
 
   async function removeProductImage(product: Product) {
     try {
-      await api("/workspace/products/" + encodeURIComponent(product.id), { method: "PATCH", body: JSON.stringify({ imageUrl: "" }) });
-      setProducts(old => old.map(item => item.id === product.id ? { ...item, imageUrl: null } : item));
+      await api("/workspace/products/" + encodeURIComponent(product.id), {
+        method: "PATCH",
+        body: JSON.stringify({ imageUrl: "" }),
+      });
+      setProducts((old) =>
+        old.map((item) =>
+          item.id === product.id ? { ...item, imageUrl: null } : item,
+        ),
+      );
       setNotice("Product image removed.");
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not remove product image."); }
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not remove product image.",
+      );
+    }
   }
 
   async function saveProduct(e: FormEvent) {
@@ -1152,18 +1163,29 @@ export default function SelloraApp() {
           <div>
             <span className="sl-kicker">SELLORA WORKSPACE</span>
             <h1>
-              {page === "overview" ? "Your business at a glance"
-                : page === "products" ? "Your products"
-                : page === "catalogues" ? "Your catalogues"
-                : page === "orders" ? "Customer orders"
-                : page === "enquiries" ? "Customer enquiries"
-                : page === "inventory" ? "Inventory management"
-                : page === "customers" ? "Customer directory"
-                : page === "reports" ? "Sales reports"
-                : page === "launch" ? "Launch checklist"
-                : page === "settings" ? "Business settings"
-                : page === "payments" ? "Payments"
-                : "Workspace"}
+              {page === "overview"
+                ? "Your business at a glance"
+                : page === "products"
+                  ? "Your products"
+                  : page === "catalogues"
+                    ? "Your catalogues"
+                    : page === "orders"
+                      ? "Customer orders"
+                      : page === "enquiries"
+                        ? "Customer enquiries"
+                        : page === "inventory"
+                          ? "Inventory management"
+                          : page === "customers"
+                            ? "Customer directory"
+                            : page === "reports"
+                              ? "Sales reports"
+                              : page === "launch"
+                                ? "Launch checklist"
+                                : page === "settings"
+                                  ? "Business settings"
+                                  : page === "payments"
+                                    ? "Payments"
+                                    : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
