@@ -540,7 +540,8 @@ router.post("/workspace/products/:id/image", requireAuth, productImageUpload.sin
     return res.status(404).json({error:"Product not found."});
   }
   if (!file) return res.status(400).json({error:"Choose a PNG, JPEG, WebP or GIF image up to 5 MB."});
-  const imageUrl = "/uploads/" + file.filename;
+  const publicApiOrigin=(process.env.PUBLIC_API_URL||req.protocol+"://"+req.get("host")).replace(/\/$/,"");
+  const imageUrl = publicApiOrigin + "/uploads/" + file.filename;
   await prisma.selloraProduct.update({where:{id:product.id},data:{imageUrl}});
   if (product.imageUrl?.startsWith("/uploads/")) {
     await fs.promises.unlink(path.join(imageUploadDir, path.basename(product.imageUrl))).catch(()=>{});
