@@ -201,7 +201,7 @@
   color:var(--sellora-forest);
 }
 .sl-quiet{background:#eef4e9;color:var(--sellora-forest);border-color:#e0ead8}
-.sl-nav button{border-radius:9px;min-height:42px;transition:background .18s ease,color .18s ease}
+.sl-nav button{border-radius:9px;min-height:42px;transition:background .18s ease,color .18s ease;font-size:15px;}
 .sl-nav button.active{background:var(--sellora-navy);color:#fff;box-shadow:0 5px 14px rgba(8,15,77,.12)}
 .sl-nav button:hover:not(.active){background:#f1f3ec;color:var(--sellora-ink)}
 .sl-sidebar{box-shadow:4px 0 24px rgba(22,42,29,.025)}
@@ -746,3 +746,208 @@
 .sl-razorpay-card>p{margin:0;color:#737d70;font-size:12px;line-height:1.65}
 .sl-razorpay-card .sl-gateway-note{margin:0;padding:10px 12px;border-radius:8px;background:#f4f6f0}
 .sl-razorpay-card .sl-form{gap:13px}
+
+/* Catalogue-native cart button and confirmation */
+.sl-store-cart-cta{display:grid;gap:8px;margin-top:12px}
+.sl-store-cart-cta .sl-store-enquire{margin:0}
+.sl-store-card-quantity{display:flex;align-items:center;justify-content:center;gap:12px;color:#657166;font-size:11px}
+.sl-store-card-quantity button{width:28px;height:28px;border:1px solid #dfe5da;border-radius:7px;background:#fff;color:var(--store-brand);cursor:pointer}
+.sl-store-cart-fab{position:fixed;right:22px;bottom:22px;z-index:90;display:flex;align-items:center;gap:9px;min-height:48px;padding:0 18px;border:1px solid var(--store-brand);border-radius:999px;background:var(--store-brand);color:#fff;box-shadow:0 10px 30px #1c30262b;font-weight:750;font-size:12px;cursor:pointer}
+.sl-store-cart-fab b{display:grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:99px;background:#fff;color:var(--store-brand);font-size:10px}
+.sl-checkout-success-panel{text-align:center;padding:18px 5px}
+.sl-checkout-success-icon{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:0 auto 20px;background:color-mix(in srgb,var(--store-brand) 13%,white);color:var(--store-brand)}
+.sl-checkout-success-panel h3{font:600 27px Georgia,serif;color:#15372f;margin:12px 0}
+.sl-checkout-success-panel>p{font-size:12px;line-height:1.7;color:#68786c}
+.sl-checkout-success-reference{display:flex;flex-direction:column;gap:7px;padding:16px;margin-top:12px;border:1px solid #e5ebe1;border-radius:10px;background:#fafbf8}
+.sl-checkout-success-reference small{font-size:10px;color:#7b867a}
+.sl-checkout-success-reference b{font-size:15px;color:#183b31;overflow-wrap:anywhere}
+.sl-checkout-panel .sl-store-secondary{width:100%;justify-content:center;margin-top:12px;cursor:pointer}
+.sl-checkout-panel .sl-checkout-error{margin:0}
+@media(max-width:620px){.sl-store-cart-fab{right:14px;bottom:14px}.sl-store-card-quantity{gap:9px}}
+
+
+/* Product card add-to-cart: intentional primary action, not a full-width grey form button */
+.sl-store-cart-cta .sl-store-add-cart{width:100%;min-height:43px;display:flex;align-items:center;justify-content:center;gap:9px;padding:0 15px;border:1px solid var(--sellora-navy,#080f4d);border-radius:9px;background:var(--sellora-navy,#080f4d);color:#fff!important;font-size:12px;font-weight:750;letter-spacing:.1px;box-shadow:0 3px 8px rgba(8,15,77,.10);transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+.sl-store-cart-cta .sl-store-add-cart svg:last-child{margin-left:auto;opacity:.8}
+.sl-store-cart-cta .sl-store-add-cart:hover{background:#18246b;color:#fff!important;transform:translateY(-1px);box-shadow:0 6px 14px rgba(8,15,77,.16)}
+.sl-store-cart-cta .sl-store-add-cart:focus-visible{outline:3px solid color-mix(in srgb,var(--store-brand) 35%,white);outline-offset:2px}
+.sl-store-card-quantity{min-height:30px}
+
+
+/* Full order receipt shown after verified checkout */
+.sl-checkout-success-items{margin:18px 0 14px;padding:16px;border:1px solid #e2e9de;border-radius:12px;background:#fbfcf9;text-align:left}
+.sl-checkout-success-items h4{margin:0 0 12px;color:#183b31;font-size:14px}
+.sl-checkout-success-item{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:11px 0;border-bottom:1px solid #e8ede5}
+.sl-checkout-success-item>span{display:grid;gap:5px;min-width:0}
+.sl-checkout-success-item b{font-size:12px;color:#183b31;overflow-wrap:anywhere}
+.sl-checkout-success-item small{font-size:10px;line-height:1.5;color:#748174}
+.sl-checkout-success-item>strong{font-size:12px;color:#183b31;white-space:nowrap}
+.sl-checkout-success-total{display:flex;justify-content:space-between;gap:12px;padding:9px 0;color:#667568;font-size:12px}
+.sl-checkout-success-total b{color:#183b31;white-space:nowrap}
+.sl-checkout-success-total.grand{margin-top:3px;padding-top:13px;border-top:1px solid #dfe7da;font-size:14px;font-weight:800;color:#11194f}
+.sl-checkout-success-total.grand b{font-size:16px;color:#11194f}
+
+
+/* Itemized order totals in workspace order cards */
+.sl-order-totals{max-width:420px;margin:14px 0 18px auto;padding:12px 15px;border:1px solid #e4e9e1;border-radius:10px;background:#fafbf8}
+.sl-order-totals p{display:flex;justify-content:space-between;gap:16px;margin:0;padding:7px 0;color:#68776b;font-size:12px}
+.sl-order-totals p b{color:#183b31;white-space:nowrap}
+.sl-order-totals p.grand{border-top:1px solid #e2e8de;margin-top:4px;padding-top:11px;color:#11194f;font-weight:800}
+.sl-order-totals p.grand b{color:#11194f;font-size:14px}
+
+/* Catalogue cards open their own analytics without changing the approved catalogue layout. */
+.sl-catalogue-open{width:100%;border:0;font:inherit;cursor:pointer;transition:filter .15s ease,transform .15s ease}.sl-catalogue-open:hover{filter:brightness(1.08)}.sl-catalogue-open:focus-visible{outline:3px solid #9dbb8d;outline-offset:-4px}.sl-catalogue-analytics-detail{border:1px solid var(--sl-line);border-radius:9px;padding:13px;margin:14px 0;background:#fbfcf9}.sl-catalogue-analytics-detail .sl-section-head{margin-bottom:12px}.sl-catalogue-analytics-detail .sl-section-head h4{font-size:13px;margin:0 0 4px}.sl-catalogue-analytics-detail .sl-section-head p{font-size:10px}.sl-catalogue-analytics-detail .sl-analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+.sl-orders-filters{display:grid;grid-template-columns:minmax(220px,1fr) 210px 220px;gap:10px;margin:20px 0}.sl-orders-filters select{border:1px solid var(--sl-line);border-radius:10px;padding:12px;background:#fff;color:inherit;min-width:0;font:inherit}.sl-orders-search{display:flex;align-items:center;gap:10px;border:1px solid var(--sl-line);border-radius:10px;padding:0 13px;min-height:44px;color:#496056}.sl-orders-search input{border:0;outline:0;background:transparent;color:inherit;width:100%;min-width:0;font:inherit}.sl-orders-search input::placeholder{color:#8b9389}@media(max-width:760px){.sl-orders-filters{grid-template-columns:1fr}.sl-orders-filters select{width:100%}}
+
+
+/* Sellora friends-launch UI polish: one typography system across app, forms, dashboard and public catalogue. */
+:root{
+  --sellora-font: "DM Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --sellora-ink:#26352b;
+  --sellora-muted:#6f796f;
+  --sellora-line:#e2e8df;
+  --sellora-surface:#fff;
+  --sellora-canvas:#f7f9f5;
+  --sellora-green:#599c56;
+  --sellora-green-dark:#315f37;
+}
+.sl-app,.sl-app *,.sl-auth-layout,.sl-auth-layout *,.sl-onboarding-page,.sl-onboarding-page *,.sl-public-page,.sl-public-page *{
+  font-family:var(--sellora-font)!important;
+}
+.sl-app,.sl-auth-layout,.sl-onboarding-page,.sl-public-page{
+  color:var(--sellora-ink);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.sl-app *, .sl-auth-layout *, .sl-onboarding-page *, .sl-public-page *{box-sizing:border-box}
+.sl-app button,.sl-app input,.sl-app select,.sl-app textarea,
+.sl-auth-layout button,.sl-auth-layout input,.sl-auth-layout select,.sl-auth-layout textarea,
+.sl-onboarding-page button,.sl-onboarding-page input,.sl-onboarding-page select,.sl-onboarding-page textarea,
+.sl-public-page button,.sl-public-page input,.sl-public-page select,.sl-public-page textarea{
+  font-family:var(--sellora-font)!important;
+}
+.sl-app :is(input,select,textarea),.sl-auth-layout :is(input,select,textarea),.sl-onboarding-page :is(input,select,textarea),.sl-public-page :is(input,select,textarea){
+  font-size:14px;
+  line-height:1.45;
+}
+.sl-app :is(button,a),.sl-auth-layout :is(button,a),.sl-onboarding-page :is(button,a),.sl-public-page :is(button,a){
+  -webkit-tap-highlight-color:transparent;
+}
+.sl-app :is(button,input,select,textarea,a),.sl-auth-layout :is(button,input,select,textarea,a),.sl-onboarding-page :is(button,input,select,textarea,a),.sl-public-page :is(button,input,select,textarea,a){
+  transition-duration:.16s;
+}
+.sl-app :is(button,input,select,textarea):focus-visible,
+.sl-auth-layout :is(button,input,select,textarea):focus-visible,
+.sl-onboarding-page :is(button,input,select,textarea):focus-visible,
+.sl-public-page :is(button,input,select,textarea):focus-visible{
+  outline:3px solid #a8c99e;
+  outline-offset:2px;
+}
+.sl-app :is(input,select,textarea),.sl-auth-layout :is(input,select,textarea),.sl-onboarding-page :is(input,select,textarea){
+  min-height:42px;
+  border-radius:9px;
+}
+.sl-app :is(button:disabled,input:disabled,select:disabled),.sl-public-page :is(button:disabled,input:disabled,select:disabled){
+  opacity:.58;
+  cursor:not-allowed;
+}
+.sl-app :is(.sl-section-card,.sl-catalogue-card,.sl-order-card,.sl-payment-card,.sl-analytics-card){
+  box-shadow:0 2px 8px #243c2507;
+}
+.sl-app :is(.sl-section-card,.sl-catalogue-card,.sl-order-card,.sl-analytics-card){
+  border-color:var(--sellora-line);
+}
+.sl-app .sl-orders-filters{grid-template-columns:minmax(220px,1fr) minmax(150px,210px) minmax(160px,220px)}
+.sl-app .sl-orders-filters :is(input,select){min-height:48px;font-size:14px}
+.sl-app .sl-orders-search{min-height:48px}
+.sl-app .sl-orders-search input{min-height:44px;border:0;box-shadow:none}
+.sl-app .sl-catalogue-open{border-radius:0}
+.sl-app :is(.sl-button,.sl-catalogue-actions button){min-height:38px}
+.sl-public-page :is(.sl-public-product,.sl-store-product){box-shadow:0 2px 10px #243c2508}
+@media(max-width:760px){
+  .sl-app .sl-orders-filters{grid-template-columns:minmax(0,1fr)}
+  .sl-app .sl-main{padding-left:16px;padding-right:16px}
+  .sl-app .sl-workspace-top{gap:10px}
+  .sl-app .sl-section-card{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .sl-app *, .sl-auth-layout *, .sl-onboarding-page *, .sl-public-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
+
+/* Final consistency pass for the workspace navigation, product library and catalogue library. */
+.sl-app .sl-sidebar{font-family:var(--sellora-font)!important}
+.sl-app .sl-brand b{font-family:var(--sellora-font)!important;font-size:12px!important;line-height:1.3;letter-spacing:1.4px}
+.sl-app .sl-brand small{font-family:var(--sellora-font)!important;font-size:10px!important;line-height:1.35}
+.sl-app .sl-workspace-label{font-size:10px!important;line-height:1.4;letter-spacing:1.35px}
+.sl-app .sl-business-chip b{font-size:12px!important;line-height:1.35}
+.sl-app .sl-business-chip small{font-size:10px!important;line-height:1.35}
+.sl-app .sl-nav button{font-family:var(--sellora-font)!important;font-size:15px!important;font-weight:500;line-height:1.35;min-height:44px;padding:11px 12px}
+.sl-app .sl-nav button.active{font-weight:700}
+.sl-app .sl-signout{font-family:var(--sellora-font)!important;font-size:12px!important}
+.sl-app .sl-user-email{font-size:11px!important;line-height:1.5}
+.sl-app .sl-workspace-top h1{font-family:var(--sellora-font)!important;font-size:34px!important;font-weight:600!important;line-height:1.2;letter-spacing:-1px}
+.sl-app .sl-section-card>h3,.sl-app .sl-section-head h3{font-family:var(--sellora-font)!important;font-size:24px!important;font-weight:600!important;line-height:1.3;letter-spacing:-.45px}
+.sl-app .sl-section-card>p,.sl-app .sl-section-head p{font-size:13px!important;line-height:1.55}
+.sl-app .sl-catalogue-cover>b{font-family:var(--sellora-font)!important;font-size:25px!important;font-weight:600!important;line-height:1.2;letter-spacing:-.45px}
+.sl-app .sl-catalogue-cover>span,.sl-app .sl-catalogue-cover>small{font-family:var(--sellora-font)!important;font-size:10px!important;font-weight:600;line-height:1.4;letter-spacing:1.3px}
+.sl-app .sl-catalogue-card-body{padding:17px}
+.sl-app .sl-catalogue-title>b{font-size:14px!important;font-weight:700;line-height:1.4}
+.sl-app .sl-catalogue-card-body>p{font-size:12px!important;line-height:1.55;min-height:36px}
+.sl-app .sl-published,.sl-app .sl-draft{font-size:11px!important;font-weight:600;line-height:1.3;padding:6px 10px}
+.sl-app .sl-catalogue-actions .sl-button{font-size:12px!important;font-weight:650;min-height:40px;padding:9px 12px}
+.sl-app .sl-public-link{font-size:11px!important;line-height:1.5;overflow-wrap:anywhere}
+.sl-app .sl-product-row{gap:14px;padding:15px 0}
+.sl-app .sl-product-name b{font-size:14px!important;font-weight:650;line-height:1.4}
+.sl-app .sl-product-name small{font-size:11px!important;line-height:1.5}
+.sl-app .sl-product-row>strong{font-size:13px!important;font-weight:650}
+.sl-app .sl-icon-action{min-width:36px;min-height:36px}
+.sl-app .sl-product-thumb{width:52px;height:52px;border-radius:9px}
+.sl-app .sl-section-card{border-radius:12px}
+.sl-app .sl-catalogue-card{border-radius:12px}
+@media(max-width:650px){
+ .sl-app .sl-nav button{font-size:13px!important;min-height:40px;padding:9px 11px}
+ .sl-app .sl-workspace-top h1{font-size:28px!important}
+ .sl-app .sl-catalogue-cover>b{font-size:22px!important}
+ .sl-app .sl-catalogue-actions .sl-button{font-size:11px!important;padding:8px 10px}
+}
+
+
+/* Readability pass: larger, consistent typography across all workspace screens. */
+.sl-app,.sl-app *{font-family:var(--sellora-font)!important}
+.sl-app .sl-workspace-top h1{font-size:36px!important;font-weight:600!important;line-height:1.22}
+.sl-app .sl-workspace-label{font-size:11px!important}
+.sl-app .sl-business-chip b{font-size:13px!important}
+.sl-app .sl-business-chip small{font-size:11px!important}
+.sl-app .sl-nav button{font-size:16px!important;line-height:1.4;min-height:46px}
+.sl-app .sl-user-email{font-size:12px!important}
+.sl-app .sl-signout{font-size:13px!important}
+.sl-app .sl-notice{font-size:13px!important;line-height:1.5;padding:13px 15px}
+.sl-app .sl-section-card>h3,.sl-app .sl-section-head h3{font-size:25px!important;line-height:1.35}
+.sl-app .sl-section-card>p,.sl-app .sl-section-head p{font-size:14px!important;line-height:1.6}
+.sl-app .sl-product-name b{font-size:15px!important;line-height:1.45}
+.sl-app .sl-product-name small{font-size:12px!important;line-height:1.55}
+.sl-app .sl-product-row>strong{font-size:14px!important}
+.sl-app .sl-catalogue-cover>b{font-size:28px!important;line-height:1.25}
+.sl-app .sl-catalogue-cover>span,.sl-app .sl-catalogue-cover>small{font-size:11px!important}
+.sl-app .sl-catalogue-title>b{font-size:15px!important;line-height:1.45}
+.sl-app .sl-catalogue-card-body>p{font-size:13px!important;line-height:1.6}
+.sl-app .sl-published,.sl-app .sl-draft{font-size:12px!important}
+.sl-app .sl-catalogue-actions .sl-button{font-size:13px!important;min-height:42px}
+.sl-app .sl-public-link{font-size:12px!important;line-height:1.6}
+.sl-app .sl-stat-grid span{font-size:10px!important}
+.sl-app .sl-stat-grid strong{font-family:var(--sellora-font)!important;font-size:29px!important;font-weight:600!important}
+.sl-app .sl-stat-grid small{font-size:12px!important;line-height:1.5}
+.sl-app .sl-check-row b{font-size:14px!important}
+.sl-app .sl-check-row small{font-size:12px!important;line-height:1.55}
+.sl-app .sl-empty h3{font-family:var(--sellora-font)!important;font-size:24px!important}
+.sl-app .sl-empty p{font-size:13px!important;line-height:1.65}
+.sl-app .sl-orders-filters :is(input,select){font-family:var(--sellora-font)!important;font-size:14px!important}
+.sl-app :is(button,a,input,select,textarea){font-family:var(--sellora-font)!important}
+@media(max-width:650px){
+ .sl-app .sl-workspace-top h1{font-size:30px!important}
+ .sl-app .sl-nav button{font-size:14px!important}
+ .sl-app .sl-catalogue-cover>b{font-size:24px!important}
+ .sl-app .sl-section-card>h3,.sl-app .sl-section-head h3{font-size:22px!important}
+}

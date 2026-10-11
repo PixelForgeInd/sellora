@@ -3,7 +3,9 @@ import { CheckCircle2, Clock3, Download, RefreshCw, Search, XCircle } from "luci
 import { api } from "../sellora/api-client";
 
 type Payment = {
-  id: string; productName: string; quantity: number; unit: string;
+  id: string; orderNumber?: string; recordType?: string; productName: string; quantity: number; unit: string;
+  items?: { productName: string; sku?: string | null; quantity: number; unit: string; unitPrice: string; lineTotal: string }[];
+  subtotal?: string; taxAmount?: string; totalAmount?: string; address?: string | null; notes?: string | null;
   amount: string; currency: string; customerName: string; customerEmail?: string | null;
   customerPhone?: string | null; status: string; razorpayOrderId: string;
   razorpayPaymentId?: string | null; createdAt: string; paidAt?: string | null;
@@ -21,6 +23,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ALL");
   const [range, setRange] = useState("ALL");
+  const [sort, setSort] = useState("newest");
 
   const load = useCallback(async (refresh = false) => {
     refresh ? setRefreshing(true) : setLoading(true);
@@ -37,18 +40,18 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
     return payments.filter(p => {
       const matchesStatus = status === "ALL" || p.status === status;
       const matchesDate = new Date(p.createdAt).getTime() >= cutoff;
-      const matchesQuery = !q || [p.id,p.productName,p.customerName,p.customerEmail,p.customerPhone,p.razorpayOrderId,p.razorpayPaymentId].some(v => String(v || "").toLowerCase().includes(q));
+      const matchesQuery = !q || [p.id,p.orderNumber,p.productName,p.customerName,p.customerEmail,p.customerPhone,p.razorpayOrderId,p.razorpayPaymentId].some(v => String(v || "").toLowerCase().includes(q));
       return matchesStatus && matchesDate && matchesQuery;
-    });
-  }, [payments, query, status, range]);
+    }).sort((a,b) => sort === "oldest" ? Date.parse(a.createdAt)-Date.parse(b.createdAt) : sort === "amount-high" ? Number(b.totalAmount || b.amount)-Number(a.totalAmount || a.amount) : sort === "amount-low" ? Number(a.totalAmount || a.amount)-Number(b.totalAmount || b.amount) : Date.parse(b.createdAt)-Date.parse(a.createdAt));
+  }, [payments, query, status, range, sort]);
 
   const paid = payments.filter(p => p.status === "PAID");
   const pending = payments.filter(p => ["CREATED","PENDING","AUTHORIZED"].includes(p.status));
   const failed = payments.filter(p => ["FAILED","REFUNDED","PARTIALLY_REFUNDED"].includes(p.status));
   const collected = paid.reduce((sum,p) => sum + Number(p.amount), 0);
   function exportCsv() {
-    const columns = ["Order reference","Customer","Phone","Email","Product","Quantity","Amount","Currency","Status","Razorpay order ID","Razorpay payment ID","Created at","Paid at"];
-    const rows = filtered.map(p => [p.id,p.customerName,p.customerPhone || "",p.customerEmail || "",p.productName,p.quantity,p.amount,p.currency,p.status,p.razorpayOrderId,p.razorpayPaymentId || "",p.createdAt,p.paidAt || ""]);
+    const columns = ["Order reference","Record type","Customer","Phone","Email","Products and quantities","Subtotal","Tax","Total","Currency","Status","Delivery address","Notes","Razorpay order ID","Razorpay payment ID","Created at","Paid at"];
+    const rows = filtered.map(p => [p.orderNumber || p.id,p.recordType || "PAYMENT_ORDER",p.customerName,p.customerPhone || "",p.customerEmail || "",(p.items || []).map(i => `${i.productName} (SKU: ${i.sku || "—"}) × ${i.quantity} @ ${i.unitPrice} = ${i.lineTotal}`).join(" | ") || `${p.productName} × ${p.quantity}`,p.subtotal ?? p.amount,p.taxAmount ?? "0",p.totalAmount ?? p.amount,p.currency,p.status,p.address || "",p.notes || "",p.razorpayOrderId,p.razorpayPaymentId || "",p.createdAt,p.paidAt || ""]);
     const csv = [columns,...rows].map(row => row.map(v => '"' + String(v ?? "").replace(/"/g,'""') + '"').join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8;"}));
     const a = document.createElement("a"); a.href=url; a.download="sellora-payments.csv"; a.click(); URL.revokeObjectURL(url);
@@ -60,7 +63,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
       .sl-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:10px 13px;background:var(--sl-primary,#599c56);color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
       .sl-button-outline{background:transparent;color:inherit}
       .sl-button:disabled{opacity:.55;cursor:not-allowed}
-      .sl-payment-filters{display:grid;grid-template-columns:minmax(220px,1fr) 170px 150px;gap:10px;margin:20px 0}
+      .sl-payment-filters{display:grid;grid-template-columns:minmax(220px,1fr) 170px 150px 190px;gap:10px;margin:20px 0}
       .sl-payment-search{display:flex;align-items:center;gap:9px;border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:0 12px;min-height:42px}
       .sl-payment-search input{border:0;outline:0;background:transparent;color:inherit;width:100%;min-width:0;font:inherit}
       .sl-payment-filters select{border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:10px;background:transparent;color:inherit;min-width:0}
@@ -87,7 +90,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
     </section>
     <section className="sl-section-card">
       <div className="sl-section-head">
-        <div><h3>Transaction history</h3><p>Payments processed through Razorpay and recorded in your Sellora workspace.</p></div>
+        <div><h3>Transaction history</h3><p>All catalogue checkout orders and Razorpay payment records for your business.</p></div>
         <div className="sl-payment-actions">
           <button className="sl-button sl-button-outline" type="button" onClick={() => void load(true)} disabled={refreshing}><RefreshCw size={15}/>{refreshing ? "Refreshing…" : "Refresh"}</button>
           <button className="sl-button" type="button" onClick={exportCsv} disabled={!filtered.length}><Download size={15}/> Export CSV</button>
@@ -96,24 +99,25 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
       <div className="sl-payment-filters">
         <label className="sl-payment-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search customer, product or payment ID"/></label>
         <select value={status} onChange={e=>setStatus(e.target.value)} aria-label="Filter payment status">
-          <option value="ALL">All statuses</option><option value="PAID">Paid</option><option value="CREATED">Created</option><option value="PENDING">Pending</option><option value="AUTHORIZED">Authorized</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option>
+          <option value="ALL">All statuses</option><option value="PAID">Paid</option><option value="CREATED">Created</option><option value="PENDING">Pending</option><option value="AUTHORIZED">Authorized</option><option value="FAILED">Failed</option><option value="REFUNDED">Refunded</option><option value="CANCELLED">Cancelled</option>
         </select>
         <select value={range} onChange={e=>setRange(e.target.value)} aria-label="Filter payment date">
           <option value="ALL">All time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option>
         </select>
+        <select value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sort payments"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="amount-high">Amount: high to low</option><option value="amount-low">Amount: low to high</option></select>
       </div>
       {error && <div className="sl-payment-error" role="alert">{error}</div>}
       {loading ? <div className="sl-empty"><RefreshCw size={24}/><p>Loading payment records…</p></div> : filtered.length ? <div className="sl-payment-table-wrap"><table className="sl-payment-table">
         <thead><tr><th>Customer / Order</th><th>Product</th><th>Amount</th><th>Status</th><th>Payment reference</th><th>Date</th></tr></thead>
         <tbody>{filtered.map(p=><tr key={p.id}>
-          <td><b>{p.customerName}</b><small>{p.customerPhone || p.customerEmail || p.id}</small></td>
-          <td><b>{p.productName}</b><small>{p.quantity} {p.unit}</small></td>
-          <td className="sl-payment-amount">{money(p.amount,p.currency)}</td>
+          <td><b>{p.customerName}</b><small>{p.orderNumber || p.id}</small><small>{p.customerPhone || p.customerEmail || ""}</small></td>
+          <td><b>{p.items?.length ? `${p.items.length} product line${p.items.length===1?"":"s"}` : p.productName}</b>{p.items?.length ? p.items.map((item,i)=><small key={item.productName+"-"+i}>{item.productName} · Qty {item.quantity} × {money(item.unitPrice,p.currency)}</small>) : <small>{p.quantity} {p.unit}</small>}</td>
+          <td className="sl-payment-amount">{money(p.totalAmount ?? p.amount,p.currency)}{Number(p.taxAmount||0)>0&&<small>Subtotal {money(p.subtotal||"0",p.currency)} + tax {money(p.taxAmount||"0",p.currency)}</small>}</td>
           <td><span className={"sl-payment-status status-"+p.status.toLowerCase()}>{p.status.replaceAll("_"," ")}</span></td>
-          <td><small>Order: {p.razorpayOrderId}</small><small>Payment: {p.razorpayPaymentId || "Not received yet"}</small></td>
+          <td><small>Order: {p.razorpayOrderId || "—"}</small><small>Payment: {p.razorpayPaymentId || "Not received yet"}</small></td>
           <td><small>{dateTime(p.createdAt)}</small>{p.paidAt && <small>Paid {dateTime(p.paidAt)}</small>}</td>
         </tr>)}</tbody>
-      </table></div> : <div className="sl-empty"><CheckCircle2 size={28}/><h3>{payments.length ? "No matching payments" : "No payments yet"}</h3><p>{payments.length ? "Change the search or filters to see other transactions." : "Once a customer pays through a published catalogue using Razorpay, the transaction will appear here."}</p>{!payments.length && <button className="sl-button sl-button-outline" onClick={onSettings}>Configure Razorpay</button>}</div>}
+      </table></div> : <div className="sl-empty"><CheckCircle2 size={28}/><h3>{payments.length ? "No matching payments" : "No orders or payments yet"}</h3><p>{payments.length ? "Change the search or filters to see other transactions." : "Published catalogue checkout orders and legacy Razorpay payment records will appear here. Try Refresh if you recently received an order."}</p>{!payments.length && <button className="sl-button sl-button-outline" onClick={onSettings}>Configure Razorpay</button>}</div>}
       <p className="sl-payment-footnote">Only payments verified by Sellora are counted as collected. Refund totals are not included until refund tracking is enabled.</p>
     </section>
   </div>;

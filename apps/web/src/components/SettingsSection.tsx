@@ -44,6 +44,7 @@ type SettingsSectionProps = {
   removeIndustryField: (field: Field) => Promise<void>;
   restoreIndustryFields: () => Promise<void>;
   busy: boolean;
+  isPlatformOwner?: boolean;
 };
 
 export function SettingsSection({
@@ -63,6 +64,7 @@ export function SettingsSection({
   removeIndustryField,
   restoreIndustryFields,
   busy,
+  isPlatformOwner = false,
 }: SettingsSectionProps) {
   const [gatewayKeyId, setGatewayKeyId] = useState("");
   const [gatewayKeySecret, setGatewayKeySecret] = useState("");
@@ -75,34 +77,27 @@ export function SettingsSection({
   const [webhookSaved, setWebhookSaved] = useState(false);
   const [gatewayBusy, setGatewayBusy] = useState(false);
   const [gatewayMessage, setGatewayMessage] = useState("");
-  const [paymentOrders, setPaymentOrders] = useState<
-    Array<{
-      id: string;
-      productName: string;
-      quantity: number;
-      unit: string;
-      amount: string;
-      currency: string;
-      customerName: string;
-      status: string;
-      createdAt: string;
-    }>
-  >([]);
+  const [platformPaymentSettings, setPlatformPaymentSettings] = useState<any>(null);
+  const [platformSettingsError, setPlatformSettingsError] = useState("");
+  const [taxEnabled, setTaxEnabled] = useState(false);
+  const [taxRate, setTaxRate] = useState("0");
+  const [taxBusy, setTaxBusy] = useState(false);
+  const [taxMessage, setTaxMessage] = useState("");
   useEffect(() => {
-    Promise.all([
-      api("/workspace/business/payment-gateway"),
-      api("/workspace/payment-orders"),
-    ])
-      .then(([v, orders]) => {
-        setGatewayKeyId(v.keyId || "");
-        setGatewayTestMode(v.testMode !== false);
-        setGatewayStatus(v.status || "NOT_CONNECTED");
-        setGatewaySecretSaved(Boolean(v.keySecretConfigured));
-        setWebhookSaved(Boolean(v.webhookSecretConfigured));
-        setPaymentOrders(orders);
-      })
-      .catch(() => {});
-  }, [business.id]);
+    api("/workspace/business/tax-settings").then((v) => { setTaxEnabled(Boolean(v.enabled)); setTaxRate(String(v.rate ?? "0")); }).catch((err) => setTaxMessage(err instanceof Error ? err.message : "Could not load tax settings."));
+  }, []);
+  async function saveTaxSettings(e: FormEvent) {
+    e.preventDefault(); setTaxBusy(true); setTaxMessage("");
+    try { const v = await api("/workspace/business/tax-settings", { method: "PUT", body: JSON.stringify({ enabled: taxEnabled, rate: Number(taxRate) }) }); setTaxEnabled(Boolean(v.enabled)); setTaxRate(String(v.rate)); setTaxMessage(v.enabled ? "Tax settings saved. Tax will be calculated on new orders." : "Tax disabled. New orders will have no tax."); }
+    catch (err) { setTaxMessage(err instanceof Error ? err.message : "Could not save tax settings."); }
+    finally { setTaxBusy(false); }
+  }
+  useEffect(() => {
+    if (!isPlatformOwner) return;
+    api("/platform/admin/payment-settings")
+      .then(setPlatformPaymentSettings)
+      .catch((err) => setPlatformSettingsError(err instanceof Error ? err.message : "Could not load platform payment settings."));
+  }, [isPlatformOwner]);
   async function saveGateway(e: FormEvent) {
     e.preventDefault();
     setGatewayBusy(true);
@@ -421,8 +416,9 @@ export function SettingsSection({
         <span className="sl-kicker">PAYMENT INTEGRATION</span>
         <h3>Connect Razorpay</h3>
         <p>
-          Connect your Razorpay account for catalogue checkout. Secrets are
-          encrypted on the server and never displayed again.
+          Accept payments directly into your own Razorpay account. Enter your
+          Key ID and Key Secret from Razorpay Dashboard. Sellora protects your
+          credentials automatically.
         </p>
         <form className="sl-form" onSubmit={saveGateway}>
           <label>
@@ -449,20 +445,7 @@ export function SettingsSection({
               autoComplete="new-password"
             />
           </label>
-          <label>
-            Razorpay Webhook Secret
-            <input
-              type="password"
-              value={gatewayWebhookSecret}
-              onChange={(e) => setGatewayWebhookSecret(e.target.value)}
-              placeholder={
-                webhookSaved
-                  ? "Saved securely — leave blank to keep"
-                  : "Webhook secret from Razorpay"
-              }
-              autoComplete="new-password"
-            />
-          </label>
+
           <label className="sl-field-required-toggle">
             <input
               type="checkbox"
@@ -512,61 +495,48 @@ export function SettingsSection({
             )}
           </div>
         </form>
-        <p className="sl-gateway-note">
-          Webhook URL:{" "}
-          <b>
-            {(
-              import.meta.env.VITE_API_URL || "http://localhost:4000/api"
-            ).replace(/\/$/, "")}
-            /webhooks/razorpay
-          </b>
-          . Configure payment.captured, payment.failed and order.paid events in
-          Razorpay Dashboard.
-        </p>
+        {isPlatformOwner && (
+          <section className="sl-section-card sl-settings-page">
+            <span className="sl-kicker">PIXELFORGE PLATFORM ADMIN</span>
+            <h3>Payment infrastructure</h3>
+            <p>Owner-only operational settings for managing Sellora's payment integration. Encryption secrets are never displayed here.</p>
+            {platformSettingsError && <p role="alert" className="sl-gateway-note">{platformSettingsError}</p>}
+            {platformPaymentSettings && (
+              <>
+                <label>
+                  Razorpay webhook endpoint
+                  <input readOnly value={platformPaymentSettings.webhookUrl || "Set PUBLIC_API_URL on the API server to display the public webhook URL"} />
+                </label>
+                {platformPaymentSettings.webhookUrl && (
+                  <div className="sl-modal-actions">
+                    <Btn type="button" kind="outline" onClick={() => void navigator.clipboard.writeText(platformPaymentSettings.webhookUrl)}>Copy webhook URL</Btn>
+                  </div>
+                )}
+                <p className="sl-gateway-note">The encryption key is managed only through the API environment file. Customer workspaces do not see this panel.</p>
+              </>
+            )}
+          </section>
+        )}
       </section>
 
       <section className="sl-section-card sl-settings-page">
-        <span className="sl-kicker">PAYMENT ACTIVITY</span>
-        <h3>Recent payments</h3>
-        <p>
-          Payments recorded for this business. Refresh the page to see the
-          latest updates.
-        </p>
-        {paymentOrders.length === 0 ? (
-          <p className="sl-muted">
-            No payment orders yet. Completed checkout attempts will appear here.
-          </p>
-        ) : (
-          <div className="sl-industry-fields">
-            {paymentOrders.map((order) => (
-              <div className="sl-industry-field" key={order.id}>
-                <span>
-                  <b>
-                    {order.productName} · {order.quantity} {order.unit}
-                  </b>
-                  <small>
-                    {order.customerName} ·{" "}
-                    {new Date(order.createdAt).toLocaleString()} · Ref{" "}
-                    {order.id.slice(-8)}
-                  </small>
-                </span>
-                <span>
-                  <b>
-                    {order.currency} {order.amount}
-                  </b>
-                  <small
-                    className={
-                      order.status === "PAID" ? "sl-published" : "sl-draft"
-                    }
-                  >
-                    {order.status}
-                  </small>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <span className="sl-kicker">TAX SETTINGS</span>
+        <h3>Optional order tax</h3>
+        <p>Enable tax calculation for new online orders. Leave it disabled if your prices already include tax or you do not need tax added at checkout.</p>
+        <form className="sl-form" onSubmit={saveTaxSettings}>
+          <label className="sl-field-required-toggle">
+            <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} />
+            Calculate tax on online orders
+          </label>
+          {taxEnabled && <label>Tax rate (%)
+            <input type="number" min="0" max="100" step="0.01" required value={taxRate} onChange={(e) => setTaxRate(e.target.value)} placeholder="e.g. 5 or 18" />
+            <small>Enter the applicable rate for your products. Confirm the correct tax treatment with your accountant.</small>
+          </label>}
+          {taxMessage && <p role="status" className="sl-gateway-note">{taxMessage}</p>}
+          <div className="sl-modal-actions"><Btn type="submit" disabled={taxBusy}>{taxBusy ? "Saving…" : "Save tax settings"} <Check size={15}/></Btn></div>
+        </form>
       </section>
+
       <section className="sl-section-card sl-settings-page">
         <span className="sl-kicker">SELLING PREFERENCES</span>
         <h3>Choose how customers buy from you</h3>
@@ -648,100 +618,6 @@ export function SettingsSection({
                 ? "Active"
                 : "Not active"}
             </span>
-          </div>
-          <div className="sl-razorpay-card">
-            <div className="sl-razorpay-heading">
-              <span>
-                <CreditCard size={19} />
-                <b>Razorpay payments</b>
-              </span>
-              <small>
-                {business.paymentGatewayStatus === "ACTIVE"
-                  ? "Credentials verified"
-                  : "Not connected"}
-              </small>
-            </div>
-            <p>
-              Connect your own Razorpay account. Use test-mode keys first, then
-              switch to live keys after testing.
-            </p>
-            <form className="sl-form" onSubmit={saveGateway}>
-              <label>
-                Razorpay Key ID
-                <input
-                  required
-                  autoComplete="off"
-                  value={gatewayKeyId}
-                  onChange={(event) => setGatewayKeyId(event.target.value)}
-                  placeholder={gatewayTestMode ? "rzp_test_…" : "rzp_live_…"}
-                />
-              </label>
-              <label>
-                Razorpay Key Secret
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={gatewayKeySecret}
-                  onChange={(event) => setGatewayKeySecret(event.target.value)}
-                  placeholder={
-                    gatewaySecretSaved
-                      ? "Saved securely — enter only to replace"
-                      : "Enter your Razorpay Key Secret"
-                  }
-                  required={!gatewaySecretSaved}
-                />
-              </label>
-              <label>
-                Razorpay Webhook Secret (optional)
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={gatewayWebhookSecret}
-                  onChange={(event) =>
-                    setGatewayWebhookSecret(event.target.value)
-                  }
-                  placeholder={
-                    webhookSaved
-                      ? "Saved securely — enter only to replace"
-                      : "Enter the webhook secret"
-                  }
-                />
-              </label>
-              <label className="sl-checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={gatewayTestMode}
-                  onChange={(event) => setGatewayTestMode(event.target.checked)}
-                />
-                Use Razorpay test mode
-              </label>
-              <p className="sl-gateway-note">
-                Secrets are encrypted before storage and never returned to this
-                page. Configure PAYMENT_ENCRYPTION_KEY on the API server before
-                connecting.
-              </p>
-              {gatewayMessage && (
-                <p role="status" className="sl-gateway-note">
-                  {gatewayMessage}
-                </p>
-              )}
-              <div className="sl-modal-actions">
-                <Btn type="submit" disabled={gatewayBusy}>
-                  {gatewayBusy ? "Verifying…" : "Verify & connect Razorpay"}{" "}
-                  <Check size={15} />
-                </Btn>
-                {business.paymentGatewayStatus === "ACTIVE" && (
-                  <Btn
-                    kind="outline"
-                    type="button"
-                    disabled={gatewayBusy}
-                    onClick={() => void disconnectGateway()}
-                  >
-                    Disconnect
-                  </Btn>
-                )}
-              </div>
-            </form>
           </div>
           {sellingMode === "ONLINE_PAYMENTS" &&
             business.paymentGatewayStatus !== "ACTIVE" && (

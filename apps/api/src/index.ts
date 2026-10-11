@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import path from "node:path";
@@ -7,6 +7,10 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { businessSchema, catalogueFieldTemplates } from "./business-schema.js";
 import selloraRouter, { requireAuth } from "./sellora.js";
+
+// npm workspace scripts run with apps/api as cwd; load the repository-root .env explicitly.
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
+dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();

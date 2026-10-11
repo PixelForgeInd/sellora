@@ -32,10 +32,12 @@ The previous yarn-specific data models remain. Generic Sellora models are additi
    npm install
    npm run db:generate
 
-5. Apply migrations and seed reference data:
+5. Apply migrations and seed reference data. Before seeding, set `PLATFORM_OWNER_EMAIL` to your own email and `PLATFORM_OWNER_PASSWORD` to a unique password of at least 12 characters in `.env`:
 
    npm run db:migrate
    npm run db:seed
+
+The seed creates the PixelForge platform-owner account and workspace. It will not automatically promote an existing non-owner account.
 
 6. Start the apps:
 
@@ -59,10 +61,10 @@ Workspace routes require Authorization: Bearer <token>. Product and catalogue op
 
 ## Razorpay setup
 
-1. Configure `PAYMENT_ENCRYPTION_KEY` on the API server as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable.
+1. Configure `PAYMENT_ENCRYPTION_KEY` once in the Sellora API host environment as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable. Existing deployments with `RAZORPAY_ENCRYPTION_KEY` can use it as a fallback. This is a Sellora-managed server secret, not a value customers enter.
 2. Apply the included migration with `npm run db:migrate` after configuring `DATABASE_URL`. Test it against a backed-up staging database before production deployment. For a disposable development database, `npx prisma db push --schema apps/api/prisma/schema.prisma` is also available.
-3. In Sellora Settings, enter the Razorpay Key ID and Key Secret. Start with test credentials; Sellora checks the credentials with Razorpay before connecting.
-4. Add the webhook URL shown in Settings to Razorpay Dashboard and enter the same webhook secret in Sellora. Subscribe to `payment.captured`, `payment.failed` and `order.paid`.
+3. Business customers enter their own Razorpay Key ID and Key Secret in Sellora Settings. Start with test credentials; Sellora checks the credentials with Razorpay before connecting.
+4. Only the PixelForge platform owner sees the platform webhook endpoint in Settings. Set `PUBLIC_API_URL` to the public API origin (without `/api`) so the owner panel can display the complete endpoint. Configure it in the relevant Razorpay Dashboard and subscribe to `payment.captured`, `payment.failed` and `order.paid`. Each business's own webhook secret remains a separate tenant-level setting.
 5. Only fixed-price products in published catalogues can be purchased online. The API calculates the amount from the saved product price and verifies Razorpay's signature and payment details before marking an order paid.
 
 ## Production hardening still required
