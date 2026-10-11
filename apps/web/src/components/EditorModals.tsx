@@ -170,10 +170,19 @@ export function ProductModal({
                 min="0"
                 step="0.001"
                 value={pform.stockQuantity}
-                onChange={(e) => setPform({ ...pform, stockQuantity: e.target.value, stockEnabled: true })}
+                onChange={(e) =>
+                  setPform({
+                    ...pform,
+                    stockQuantity: e.target.value,
+                    stockEnabled: true,
+                  })
+                }
                 placeholder="e.g. 100"
               />
-              <span className="sl-muted">Enter 0 if currently out of stock. Saving a quantity enables stock validation at checkout.</span>
+              <span className="sl-muted">
+                Enter 0 if currently out of stock. Saving a quantity enables
+                stock validation at checkout.
+              </span>
             </label>
           </div>
           <div className="sl-field-divider">
