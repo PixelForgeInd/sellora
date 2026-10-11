@@ -25,7 +25,6 @@ import {
   X,
   MessageCircle,
   Users,
-  Boxes,
   MessageSquare,
 } from "lucide-react";
 import { api, getSessionToken } from "./sellora/api-client";
@@ -46,7 +45,6 @@ import { PaymentsSection } from "./components/PaymentsSection";
 import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
 import {
   EnquiriesSection,
-  InventorySection,
   CustomersSection,
   ReportsSection,
 } from "./components/OperationsSections";
@@ -1120,7 +1118,6 @@ export default function SelloraApp() {
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
             { id: "orders", label: "All orders", icon: ClipboardList },
             { id: "enquiries", label: "Enquiries", icon: MessageSquare },
-            { id: "inventory", label: "Inventory", icon: Boxes },
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
@@ -1173,9 +1170,7 @@ export default function SelloraApp() {
                       ? "Customer orders"
                       : page === "enquiries"
                         ? "Customer enquiries"
-                        : page === "inventory"
-                          ? "Inventory management"
-                          : page === "customers"
+                        : page === "customers"
                             ? "Customer directory"
                             : page === "reports"
                               ? "Sales reports"
@@ -1958,9 +1953,6 @@ export default function SelloraApp() {
         )}
         {page === "enquiries" && (
           <EnquiriesSection setError={setError} setNotice={setNotice} />
-        )}
-        {page === "inventory" && (
-          <InventorySection setError={setError} setNotice={setNotice} />
         )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
