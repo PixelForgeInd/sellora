@@ -15,6 +15,7 @@ export type Business = {
   productCategory: string;
   businessModel: string;
   phone?: string | null;
+  address?: string | null;
   website?: string | null;
   email?: string | null;
   logoUrl?: string | null;
@@ -34,6 +35,8 @@ export type Product = {
   currency: string;
   unit: string;
   imageUrl?: string | null;
+  stockEnabled?: boolean;
+  stockQuantity?: string | number | null;
   fields: Record<string, string | number | boolean | string[]>;
 };
 
@@ -54,6 +57,7 @@ export type PublicData = {
     name: string;
     industry: string;
     phone?: string | null;
+    address?: string | null;
     website?: string | null;
     brandColor: string;
     email?: string | null;

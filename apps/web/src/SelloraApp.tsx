@@ -24,6 +24,8 @@ import {
   Trash2,
   X,
   MessageCircle,
+  Users,
+  MessageSquare,
 } from "lucide-react";
 import { api, getSessionToken } from "./sellora/api-client";
 import {
@@ -41,6 +43,11 @@ import {
 import { SettingsSection } from "./components/SettingsSection";
 import { PaymentsSection } from "./components/PaymentsSection";
 import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
+import {
+  EnquiriesSection,
+  CustomersSection,
+  ReportsSection,
+} from "./components/OperationsSections";
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
@@ -70,7 +77,15 @@ export default function SelloraApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState("signup");
+  const [resetToken, setResetToken] = useState(
+    () => new URLSearchParams(window.location.search).get("resetToken") || "",
+  );
+  const [authNotice, setAuthNotice] = useState("");
+  const [mode, setMode] = useState(() =>
+    new URLSearchParams(window.location.search).has("resetToken")
+      ? "reset"
+      : "signup",
+  );
 
   // Workspace navigation and feedback
   const [page, setPage] = useState("overview");
@@ -97,8 +112,11 @@ export default function SelloraApp() {
     industry: "Textiles",
     productCategory: "yarn-textiles",
     businessModel: "B2B",
+    email: "",
     phone: "",
+    address: "",
     website: "",
+    logoUrl: "",
     brandColor: "#599c56",
   });
   const [fieldForm, setFieldForm] = useState({
@@ -118,6 +136,8 @@ export default function SelloraApp() {
     currency: "INR",
     unit: "kg",
     imageUrl: "",
+    stockEnabled: false,
+    stockQuantity: "",
     fields: {} as Record<string, string | number | boolean | string[]>,
   });
   const [cform, setCform] = useState({
@@ -239,8 +259,11 @@ export default function SelloraApp() {
         industry: updated.industry,
         productCategory: updated.productCategory,
         businessModel: updated.businessModel,
+        email: updated.email || "",
         phone: updated.phone || "",
+        address: updated.address || "",
         website: updated.website || "",
+        logoUrl: updated.logoUrl || "",
         brandColor: updated.brandColor,
       });
       setNotice("Business details updated.");
@@ -337,8 +360,11 @@ export default function SelloraApp() {
         industry: business.industry,
         productCategory: business.productCategory,
         businessModel: business.businessModel,
+        email: business.email || "",
         phone: business.phone || "",
+        address: business.address || "",
         website: business.website || "",
+        logoUrl: business.logoUrl || "",
         brandColor: business.brandColor || "#599c56",
       });
       try {
@@ -379,7 +405,37 @@ export default function SelloraApp() {
     e.preventDefault();
     setBusy(true);
     setError("");
+    setAuthNotice("");
     try {
+      if (mode === "forgot") {
+        const result = await api(
+          "/auth/password/forgot",
+          { method: "POST", body: JSON.stringify({ email }) },
+          "",
+        );
+        setAuthNotice(
+          result.message ||
+            "If an account exists, reset instructions will be sent.",
+        );
+        setMode("login");
+        return;
+      }
+      if (mode === "reset") {
+        const result = await api(
+          "/auth/password/reset",
+          {
+            method: "POST",
+            body: JSON.stringify({ token: resetToken, newPassword: password }),
+          },
+          "",
+        );
+        setAuthNotice(result.message || "Password reset. You can now sign in.");
+        setPassword("");
+        setResetToken("");
+        window.history.replaceState({}, "", window.location.pathname);
+        setMode("login");
+        return;
+      }
       const d = await api(
         "/auth/" + mode,
         { method: "POST", body: JSON.stringify({ email, password }) },
@@ -393,7 +449,7 @@ export default function SelloraApp() {
       const b = await api("/workspace/business", {}, d.token);
       if (b) await load(d.token);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not sign in");
+      setError(e instanceof Error ? e.message : "Could not continue");
     } finally {
       setBusy(false);
     }
@@ -429,6 +485,9 @@ export default function SelloraApp() {
             currency: p.currency,
             unit: p.unit,
             imageUrl: p.imageUrl || "",
+            stockEnabled: Boolean(p.stockEnabled),
+            stockQuantity:
+              p.stockQuantity == null ? "" : String(p.stockQuantity),
             fields: p.fields || {},
           }
         : {
@@ -440,6 +499,8 @@ export default function SelloraApp() {
             unit:
               business?.productCategory === "yarn-textiles" ? "kg" : "piece",
             imageUrl: "",
+            stockEnabled: false,
+            stockQuantity: "",
             fields: {},
           },
     );
@@ -467,6 +528,49 @@ export default function SelloraApp() {
       setError("Could not read this image. Try another file.");
     reader.readAsDataURL(file);
   }
+  async function uploadProductImage(product: Product, file: File) {
+    const form = new FormData();
+    form.append("image", file);
+    try {
+      const result = await api(
+        "/workspace/products/" + encodeURIComponent(product.id) + "/image",
+        { method: "POST", body: form },
+      );
+      setProducts((old) =>
+        old.map((item) =>
+          item.id === product.id
+            ? { ...item, imageUrl: result.imageUrl }
+            : item,
+        ),
+      );
+      setNotice("Image uploaded for " + product.name + ".");
+      setError("");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not upload product image.",
+      );
+    }
+  }
+
+  async function removeProductImage(product: Product) {
+    try {
+      await api("/workspace/products/" + encodeURIComponent(product.id), {
+        method: "PATCH",
+        body: JSON.stringify({ imageUrl: "" }),
+      });
+      setProducts((old) =>
+        old.map((item) =>
+          item.id === product.id ? { ...item, imageUrl: null } : item,
+        ),
+      );
+      setNotice("Product image removed.");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not remove product image.",
+      );
+    }
+  }
+
   async function saveProduct(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -475,13 +579,39 @@ export default function SelloraApp() {
       const body = {
         ...pform,
         price: pform.price ? Number(pform.price) : undefined,
+        stockEnabled: pform.stockQuantity !== "" ? true : pform.stockEnabled,
+        stockQuantity:
+          pform.stockQuantity !== "" ? Number(pform.stockQuantity) : undefined,
       };
       const p = await api(
         editing ? "/workspace/products/" + editing : "/workspace/products",
         { method: editing ? "PATCH" : "POST", body: JSON.stringify(body) },
       );
+      let savedProduct = p;
+      if (pform.stockQuantity !== "") {
+        // Persist stock through the inventory endpoint for both new and existing
+        // products. Zero is a valid quantity and must not be treated as empty.
+        const inventory = await api(
+          "/workspace/inventory/" + encodeURIComponent(p.id) + "/adjust",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              quantity: Number(pform.stockQuantity),
+              reason: "ADJUSTMENT",
+              note: "Saved from product editor",
+            }),
+          },
+        );
+        savedProduct = {
+          ...p,
+          stockEnabled: inventory.stockEnabled,
+          stockQuantity: inventory.stockQuantity,
+        };
+      }
       setProducts((old) =>
-        editing ? old.map((x) => (x.id === p.id ? p : x)) : [p, ...old],
+        editing
+          ? old.map((x) => (x.id === savedProduct.id ? savedProduct : x))
+          : [savedProduct, ...old],
       );
       setModal("");
       setNotice("Product saved.");
@@ -818,6 +948,106 @@ export default function SelloraApp() {
     URL.revokeObjectURL(url);
   };
 
+  async function updateOrderStatus(order: any, status: string) {
+    if (!order.id || String(order.id).startsWith("payment-")) {
+      setError(
+        "This legacy payment record does not support fulfilment status changes.",
+      );
+      return;
+    }
+    try {
+      const updated = await api(
+        "/workspace/orders/" + encodeURIComponent(order.id) + "/status",
+        {
+          method: "PATCH",
+          body: JSON.stringify({ status }),
+        },
+      );
+      setOrders((old) =>
+        old.map((item) =>
+          item.id === updated.id ? { ...item, ...updated } : item,
+        ),
+      );
+      setNotice(
+        "Order " +
+          updated.orderNumber +
+          " updated to " +
+          updated.status.toLowerCase() +
+          ".",
+      );
+      setError("");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not update order status.",
+      );
+    }
+  }
+
+  async function editOrderDetails(order: any) {
+    if (String(order.id).startsWith("payment-")) {
+      setError("Legacy payment records cannot be edited here.");
+      return;
+    }
+    const customerName = window.prompt(
+      "Customer name",
+      order.customerName || "",
+    );
+    if (customerName === null) return;
+    const phone = window.prompt("Customer phone", order.phone || "");
+    if (phone === null) return;
+    const email = window.prompt("Customer email", order.email || "");
+    if (email === null) return;
+    const address = window.prompt("Delivery address", order.address || "");
+    if (address === null) return;
+    const notes = window.prompt("Order notes", order.notes || "");
+    if (notes === null) return;
+    try {
+      const updated = await api(
+        "/workspace/orders/" + encodeURIComponent(order.id),
+        {
+          method: "PATCH",
+          body: JSON.stringify({ customerName, phone, email, address, notes }),
+        },
+      );
+      setOrders((old) =>
+        old.map((item) =>
+          item.id === updated.id ? { ...item, ...updated } : item,
+        ),
+      );
+      setNotice("Order details updated.");
+      setError("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not edit order.");
+    }
+  }
+
+  async function refundOrder(order: any) {
+    if (
+      !window.confirm(
+        "Submit a full refund for " +
+          (order.orderNumber || order.id) +
+          " through Razorpay?",
+      )
+    )
+      return;
+    try {
+      const result = await api(
+        "/workspace/orders/" + encodeURIComponent(order.id) + "/refund",
+        { method: "POST" },
+      );
+      setOrders((old) =>
+        old.map((item) =>
+          item.id === order.id
+            ? { ...item, refundStatus: result.refundStatus }
+            : item,
+        ),
+      );
+      setNotice(result.message || "Refund submitted.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not submit refund.");
+    }
+  }
+
   const downloadBulkDeliverySlips = () => {
     if (!filteredOrders.length) {
       setNotice("There are no orders matching the current filters.");
@@ -919,7 +1149,10 @@ export default function SelloraApp() {
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
-            { id: "orders", label: "All orders", icon: ClipboardList },
+            { id: "orders", label: "Orders", icon: ClipboardList },
+            { id: "enquiries", label: "Enquiries", icon: MessageSquare },
+            { id: "customers", label: "Customers", icon: Users },
+            { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
@@ -966,13 +1199,21 @@ export default function SelloraApp() {
                   ? "Your products"
                   : page === "catalogues"
                     ? "Your catalogues"
-                    : page === "launch"
-                      ? "Launch checklist"
-                      : page === "settings"
-                        ? "Business settings"
-                        : page === "payments"
-                          ? "Payments"
-                          : "Workspace"}
+                    : page === "orders"
+                      ? "Customer orders"
+                      : page === "enquiries"
+                        ? "Customer enquiries"
+                        : page === "customers"
+                          ? "Customer directory"
+                          : page === "reports"
+                            ? "Sales reports"
+                            : page === "launch"
+                              ? "Launch checklist"
+                              : page === "settings"
+                                ? "Business settings"
+                                : page === "payments"
+                                  ? "Payments"
+                                  : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -1048,14 +1289,11 @@ export default function SelloraApp() {
                     orders
                       .filter(
                         (o: any) =>
-                          (o.paymentStatus === "PAID" ||
-                            o.status === "CONFIRMED" ||
-                            o.status === "PAID") &&
-                          (o.paidAt || o.updatedAt) &&
-                          new Date(o.paidAt || o.updatedAt).toLocaleDateString(
-                            "en-CA",
-                            { timeZone: "Asia/Kolkata" },
-                          ) ===
+                          o.paymentStatus === "PAID" &&
+                          o.paidAt &&
+                          new Date(o.paidAt).toLocaleDateString("en-CA", {
+                            timeZone: "Asia/Kolkata",
+                          }) ===
                             new Date().toLocaleDateString("en-CA", {
                               timeZone: "Asia/Kolkata",
                             }),
@@ -1065,6 +1303,7 @@ export default function SelloraApp() {
                           sum + Number(o.totalAmount ?? o.subtotal ?? 0),
                         0,
                       ),
+                    "INR",
                   )}
                 </strong>
                 <small>Verified payments received today</small>
@@ -1150,6 +1389,8 @@ export default function SelloraApp() {
             products={products}
             startProduct={startProduct}
             deleteProduct={deleteProduct}
+            uploadProductImage={uploadProductImage}
+            removeProductImage={removeProductImage}
           />
         )}
         {page === "catalogues" && (
@@ -1300,13 +1541,102 @@ export default function SelloraApp() {
                       <div
                         style={{
                           display: "flex",
-                          justifyContent: "flex-end",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 12,
+                          flexWrap: "wrap",
                           marginBottom: 12,
                         }}
                       >
-                        <Btn onClick={() => printDeliverySlip(order)}>
-                          <Printer size={15} /> Print delivery slip
-                        </Btn>
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          Fulfilment status{" "}
+                          <select
+                            aria-label={
+                              "Update status for order " +
+                              (order.orderNumber || order.id)
+                            }
+                            className="sl-fulfilment-select"
+                            style={{
+                              appearance: "none",
+                              WebkitAppearance: "none",
+                              minHeight: 44,
+                              minWidth: 154,
+                              padding: "10px 38px 10px 14px",
+                              border: "1px solid #dce5da",
+                              borderRadius: 12,
+                              backgroundColor: "#fff",
+                              backgroundImage:
+                                "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23332f2f%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22m6 9 6 6 6-6%22/%3E%3C/svg%3E')",
+                              backgroundRepeat: "no-repeat",
+                              backgroundPosition: "right 12px center",
+                              color: "#332f2f",
+                              font: "inherit",
+                              fontWeight: 500,
+                              lineHeight: 1.35,
+                              boxShadow: "0 1px 2px rgba(28, 44, 33, 0.04)",
+                              cursor:
+                                ["DELIVERED", "CANCELLED"].includes(
+                                  order.status,
+                                ) || String(order.id).startsWith("payment-")
+                                  ? "not-allowed"
+                                  : "pointer",
+                              outlineOffset: 2,
+                            }}
+                            value={order.status || "PENDING"}
+                            disabled={
+                              ["DELIVERED", "CANCELLED"].includes(
+                                order.status,
+                              ) || String(order.id).startsWith("payment-")
+                            }
+                            onChange={(e) =>
+                              void updateOrderStatus(order, e.target.value)
+                            }
+                          >
+                            <option value="PENDING">Pending</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="PROCESSING">Processing</option>
+                            <option value="DISPATCHED">Dispatched</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="CANCELLED">Cancelled</option>
+                          </select>
+                        </label>
+                        <div
+                          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                        >
+                          <Btn
+                            kind="outline"
+                            onClick={() => void editOrderDetails(order)}
+                            disabled={
+                              ["DELIVERED", "CANCELLED", "DISPATCHED"].includes(
+                                order.status,
+                              ) || String(order.id).startsWith("payment-")
+                            }
+                          >
+                            Edit details
+                          </Btn>
+                          {order.recordType !== "PAYMENT_ORDER" &&
+                            order.paymentStatus === "PAID" &&
+                            order.refundStatus !== "REFUNDED" && (
+                              <Btn
+                                kind="danger"
+                                onClick={() => void refundOrder(order)}
+                                disabled={order.refundStatus === "PENDING"}
+                              >
+                                {order.refundStatus === "PENDING"
+                                  ? "Refund pending"
+                                  : "Refund payment"}
+                              </Btn>
+                            )}
+                          <Btn onClick={() => printDeliverySlip(order)}>
+                            <Printer size={15} /> Print delivery slip
+                          </Btn>
+                        </div>
                       </div>
                       <div className="sl-order-customer">
                         <p>
@@ -1681,6 +2011,11 @@ export default function SelloraApp() {
         {page === "payments" && (
           <PaymentsSection onSettings={() => setPage("settings")} />
         )}
+        {page === "enquiries" && (
+          <EnquiriesSection setError={setError} setNotice={setNotice} />
+        )}
+        {page === "customers" && <CustomersSection setError={setError} />}
+        {page === "reports" && <ReportsSection setError={setError} />}
         {page === "settings" && (
           <SettingsSection
             business={business}

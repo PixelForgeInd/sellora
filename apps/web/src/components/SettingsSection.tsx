@@ -11,8 +11,11 @@ type ProfileForm = {
   industry: string;
   productCategory: string;
   businessModel: string;
+  email: string;
   phone: string;
+  address: string;
   website: string;
+  logoUrl: string;
   brandColor: string;
 };
 type FieldForm = {
@@ -84,6 +87,11 @@ export function SettingsSection({
   const [taxRate, setTaxRate] = useState("0");
   const [taxBusy, setTaxBusy] = useState(false);
   const [taxMessage, setTaxMessage] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
   useEffect(() => {
     api("/workspace/business/tax-settings")
       .then((v) => {
@@ -242,6 +250,17 @@ export function SettingsSection({
           </div>
           <div className="sl-form-row">
             <label>
+              Business email
+              <input
+                type="email"
+                value={profileForm.email}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, email: e.target.value })
+                }
+                placeholder="sales@company.com"
+              />
+            </label>
+            <label>
               Business model
               <select
                 value={profileForm.businessModel}
@@ -272,6 +291,29 @@ export function SettingsSection({
               />
             </label>
           </div>
+          <label>
+            Business address
+            <textarea
+              rows={3}
+              maxLength={1000}
+              value={profileForm.address}
+              onChange={(e) =>
+                setProfileForm({ ...profileForm, address: e.target.value })
+              }
+              placeholder="Street, city, state, PIN code"
+            />
+          </label>
+          <label>
+            Logo URL
+            <input
+              type="url"
+              value={profileForm.logoUrl}
+              onChange={(e) =>
+                setProfileForm({ ...profileForm, logoUrl: e.target.value })
+              }
+              placeholder="https://example.com/logo.png"
+            />
+          </label>
           <label>
             Website
             <input
@@ -305,6 +347,88 @@ export function SettingsSection({
           <div className="sl-modal-actions">
             <Btn type="submit" disabled={busy}>
               {busy ? "Saving…" : "Save business details"} <Check size={15} />
+            </Btn>
+          </div>
+        </form>
+      </section>
+      <section className="sl-section-card sl-settings-page">
+        <span className="sl-kicker">ACCOUNT SECURITY</span>
+        <h3>Change password</h3>
+        <p>
+          Update your sign-in password. Password recovery by email requires a
+          configured mail delivery service and is not available yet.
+        </p>
+        <form
+          className="sl-form"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setPasswordMessage("");
+            if (newPassword !== confirmPassword) {
+              setPasswordMessage("New password and confirmation do not match.");
+              return;
+            }
+            setPasswordBusy(true);
+            try {
+              const result = await api("/auth/password", {
+                method: "PATCH",
+                body: JSON.stringify({ currentPassword, newPassword }),
+              });
+              setPasswordMessage(result.message || "Password updated.");
+              setCurrentPassword("");
+              setNewPassword("");
+              setConfirmPassword("");
+            } catch (err) {
+              setPasswordMessage(
+                err instanceof Error
+                  ? err.message
+                  : "Could not update password.",
+              );
+            } finally {
+              setPasswordBusy(false);
+            }
+          }}
+        >
+          <label>
+            Current password
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </label>
+          <div className="sl-form-row">
+            <label>
+              New password
+              <input
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </label>
+            <label>
+              Confirm new password
+              <input
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </label>
+          </div>
+          {passwordMessage && <p role="status">{passwordMessage}</p>}
+          <div className="sl-modal-actions">
+            <Btn type="submit" disabled={passwordBusy}>
+              {passwordBusy ? "Updating…" : "Update password"}{" "}
+              <Check size={15} />
             </Btn>
           </div>
         </form>
