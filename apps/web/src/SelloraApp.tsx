@@ -97,8 +97,11 @@ export default function SelloraApp() {
     industry: "Textiles",
     productCategory: "yarn-textiles",
     businessModel: "B2B",
+    email: "",
     phone: "",
+    address: "",
     website: "",
+    logoUrl: "",
     brandColor: "#599c56",
   });
   const [fieldForm, setFieldForm] = useState({
@@ -333,8 +336,11 @@ export default function SelloraApp() {
         industry: business.industry,
         productCategory: business.productCategory,
         businessModel: business.businessModel,
+        email: business.email || "",
         phone: business.phone || "",
+        address: business.address || "",
         website: business.website || "",
+        logoUrl: business.logoUrl || "",
         brandColor: business.brandColor || "#599c56",
       });
       try {
