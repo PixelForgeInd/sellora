@@ -371,12 +371,14 @@ type ProductSectionProps = {
   products: Product[];
   startProduct: (product?: Product) => void;
   deleteProduct: (product: Product) => Promise<void>;
+  uploadProductImage: (product: Product, file: File) => Promise<void>;
 };
 export function ProductSection({
   category,
   products,
   startProduct,
   deleteProduct,
+  uploadProductImage,
 }: ProductSectionProps) {
   return (
     <section className="sl-section-card">
@@ -422,6 +424,10 @@ export function ProductSection({
               </small>
             </div>
             <strong>{money(p.price, p.currency, p.unit)}</strong>
+            <label className="sl-button sl-button-outline" style={{cursor:"pointer"}}>
+              Upload image
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{display:"none"}} onChange={e=>{const file=e.target.files?.[0];if(file)void uploadProductImage(p,file);e.currentTarget.value="";}} />
+            </label>
             <Btn kind="outline" onClick={() => startProduct(p)}>
               Edit
             </Btn>
