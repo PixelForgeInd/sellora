@@ -587,6 +587,16 @@ export default function SelloraApp() {
         editing ? "/workspace/products/" + editing : "/workspace/products",
         { method: editing ? "PATCH" : "POST", body: JSON.stringify(body) },
       );
+      if (editing && pform.stockQuantity !== "") {
+        await api("/workspace/inventory/" + encodeURIComponent(p.id) + "/adjust", {
+          method: "POST",
+          body: JSON.stringify({
+            quantity: Number(pform.stockQuantity),
+            reason: "ADJUSTMENT",
+            note: "Updated from product editor",
+          }),
+        });
+      }
       setProducts((old) =>
         editing ? old.map((x) => (x.id === p.id ? p : x)) : [p, ...old],
       );
