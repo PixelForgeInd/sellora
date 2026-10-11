@@ -19,6 +19,7 @@ import {
   Package,
   Plus,
   Settings,
+  Search,
   Share2,
   Trash2,
   X,
