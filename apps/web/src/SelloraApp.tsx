@@ -79,9 +79,15 @@ export default function SelloraApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get("resetToken") || "");
+  const [resetToken, setResetToken] = useState(
+    () => new URLSearchParams(window.location.search).get("resetToken") || "",
+  );
   const [authNotice, setAuthNotice] = useState("");
-  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).has("resetToken") ? "reset" : "signup");
+  const [mode, setMode] = useState(() =>
+    new URLSearchParams(window.location.search).has("resetToken")
+      ? "reset"
+      : "signup",
+  );
 
   // Workspace navigation and feedback
   const [page, setPage] = useState("overview");
@@ -402,13 +408,27 @@ export default function SelloraApp() {
     setAuthNotice("");
     try {
       if (mode === "forgot") {
-        const result = await api("/auth/password/forgot", { method: "POST", body: JSON.stringify({ email }) }, "");
-        setAuthNotice(result.message || "If an account exists, reset instructions will be sent.");
+        const result = await api(
+          "/auth/password/forgot",
+          { method: "POST", body: JSON.stringify({ email }) },
+          "",
+        );
+        setAuthNotice(
+          result.message ||
+            "If an account exists, reset instructions will be sent.",
+        );
         setMode("login");
         return;
       }
       if (mode === "reset") {
-        const result = await api("/auth/password/reset", { method: "POST", body: JSON.stringify({ token: resetToken, newPassword: password }) }, "");
+        const result = await api(
+          "/auth/password/reset",
+          {
+            method: "POST",
+            body: JSON.stringify({ token: resetToken, newPassword: password }),
+          },
+          "",
+        );
         setAuthNotice(result.message || "Password reset. You can now sign in.");
         setPassword("");
         setResetToken("");
@@ -416,7 +436,11 @@ export default function SelloraApp() {
         setMode("login");
         return;
       }
-      const d = await api("/auth/" + mode, { method: "POST", body: JSON.stringify({ email, password }) }, "");
+      const d = await api(
+        "/auth/" + mode,
+        { method: "POST", body: JSON.stringify({ email, password }) },
+        "",
+      );
       sessionStorage.setItem("sellora_token", d.token);
       setAccess(d.token);
       setUser(d.user.email);
@@ -430,7 +454,7 @@ export default function SelloraApp() {
       setBusy(false);
     }
   }
-    async function createBusiness(e: FormEvent) {
+  async function createBusiness(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");

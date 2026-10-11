@@ -102,65 +102,135 @@ export function AuthScreen({
         <div className="sl-auth-card">
           <Brand />
           <span className="sl-kicker">
-            {mode === "signup" ? "START YOUR WORKSPACE" : mode === "forgot" ? "PASSWORD RECOVERY" : mode === "reset" ? "CHOOSE A NEW PASSWORD" : "WELCOME BACK"}
+            {mode === "signup"
+              ? "START YOUR WORKSPACE"
+              : mode === "forgot"
+                ? "PASSWORD RECOVERY"
+                : mode === "reset"
+                  ? "CHOOSE A NEW PASSWORD"
+                  : "WELCOME BACK"}
           </span>
           <h2>
-            {mode === "signup" ? "Create your Sellora account" : mode === "forgot" ? "Reset your password" : mode === "reset" ? "Set a new password" : "Log in to Sellora"}
+            {mode === "signup"
+              ? "Create your Sellora account"
+              : mode === "forgot"
+                ? "Reset your password"
+                : mode === "reset"
+                  ? "Set a new password"
+                  : "Log in to Sellora"}
           </h2>
           <p>
-            {mode === "signup" ? "Your catalogue journey starts here." : mode === "forgot" ? "We will email a secure reset link if the account exists." : mode === "reset" ? "Choose a password you have not used before." : "Continue managing products and catalogues."}
+            {mode === "signup"
+              ? "Your catalogue journey starts here."
+              : mode === "forgot"
+                ? "We will email a secure reset link if the account exists."
+                : mode === "reset"
+                  ? "Choose a password you have not used before."
+                  : "Continue managing products and catalogues."}
           </p>
           <Err text={error} />
-          {notice && <p className="sl-notice" role="status">{notice}</p>}
+          {notice && (
+            <p className="sl-notice" role="status">
+              {notice}
+            </p>
+          )}
           <form className="sl-form" onSubmit={auth}>
-            {mode !== "reset" && <label>
-              Email address
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-              />
-            </label>}
-            {mode !== "forgot" && <label>
-              {mode === "reset" ? "New password" : "Password"}
-              <div className="sl-password-wrap">
+            {mode !== "reset" && (
+              <label>
+                Email address
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="email"
                   required
-                  minLength={mode === "signup" || mode === "reset" ? 8 : 1}
-                  autoComplete={
-                    mode === "signup" || mode === "reset" ? "new-password" : "current-password"
-                  }
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    mode === "signup" || mode === "reset" ? "At least 8 characters" : "Your password"
-                  }
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
                 />
-                <button
-                  className="sl-password-toggle"
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
-            </label>}
+              </label>
+            )}
+            {mode !== "forgot" && (
+              <label>
+                {mode === "reset" ? "New password" : "Password"}
+                <div className="sl-password-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={mode === "signup" || mode === "reset" ? 8 : 1}
+                    autoComplete={
+                      mode === "signup" || mode === "reset"
+                        ? "new-password"
+                        : "current-password"
+                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={
+                      mode === "signup" || mode === "reset"
+                        ? "At least 8 characters"
+                        : "Your password"
+                    }
+                  />
+                  <button
+                    className="sl-password-toggle"
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </label>
+            )}
             <Btn type="submit" disabled={busy}>
-              {busy ? "Please wait…" : mode === "signup" ? "Create account" : mode === "forgot" ? "Send reset link" : mode === "reset" ? "Reset password" : "Log in"}{" "}
+              {busy
+                ? "Please wait…"
+                : mode === "signup"
+                  ? "Create account"
+                  : mode === "forgot"
+                    ? "Send reset link"
+                    : mode === "reset"
+                      ? "Reset password"
+                      : "Log in"}{" "}
               <ArrowRight size={16} />
             </Btn>
           </form>
-          {mode === "login" && <p className="sl-auth-switch"><button type="button" onClick={() => { setMode("forgot"); setError(""); }}>Forgot password?</button></p>}
+          {mode === "login" && (
+            <p className="sl-auth-switch">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("forgot");
+                  setError("");
+                }}
+              >
+                Forgot password?
+              </button>
+            </p>
+          )}
           <p className="sl-auth-switch">
-            {mode === "forgot" || mode === "reset" ? "Remember your password?" : mode === "signup" ? "Already have an account?" : "New to Sellora?"}{" "}
-            <button type="button" onClick={() => { setMode(mode === "signup" || mode === "forgot" || mode === "reset" ? "login" : "signup"); setError(""); }}>
-              {mode === "signup" ? "Log in" : mode === "forgot" || mode === "reset" ? "Back to log in" : "Create account"}
+            {mode === "forgot" || mode === "reset"
+              ? "Remember your password?"
+              : mode === "signup"
+                ? "Already have an account?"
+                : "New to Sellora?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setMode(
+                  mode === "signup" || mode === "forgot" || mode === "reset"
+                    ? "login"
+                    : "signup",
+                );
+                setError("");
+              }}
+            >
+              {mode === "signup"
+                ? "Log in"
+                : mode === "forgot" || mode === "reset"
+                  ? "Back to log in"
+                  : "Create account"}
             </button>
           </p>
           <small className="sl-muted">
