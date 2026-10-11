@@ -503,11 +503,17 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
   const definitions = await prisma.catalogueField.findMany({where:{businessId:business.id},select:{key:true,label:true,type:true,required:true,options:true}});
   const fieldError = validateProductFields(data.fields, definitions);
   if (fieldError) return res.status(400).json({error:fieldError});
-  const product = await prisma.selloraProduct.create({data:{
-    businessId:business.id,name:data.name,sku:data.sku || null,description:data.description || null,
-    price:data.price === undefined ? null : new Prisma.Decimal(data.price),currency:data.currency,unit:data.unit,
-    imageUrl:data.imageUrl || null,stockEnabled:data.stockEnabled,stockQuantity:data.stockEnabled && data.stockQuantity !== undefined && data.stockQuantity !== null ? new Prisma.Decimal(data.stockQuantity) : null,fields:data.fields
-  }});
+  const product = await prisma.$transaction(async tx => {
+    const created=await tx.selloraProduct.create({data:{
+      businessId:business.id,name:data.name,sku:data.sku || null,description:data.description || null,
+      price:data.price === undefined ? null : new Prisma.Decimal(data.price),currency:data.currency,unit:data.unit,
+      imageUrl:data.imageUrl || null,stockEnabled:data.stockEnabled,stockQuantity:data.stockEnabled && data.stockQuantity !== undefined && data.stockQuantity !== null ? new Prisma.Decimal(data.stockQuantity) : null,fields:data.fields
+    }});
+    if(data.stockEnabled && data.stockQuantity && data.stockQuantity>0) {
+      await tx.selloraStockMovement.create({data:{businessId:business.id,productId:created.id,quantityDelta:new Prisma.Decimal(data.stockQuantity),reason:"INITIAL_STOCK"}});
+    }
+    return created;
+  });
   res.status(201).json(product);
 }));
 router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,res) => {
@@ -516,7 +522,6 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     description:z.string().trim().max(2000).nullable().optional(),price:z.number().positive().nullable().optional(),
     currency:z.string().length(3).optional(),unit:z.string().trim().min(1).max(20).optional(),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).nullable().optional(),
-    stockEnabled:z.boolean().optional(), stockQuantity:z.number().min(0).max(100000000).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).optional()
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
@@ -530,11 +535,9 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     const fieldError = validateProductFields(mergedFields, definitions);
     if (fieldError) return res.status(400).json({error:fieldError});
   }
-  const {price,stockQuantity,...rest}=data;
+  const {price,...rest}=data;
   const product=await prisma.selloraProduct.update({where:{id:owned.id},data:{
     ...rest,imageUrl:rest.imageUrl === "" ? null : rest.imageUrl,
-    ...(stockQuantity !== undefined ? {stockQuantity:stockQuantity===null?null:new Prisma.Decimal(stockQuantity)} : {}),
-    ...(rest.stockEnabled === false ? {stockQuantity:null} : {}),
     ...(price !== undefined ? {price:price===null?null:new Prisma.Decimal(price)} : {})
   }});
   if(owned.imageUrl?.startsWith("/uploads/") && product.imageUrl!==owned.imageUrl) {
