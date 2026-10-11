@@ -415,7 +415,10 @@ export function ReportsSection({ setError = () => {} }: Props) {
       <div className="sl-section-head">
         <div>
           <h3>Sales & payment reports</h3>
-          <p>Choose a date range to prepare a report. Report figures and order details are not displayed on this page.</p>
+          <p>
+            Choose a date range to prepare a report. Report figures and order
+            details are not displayed on this page.
+          </p>
         </div>
       </div>
       <div className="sl-orders-filters">
