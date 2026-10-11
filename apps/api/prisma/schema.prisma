@@ -151,6 +151,7 @@ model Business {
   businessModel   String
   email           String?
   phone           String?
+  address         String?
   website         String?
   logoUrl         String?
   brandColor      String           @default("#599c56")
