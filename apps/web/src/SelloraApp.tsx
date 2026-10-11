@@ -136,6 +136,8 @@ export default function SelloraApp() {
     currency: "INR",
     unit: "kg",
     imageUrl: "",
+    stockEnabled: false,
+    stockQuantity: "",
     fields: {} as Record<string, string | number | boolean | string[]>,
   });
   const [cform, setCform] = useState({
@@ -483,6 +485,8 @@ export default function SelloraApp() {
             currency: p.currency,
             unit: p.unit,
             imageUrl: p.imageUrl || "",
+            stockEnabled: Boolean(p.stockEnabled),
+            stockQuantity: p.stockQuantity == null ? "" : String(p.stockQuantity),
             fields: p.fields || {},
           }
         : {
@@ -494,6 +498,8 @@ export default function SelloraApp() {
             unit:
               business?.productCategory === "yarn-textiles" ? "kg" : "piece",
             imageUrl: "",
+            stockEnabled: false,
+            stockQuantity: "",
             fields: {},
           },
     );
@@ -572,6 +578,8 @@ export default function SelloraApp() {
       const body = {
         ...pform,
         price: pform.price ? Number(pform.price) : undefined,
+        stockEnabled: pform.stockQuantity !== "" ? true : pform.stockEnabled,
+        stockQuantity: pform.stockQuantity !== "" ? Number(pform.stockQuantity) : undefined,
       };
       const p = await api(
         editing ? "/workspace/products/" + editing : "/workspace/products",
