@@ -357,9 +357,39 @@ export function PublicCatalogue({
           -webkit-font-smoothing: antialiased;
         }
         .sl-storefront .sl-store-enquiry-submit {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+          min-height: 54px;
+          padding: 14px 22px;
+          border: 1px solid #080d49;
+          border-radius: 14px;
+          background: #080d49;
+          color: #fff;
+          box-shadow: 0 8px 18px rgba(8, 13, 73, 0.12);
+          font-family: inherit;
           font-size: 16px;
           font-weight: 600;
           letter-spacing: 0.01em;
+          line-height: 1.25;
+          -webkit-font-smoothing: antialiased;
+          cursor: pointer;
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .sl-storefront .sl-store-enquiry-submit:hover:not(:disabled) {
+          background: #11195f;
+          box-shadow: 0 10px 22px rgba(8, 13, 73, 0.18);
+          transform: translateY(-1px);
+        }
+        .sl-storefront .sl-store-enquiry-submit:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .sl-storefront .sl-store-enquiry-submit:disabled {
+          opacity: 0.68;
+          cursor: wait;
+          box-shadow: none;
         }
         .sl-storefront .sl-store-contact-primary:focus-visible,
         .sl-storefront .sl-store-contact-secondary:focus-visible,
