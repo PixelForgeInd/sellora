@@ -724,12 +724,21 @@ router.post("/public/catalogues/:slug/events", async (req,res) => {
 router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
   const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if(!business) return res.status(409).json({error:"Complete business setup first."});
-  const orders=await prisma.selloraOrder.findMany({
-    where:{businessId:business.id},
-    include:{catalogue:{select:{id:true,title:true,slug:true}},items:true},
-    orderBy:{createdAt:"desc"}
-  });
-  res.json(orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))})));
+  const [orders,payments]=await Promise.all([
+    prisma.selloraOrder.findMany({where:{businessId:business.id},include:{catalogue:{select:{id:true,title:true,slug:true}},items:true},orderBy:{createdAt:"desc"}}),
+    prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"}})
+  ]);
+  const catalogueOrders=orders.map(order=>({...order,recordType:"CATALOGUE_ORDER",subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))}));
+  const legacyOrders=payments.map(order=>({
+    id:"payment-"+order.id,recordType:"PAYMENT_ORDER",orderNumber:order.id,
+    businessId:order.businessId,catalogueId:null,catalogue:null,
+    customerName:order.customerName,email:order.customerEmail||null,phone:order.customerPhone||null,address:null,notes:null,
+    currency:order.currency,subtotal:order.amount.toString(),taxAmount:"0",totalAmount:order.amount.toString(),
+    status:order.status==="PAID"?"CONFIRMED":order.status==="FAILED"?"PAYMENT_FAILED":"PENDING",
+    paymentStatus:order.status,razorpayOrderId:order.razorpayOrderId,razorpayPaymentId:order.razorpayPaymentId,
+    createdAt:order.createdAt,updatedAt:order.updatedAt,items:[{id:"item-"+order.id,productName:order.productName,sku:null,quantity:order.quantity,unit:order.unit,unitPrice:order.amount.toString(),lineTotal:order.amount.toString()}]
+  }));
+  res.json([...catalogueOrders,...legacyOrders].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime()));
 }));
 
 router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(async (req,res) => {
