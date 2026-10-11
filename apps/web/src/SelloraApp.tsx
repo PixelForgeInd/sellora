@@ -547,6 +547,14 @@ export default function SelloraApp() {
     }
   }
 
+  async function removeProductImage(product: Product) {
+    try {
+      await api("/workspace/products/" + encodeURIComponent(product.id), { method: "PATCH", body: JSON.stringify({ imageUrl: "" }) });
+      setProducts(old => old.map(item => item.id === product.id ? { ...item, imageUrl: null } : item));
+      setNotice("Product image removed.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not remove product image."); }
+  }
+
   async function saveProduct(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -1332,6 +1340,7 @@ export default function SelloraApp() {
             startProduct={startProduct}
             deleteProduct={deleteProduct}
             uploadProductImage={uploadProductImage}
+            removeProductImage={removeProductImage}
           />
         )}
         {page === "catalogues" && (
