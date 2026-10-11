@@ -383,6 +383,7 @@ export function ReportsSection({ setError = () => {} }: Props) {
         <label>
           From{" "}
           <input
+            className="sl-report-date-input"
             type="date"
             value={from}
             max={to}
@@ -392,6 +393,7 @@ export function ReportsSection({ setError = () => {} }: Props) {
         <label>
           To{" "}
           <input
+            className="sl-report-date-input"
             type="date"
             value={to}
             min={from}
