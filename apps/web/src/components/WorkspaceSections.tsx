@@ -424,9 +424,21 @@ export function ProductSection({
               </small>
             </div>
             <strong>{money(p.price, p.currency, p.unit)}</strong>
-            <label className="sl-button sl-button-outline" style={{cursor:"pointer"}}>
+            <label
+              className="sl-button sl-button-outline"
+              style={{ cursor: "pointer" }}
+            >
               Upload image
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" style={{display:"none"}} onChange={e=>{const file=e.target.files?.[0];if(file)void uploadProductImage(p,file);e.currentTarget.value="";}} />
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadProductImage(p, file);
+                  e.currentTarget.value = "";
+                }}
+              />
             </label>
             <Btn kind="outline" onClick={() => startProduct(p)}>
               Edit
