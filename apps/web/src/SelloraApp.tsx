@@ -79,7 +79,9 @@ export default function SelloraApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState("signup");
+  const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get("resetToken") || "");
+  const [authNotice, setAuthNotice] = useState("");
+  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).has("resetToken") ? "reset" : "signup");
 
   // Workspace navigation and feedback
   const [page, setPage] = useState("overview");
@@ -397,12 +399,24 @@ export default function SelloraApp() {
     e.preventDefault();
     setBusy(true);
     setError("");
+    setAuthNotice("");
     try {
-      const d = await api(
-        "/auth/" + mode,
-        { method: "POST", body: JSON.stringify({ email, password }) },
-        "",
-      );
+      if (mode === "forgot") {
+        const result = await api("/auth/password/forgot", { method: "POST", body: JSON.stringify({ email }) }, "");
+        setAuthNotice(result.message || "If an account exists, reset instructions will be sent.");
+        setMode("login");
+        return;
+      }
+      if (mode === "reset") {
+        const result = await api("/auth/password/reset", { method: "POST", body: JSON.stringify({ token: resetToken, newPassword: password }) }, "");
+        setAuthNotice(result.message || "Password reset. You can now sign in.");
+        setPassword("");
+        setResetToken("");
+        window.history.replaceState({}, "", window.location.pathname);
+        setMode("login");
+        return;
+      }
+      const d = await api("/auth/" + mode, { method: "POST", body: JSON.stringify({ email, password }) }, "");
       sessionStorage.setItem("sellora_token", d.token);
       setAccess(d.token);
       setUser(d.user.email);
@@ -411,12 +425,12 @@ export default function SelloraApp() {
       const b = await api("/workspace/business", {}, d.token);
       if (b) await load(d.token);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not sign in");
+      setError(e instanceof Error ? e.message : "Could not continue");
     } finally {
       setBusy(false);
     }
   }
-  async function createBusiness(e: FormEvent) {
+    async function createBusiness(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
