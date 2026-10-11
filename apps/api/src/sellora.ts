@@ -497,7 +497,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).optional(),
     stockEnabled:z.boolean().default(false), stockQuantity:z.number().min(0).max(100000000).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).default({})
-  }).parse(req.body);
+  }).refine(data => !data.stockEnabled || (data.stockQuantity !== undefined && data.stockQuantity !== null), {message:"Set an initial stock quantity when enabling stock tracking."}).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const definitions = await prisma.catalogueField.findMany({where:{businessId:business.id},select:{key:true,label:true,type:true,required:true,options:true}});
