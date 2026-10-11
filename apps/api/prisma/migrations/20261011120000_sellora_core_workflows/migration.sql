@@ -8,6 +8,10 @@ CREATE TABLE IF NOT EXISTS "SelloraCustomer" (
   "name" TEXT NOT NULL, "email" TEXT, "phone" TEXT, "address" TEXT, "city" TEXT, "notes" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL
 );
+DO $ BEGIN
+  ALTER TABLE "SelloraOrder" ADD CONSTRAINT "SelloraOrder_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "SelloraCustomer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $;
 CREATE INDEX IF NOT EXISTS "SelloraCustomer_businessId_phone_idx" ON "SelloraCustomer"("businessId","phone");
 CREATE INDEX IF NOT EXISTS "SelloraCustomer_businessId_email_idx" ON "SelloraCustomer"("businessId","email");
 CREATE INDEX IF NOT EXISTS "SelloraCustomer_businessId_name_idx" ON "SelloraCustomer"("businessId","name");
