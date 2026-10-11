@@ -14,6 +14,13 @@ function getImageUploadDir() {
   fs.mkdirSync(directory, { recursive: true });
   return directory;
 }
+function uploadedImageFilename(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const pathname=value.startsWith("/")?value:new URL(value).pathname;
+    return pathname.startsWith("/uploads/")?path.basename(pathname):null;
+  } catch { return null; }
+}
 function hasValidImageSignature(buffer: Buffer, mimeType: string) {
   if (mimeType === "image/png") return buffer.length >= 8 && buffer.subarray(0,8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]));
   if (mimeType === "image/jpeg") return buffer.length >= 3 && buffer[0]===0xff && buffer[1]===0xd8 && buffer[2]===0xff;
@@ -540,8 +547,9 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     ...rest,imageUrl:rest.imageUrl === "" ? null : rest.imageUrl,
     ...(price !== undefined ? {price:price===null?null:new Prisma.Decimal(price)} : {})
   }});
-  if(owned.imageUrl?.startsWith("/uploads/") && product.imageUrl!==owned.imageUrl) {
-    await fs.promises.unlink(path.join(getImageUploadDir(),path.basename(owned.imageUrl))).catch(()=>{});
+  const oldImageFilename=uploadedImageFilename(owned.imageUrl);
+  if(oldImageFilename && product.imageUrl!==owned.imageUrl) {
+    await fs.promises.unlink(path.join(getImageUploadDir(),oldImageFilename)).catch(()=>{});
   }
   res.json(product);
 }));
@@ -563,8 +571,9 @@ router.post("/workspace/products/:id/image", requireAuth, productImageUpload.sin
   const publicApiOrigin=(process.env.PUBLIC_API_URL||req.protocol+"://"+req.get("host")).replace(/\/$/,"");
   const imageUrl = publicApiOrigin + "/uploads/" + file.filename;
   await prisma.selloraProduct.update({where:{id:product.id},data:{imageUrl}});
-  if (product.imageUrl?.startsWith("/uploads/")) {
-    await fs.promises.unlink(path.join(getImageUploadDir(), path.basename(product.imageUrl))).catch(()=>{});
+  const oldImageFilename=uploadedImageFilename(product.imageUrl);
+  if (oldImageFilename) {
+    await fs.promises.unlink(path.join(getImageUploadDir(), oldImageFilename)).catch(()=>{});
   }
   res.status(201).json({imageUrl});
 }));
