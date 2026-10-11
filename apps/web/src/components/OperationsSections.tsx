@@ -7,6 +7,51 @@ type Props = {
   setNotice?: (message: string) => void;
 };
 
+const datePickerStyles = (
+    <style>{`
+      .sl-section-card .sl-report-date-input {
+        box-sizing: border-box;
+        min-height: 42px;
+        min-width: 150px;
+        padding: 10px 12px;
+        border: 1px solid #dce5da;
+        border-radius: 10px;
+        background: transparent;
+        color: #26372d;
+        font: inherit;
+        font-size: 14px;
+        line-height: 1.35;
+        box-shadow: none;
+        accent-color: #599c56;
+        color-scheme: light;
+        cursor: pointer;
+        transition: border-color 150ms ease, background-color 150ms ease;
+      }
+      .sl-section-card .sl-report-date-input:hover {
+        border-color: #cbd8c8;
+        background: #fff;
+      }
+      .sl-section-card .sl-report-date-input:focus,
+      .sl-section-card .sl-report-date-input:focus-visible {
+        outline: none;
+        border-color: #599c56;
+        box-shadow: 0 0 0 3px rgba(89, 156, 86, 0.14);
+        background: #fff;
+      }
+      .sl-section-card .sl-report-date-input::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.65;
+        margin-left: 8px;
+      }
+      @media (max-width: 640px) {
+        .sl-section-card .sl-report-date-input {
+          width: 100%;
+          min-width: 0;
+        }
+      }
+    `}</style>
+);
+
 export function EnquiriesSection({
   setError = () => {},
   setNotice = () => {},
@@ -339,50 +384,7 @@ export function CustomersSection({ setError = () => {} }: Props) {
 }
 
 export function ReportsSection({ setError = () => {} }: Props) {
-  const datePickerStyles = (
-    <style>{`
-      .sl-section-card .sl-report-date-input {
-        box-sizing: border-box;
-        min-height: 48px;
-        min-width: 190px;
-        padding: 11px 14px;
-        border: 1px solid #dce5da;
-        border-radius: 12px;
-        background: #f9faf7;
-        color: #26372d;
-        font: inherit;
-        font-size: 15px;
-        line-height: 1.35;
-        box-shadow: none;
-        accent-color: #599c56;
-        color-scheme: light;
-        cursor: pointer;
-        transition: border-color 150ms ease, background-color 150ms ease;
-      }
-      .sl-section-card .sl-report-date-input:hover {
-        border-color: #cbd8c8;
-        background: #fff;
-      }
-      .sl-section-card .sl-report-date-input:focus,
-      .sl-section-card .sl-report-date-input:focus-visible {
-        outline: none;
-        border-color: #599c56;
-        box-shadow: 0 0 0 3px rgba(89, 156, 86, 0.14);
-        background: #fff;
-      }
-      .sl-section-card .sl-report-date-input::-webkit-calendar-picker-indicator {
-        cursor: pointer;
-        opacity: 0.65;
-        margin-left: 8px;
-      }
-      @media (max-width: 640px) {
-        .sl-section-card .sl-report-date-input {
-          width: 100%;
-          min-width: 0;
-        }
-      }
-    `}</style>
-  );
+
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
