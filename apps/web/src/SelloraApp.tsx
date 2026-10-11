@@ -716,6 +716,34 @@ export default function SelloraApp() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadBulkDeliverySlips = () => {
+    if (!filteredOrders.length) {
+      setNotice("There are no orders matching the current filters.");
+      return;
+    }
+    const esc = (value:any) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char] || char));
+    const slips = filteredOrders.map((order:any) => {
+      const itemRows = (order.items || []).map((item:any) => `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`).join("");
+      return `<section class="slip">
+        <div class="top"><div><h1>${esc(business.name || "Delivery Slip")}</h1><p class="muted">DELIVERY SLIP · NOT A TAX INVOICE</p></div><div><p><b>Order:</b> ${esc(order.orderNumber || order.id)}</p><p><b>Date:</b> ${esc(order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "—")}</p></div></div>
+        <div class="box"><h2>SHIP TO</h2><p class="address">${esc(order.customerName || "Customer")}</p><p>${esc(order.address || "Delivery address not provided")}</p><p><b>Phone:</b> ${esc(order.phone || "—")}</p><p><b>Email:</b> ${esc(order.email || "—")}</p></div>
+        <h2>ITEMS TO DISPATCH</h2><table><thead><tr><th>Product</th><th>SKU</th><th>Quantity</th></tr></thead><tbody>${itemRows || "<tr><td colspan='3'>No item details available</td></tr>"}</tbody></table>
+        ${order.notes ? `<div class="box"><h2>ORDER NOTES</h2><p>${esc(order.notes)}</p></div>` : ""}
+        <div class="footer">Please verify items and quantities before dispatch. Order status: ${esc(order.status || "—")} · Payment status: ${esc(order.paymentStatus || "—")}</div>
+      </section>`;
+    }).join("");
+    const popup = window.open("", "_blank", "width=900,height=900");
+    if (!popup) {
+      window.alert("Please allow pop-ups to download the bulk delivery slips.");
+      return;
+    }
+    popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bulk delivery slips</title><style>
+      body{font:14px Arial,sans-serif;color:#172b25;margin:24px}h1{font-size:22px;margin:0 0 5px}h2{font-size:15px;margin:24px 0 10px}p{margin:5px 0;line-height:1.5}.muted{color:#68766d;font-size:12px}.top{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #dce5da;padding-bottom:16px}.box{border:1px solid #dce5da;border-radius:8px;padding:14px;margin-top:16px}.address{white-space:pre-wrap;font-size:16px;font-weight:600;line-height:1.6}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;border-bottom:1px solid #e4e9e4;padding:10px 8px}th{background:#f4f7f1;font-size:11px;text-transform:uppercase}.footer{margin-top:32px;border-top:1px solid #dce5da;padding-top:12px;font-size:11px;color:#68766d}.slip{break-after:page;page-break-after:always}.slip:last-of-type{break-after:auto;page-break-after:auto}.no-print{margin:0 0 20px}@media print{body{margin:12mm}.no-print{display:none}.slip{break-after:page;page-break-after:always}.slip:last-of-type{break-after:auto;page-break-after:auto}}</style></head><body>
+      <p class="no-print"><b>${filteredOrders.length} delivery slips</b> · Use your browser's print dialog and choose “Save as PDF” to download them as one PDF. <button onclick="window.print()">Print / Save as PDF</button></p>
+      ${slips}<script>window.onload=()=>window.print()<\/script></body></html>`);
+    popup.document.close();
+  };
+
   const printDeliverySlip = (order:any) => {
     const esc = (value:any) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char] || char));
     const itemRows = (order.items || []).map((item:any) => `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`).join("");
@@ -986,7 +1014,7 @@ export default function SelloraApp() {
                   Order requests, customer details and item-level breakdowns.
                 </p>
               </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn onClick={exportOrdersCsv} disabled={!orders.length}><Download size={15}/> Export CSV</Btn><Btn
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn onClick={downloadBulkDeliverySlips} disabled={!filteredOrders.length}><Download size={15}/> Download bulk delivery slips</Btn><Btn onClick={exportOrdersCsv} disabled={!orders.length}><Download size={15}/> Export CSV</Btn><Btn
                 onClick={async () => {
                   try {
                     setOrders(await api("/workspace/orders"));
