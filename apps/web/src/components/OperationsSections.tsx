@@ -40,6 +40,7 @@ export function EnquiriesSection({
   }
   return (
     <section className="sl-section-card">
+      {datePickerStyles}
       <div className="sl-section-head">
         <div>
           <h3>Customer enquiries</h3>
@@ -338,6 +339,47 @@ export function CustomersSection({ setError = () => {} }: Props) {
 }
 
 export function ReportsSection({ setError = () => {} }: Props) {
+  const datePickerStyles = (
+    <style>{`
+      .sl-section-card .sl-report-date-input {
+        box-sizing: border-box;
+        min-height: 48px;
+        min-width: 190px;
+        padding: 11px 14px;
+        border: 1px solid #dce5da;
+        border-radius: 12px;
+        background: #fff;
+        color: #26372d;
+        font: inherit;
+        font-size: 15px;
+        line-height: 1.35;
+        box-shadow: 0 1px 2px rgba(28, 44, 33, 0.04);
+        accent-color: #599c56;
+        color-scheme: light;
+        cursor: pointer;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+      }
+      .sl-section-card .sl-report-date-input:hover {
+        border-color: #aabca6;
+      }
+      .sl-section-card .sl-report-date-input:focus-visible {
+        outline: 2px solid #599c56;
+        outline-offset: 2px;
+        border-color: #599c56;
+      }
+      .sl-section-card .sl-report-date-input::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.72;
+        margin-left: 8px;
+      }
+      @media (max-width: 640px) {
+        .sl-section-card .sl-report-date-input {
+          width: 100%;
+          min-width: 0;
+        }
+      }
+    `}</style>
+  );
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
