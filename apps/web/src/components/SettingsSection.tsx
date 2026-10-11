@@ -11,8 +11,11 @@ type ProfileForm = {
   industry: string;
   productCategory: string;
   businessModel: string;
+  email: string;
   phone: string;
+  address: string;
   website: string;
+  logoUrl: string;
   brandColor: string;
 };
 type FieldForm = {
@@ -208,6 +211,10 @@ export function SettingsSection({
           </div>
           <div className="sl-form-row">
             <label>
+              Business email
+              <input type="email" value={profileForm.email} onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })} placeholder="sales@company.com" />
+            </label>
+            <label>
               Business model
               <select
                 value={profileForm.businessModel}
@@ -238,6 +245,14 @@ export function SettingsSection({
               />
             </label>
           </div>
+          <label>
+            Business address
+            <textarea rows={3} maxLength={1000} value={profileForm.address} onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })} placeholder="Street, city, state, PIN code" />
+          </label>
+          <label>
+            Logo URL
+            <input type="url" value={profileForm.logoUrl} onChange={(e) => setProfileForm({ ...profileForm, logoUrl: e.target.value })} placeholder="https://example.com/logo.png" />
+          </label>
           <label>
             Website
             <input
