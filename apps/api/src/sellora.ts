@@ -854,6 +854,9 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   for(const [productId,quantity] of requested.entries()){
     const product=available.get(productId);
     if(!product) return res.status(400).json({error:"One or more cart items are unavailable. Refresh the catalogue and try again."});
+    if(product.stockEnabled && (product.stockQuantity === null || product.stockQuantity === undefined || product.stockQuantity.lte(0))) {
+      return res.status(409).json({error: product.name + " is out of stock. Please enquire with the business."});
+    }
     if(product.price === null || !product.price.isFinite() || product.price.lte(0)) return res.status(400).json({error:`Price is unavailable for ${product.name}. Please enquire with the business.`});
     if(currency && currency !== product.currency) return res.status(400).json({error:"Products with different currencies cannot be checked out together."});
     currency=product.currency;
