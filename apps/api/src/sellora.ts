@@ -14,6 +14,13 @@ function getImageUploadDir() {
   fs.mkdirSync(directory, { recursive: true });
   return directory;
 }
+function hasValidImageSignature(buffer: Buffer, mimeType: string) {
+  if (mimeType === "image/png") return buffer.length >= 8 && buffer.subarray(0,8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]));
+  if (mimeType === "image/jpeg") return buffer.length >= 3 && buffer[0]===0xff && buffer[1]===0xd8 && buffer[2]===0xff;
+  if (mimeType === "image/gif") return buffer.length >= 6 && ["GIF87a","GIF89a"].includes(buffer.subarray(0,6).toString("ascii"));
+  if (mimeType === "image/webp") return buffer.length >= 12 && buffer.subarray(0,4).toString("ascii")==="RIFF" && buffer.subarray(8,12).toString("ascii")==="WEBP";
+  return false;
+}
 const productImageUpload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, callback) => { try { callback(null, getImageUploadDir()); } catch (error) { callback(error as Error, ""); } },
@@ -543,6 +550,8 @@ router.post("/workspace/products/:id/image", requireAuth, productImageUpload.sin
     return res.status(404).json({error:"Product not found."});
   }
   if (!file) return res.status(400).json({error:"Choose a PNG, JPEG, WebP or GIF image up to 5 MB."});
+  const imageBytes=await fs.promises.readFile(file.path);
+  if(!hasValidImageSignature(imageBytes,file.mimetype)){await fs.promises.unlink(file.path).catch(()=>{});return res.status(400).json({error:"The uploaded file is not a valid image of the selected type."});}
   const publicApiOrigin=(process.env.PUBLIC_API_URL||req.protocol+"://"+req.get("host")).replace(/\/$/,"");
   const imageUrl = publicApiOrigin + "/uploads/" + file.filename;
   await prisma.selloraProduct.update({where:{id:product.id},data:{imageUrl}});
