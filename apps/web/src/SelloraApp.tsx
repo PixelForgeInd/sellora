@@ -1171,16 +1171,16 @@ export default function SelloraApp() {
                       : page === "enquiries"
                         ? "Customer enquiries"
                         : page === "customers"
-                            ? "Customer directory"
-                            : page === "reports"
-                              ? "Sales reports"
-                              : page === "launch"
-                                ? "Launch checklist"
-                                : page === "settings"
-                                  ? "Business settings"
-                                  : page === "payments"
-                                    ? "Payments"
-                                    : "Workspace"}
+                          ? "Customer directory"
+                          : page === "reports"
+                            ? "Sales reports"
+                            : page === "launch"
+                              ? "Launch checklist"
+                              : page === "settings"
+                                ? "Business settings"
+                                : page === "payments"
+                                  ? "Payments"
+                                  : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
