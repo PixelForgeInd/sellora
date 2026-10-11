@@ -486,7 +486,8 @@ export default function SelloraApp() {
             unit: p.unit,
             imageUrl: p.imageUrl || "",
             stockEnabled: Boolean(p.stockEnabled),
-            stockQuantity: p.stockQuantity == null ? "" : String(p.stockQuantity),
+            stockQuantity:
+              p.stockQuantity == null ? "" : String(p.stockQuantity),
             fields: p.fields || {},
           }
         : {
@@ -579,7 +580,8 @@ export default function SelloraApp() {
         ...pform,
         price: pform.price ? Number(pform.price) : undefined,
         stockEnabled: pform.stockQuantity !== "" ? true : pform.stockEnabled,
-        stockQuantity: pform.stockQuantity !== "" ? Number(pform.stockQuantity) : undefined,
+        stockQuantity:
+          pform.stockQuantity !== "" ? Number(pform.stockQuantity) : undefined,
       };
       const p = await api(
         editing ? "/workspace/products/" + editing : "/workspace/products",
