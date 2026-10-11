@@ -1149,7 +1149,7 @@ export default function SelloraApp() {
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
-            { id: "orders", label: "All orders", icon: ClipboardList },
+            { id: "orders", label: "Orders", icon: ClipboardList },
             { id: "enquiries", label: "Enquiries", icon: MessageSquare },
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
