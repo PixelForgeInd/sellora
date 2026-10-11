@@ -128,6 +128,21 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     const business = await response.json();
     assert.equal(business.productCategory, "yarn-textiles");
     assert.ok(business.catalogueFields.some((field) => field.key === "count"));
+
+    const profile = await jsonRequest("/api/workspace/business/settings", {
+      method: "PATCH",
+      token,
+      body: {
+        email: `sales-${suffix}@example.test`,
+        address: "12 Test Road, Salem, Tamil Nadu",
+        logoUrl: "https://example.test/logo.png",
+      },
+    });
+    assert.equal(profile.status, 200);
+    const savedProfile = await profile.json();
+    assert.equal(savedProfile.email, `sales-${suffix}@example.test`);
+    assert.equal(savedProfile.address, "12 Test Road, Salem, Tamil Nadu");
+    assert.equal(savedProfile.logoUrl, "https://example.test/logo.png");
   });
 
   await t.test("creates and updates a product", async () => {
