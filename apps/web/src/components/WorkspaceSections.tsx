@@ -575,9 +575,7 @@ export function ProductSection({
             Refresh stock
           </Btn>
         </div>
-        {!movements.length ? (
-          <p className="sl-muted">No stock movements recorded yet.</p>
-        ) : (
+        {!movements.length ? null : (
           <div style={{ overflowX: "auto" }}>
             <table>
               <thead>
