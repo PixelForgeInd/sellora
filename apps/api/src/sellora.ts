@@ -337,6 +337,9 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     productCategory: z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]).optional(),
     businessModel: z.enum(["B2B","B2C","B2B2C"]).optional(),
     phone: z.string().trim().max(30).nullable().optional(),
+    email: z.union([z.string().trim().email().max(160), z.literal("")]).nullable().optional(),
+    address: z.string().trim().max(1000).nullable().optional(),
+    logoUrl: z.union([z.string().trim().url().max(500), z.literal("")]).nullable().optional(),
     website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
     brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional()
   }).refine((value) => Object.values(value).some((item) => item !== undefined), { message: "Provide at least one setting to update." }).parse(req.body);
@@ -345,9 +348,9 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
   if (data.sellingMode === "ONLINE_PAYMENTS" && (business.paymentGatewayStatus !== "ACTIVE" || !business.razorpayKeyId || !business.razorpayKeySecretEncrypted)) return res.status(409).json({error:"Connect and verify Razorpay before enabling online payments."});
   const updated = await prisma.business.update({
     where:{id:business.id},
-    data:{...data,website:data.website === "" ? null : data.website},
+    data:{...data,email:data.email === "" ? null : data.email,address:data.address === "" ? null : data.address,logoUrl:data.logoUrl === "" ? null : data.logoUrl,website:data.website === "" ? null : data.website},
     select:{
-      id:true,name:true,slug:true,industry:true,productCategory:true,businessModel:true,phone:true,website:true,brandColor:true,sellingMode:true,paymentGatewayProvider:true,paymentGatewayStatus:true,updatedAt:true
+      id:true,name:true,slug:true,industry:true,productCategory:true,businessModel:true,email:true,phone:true,address:true,website:true,logoUrl:true,brandColor:true,sellingMode:true,paymentGatewayProvider:true,paymentGatewayStatus:true,updatedAt:true
     }
   });
   res.json({
@@ -583,7 +586,7 @@ router.get("/public/catalogues/:slug", async (req,res) => {
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,
-    business:{name:catalogue.business.name,industry:catalogue.business.industry,phone:catalogue.business.phone,website:catalogue.business.website,brandColor:catalogue.business.brandColor,email:catalogue.business.email,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
+    business:{name:catalogue.business.name,industry:catalogue.business.industry,email:catalogue.business.email,phone:catalogue.business.phone,address:catalogue.business.address,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
     checkoutReady: catalogue.business.sellingMode === "ONLINE_PAYMENTS" && catalogue.business.paymentGatewayStatus === "ACTIVE" && catalogue.business.paymentGatewayProvider === "RAZORPAY",
     products:catalogue.items.map(({product})=>({...product,price:product.price?.toString() ?? null}))
   });
