@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import {
   ArrowRight,
@@ -441,50 +441,6 @@ export function ProductSection({
   uploadProductImage,
   removeProductImage,
 }: ProductSectionProps) {
-  const [stock, setStock] = useState<Record<string, string>>({});
-  const [movements, setMovements] = useState<any[]>([]);
-  const [stockBusy, setStockBusy] = useState("");
-  async function refreshStock() {
-    try {
-      const result = await api("/workspace/inventory");
-      setStock(
-        Object.fromEntries(
-          result.products.map((p: any) => [p.id, String(p.stockQuantity ?? 0)]),
-        ),
-      );
-      setMovements(result.movements || []);
-    } catch {
-      // Product management remains usable if stock data cannot be refreshed.
-    }
-  }
-  useEffect(() => {
-    void refreshStock();
-  }, []);
-  async function saveStock(product: Product) {
-    const quantity = Number(stock[product.id] ?? "0");
-    if (!Number.isFinite(quantity) || quantity < 0) return;
-    setStockBusy(product.id);
-    try {
-      await api(
-        "/workspace/inventory/" + encodeURIComponent(product.id) + "/adjust",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            quantity,
-            reason: "ADJUSTMENT",
-            note: "Product page stock adjustment",
-          }),
-        },
-      );
-      await refreshStock();
-    } catch (error) {
-      window.alert(
-        error instanceof Error ? error.message : "Could not update stock.",
-      );
-    } finally {
-      setStockBusy("");
-    }
-  }
   return (
     <section className="sl-section-card">
       <div className="sl-section-head">
