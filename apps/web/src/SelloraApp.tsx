@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   Copy,
   CreditCard,
+  Download,
+  Printer,
   ExternalLink,
   Eye,
   EyeOff,
@@ -690,6 +692,38 @@ export default function SelloraApp() {
     autoLaunchTasks.filter((t) => t.done).length +
     manualLaunchTasks.filter((t) => launchChecks[t.id]).length;
   const launchTotal = autoLaunchTasks.length + manualLaunchTasks.length;
+
+  const exportOrdersCsv = () => {
+    const columns = ["Order number","Created at","Customer","Phone","Email","Catalogue","Product","SKU","Quantity","Unit","Unit price","Line total","Subtotal","Tax","Total","Currency","Order status","Payment status","Delivery address","Notes","Razorpay order ID","Razorpay payment ID"];
+    const rows = orders.flatMap((order:any) => (order.items?.length ? order.items : [{productName:"",sku:"",quantity:"",unit:"",unitPrice:"",lineTotal:""}]).map((item:any) => [
+      order.orderNumber || order.id, order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "",
+      order.customerName, order.phone || "", order.email || "", order.catalogue?.title || "",
+      item.productName || "", item.sku || "", item.quantity, item.unit || "", item.unitPrice || "",
+      item.lineTotal || "", order.subtotal ?? "", order.taxAmount ?? "0", order.totalAmount ?? order.subtotal ?? "",
+      order.currency || "INR", order.status || "", order.paymentStatus || "", order.address || "", order.notes || "",
+      order.razorpayOrderId || "", order.razorpayPaymentId || ""
+    ]));
+    const csv = [columns, ...rows].map(row => row.map((v:any) => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\\uFEFF", csv], {type:"text/csv;charset=utf-8;"}));
+    const a = document.createElement("a"); a.href = url; a.download = "sellora-orders.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const printDeliverySlip = (order:any) => {
+    const esc = (value:any) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char] || char));
+    const itemRows = (order.items || []).map((item:any) => `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`).join("");
+    const popup = window.open("", "_blank", "width=800,height=900");
+    if (!popup) { window.alert("Please allow pop-ups to print the delivery slip."); return; }
+    popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Delivery slip - ${esc(order.orderNumber || order.id)}</title><style>
+      body{font:14px Arial,sans-serif;color:#172b25;margin:32px}h1{font-size:22px;margin:0 0 5px}h2{font-size:15px;margin:24px 0 10px}p{margin:5px 0;line-height:1.5}.muted{color:#68766d;font-size:12px}.top{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #dce5da;padding-bottom:16px}.box{border:1px solid #dce5da;border-radius:8px;padding:14px;margin-top:16px}.address{white-space:pre-wrap;font-size:16px;font-weight:600;line-height:1.6}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;border-bottom:1px solid #e4e9e4;padding:10px 8px}th{background:#f4f7f1;font-size:11px;text-transform:uppercase}.footer{margin-top:32px;border-top:1px solid #dce5da;padding-top:12px;font-size:11px;color:#68766d}@media print{body{margin:12mm}.no-print{display:none}}</style></head><body>
+      <div class="top"><div><h1>${esc(business.name || "Delivery Slip")}</h1><p class="muted">DELIVERY SLIP · NOT A TAX INVOICE</p></div><div><p><b>Order:</b> ${esc(order.orderNumber || order.id)}</p><p><b>Date:</b> ${esc(order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "—")}</p></div></div>
+      <div class="box"><h2>SHIP TO</h2><p class="address">${esc(order.customerName || "Customer")}</p><p>${esc(order.address || "Delivery address not provided")}</p><p><b>Phone:</b> ${esc(order.phone || "—")}</p><p><b>Email:</b> ${esc(order.email || "—")}</p></div>
+      <h2>ITEMS TO DISPATCH</h2><table><thead><tr><th>Product</th><th>SKU</th><th>Quantity</th></tr></thead><tbody>${itemRows || "<tr><td colspan='3'>No item details available</td></tr>"}</tbody></table>
+      ${order.notes ? `<div class="box"><h2>ORDER NOTES</h2><p>${esc(order.notes)}</p></div>` : ""}
+      <div class="footer">Please verify items and quantities before dispatch. Order status: ${esc(order.status || "—")} · Payment status: ${esc(order.paymentStatus || "—")}</div>
+      <p class="no-print"><button onclick="window.print()">Print delivery slip</button></p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    popup.document.close();
+  };
   return (
     <div className="sl-app">
       <aside className="sl-sidebar">
@@ -919,19 +953,17 @@ export default function SelloraApp() {
                   Order requests, customer details and item-level breakdowns.
                 </p>
               </div>
-              <Btn
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn onClick={exportOrdersCsv} disabled={!orders.length}><Download size={15}/> Export CSV</Btn><Btn
                 onClick={async () => {
                   try {
                     setOrders(await api("/workspace/orders"));
                   } catch (e) {
-                    setError(
-                      e instanceof Error ? e.message : "Could not load orders",
-                    );
+                    setError(e instanceof Error ? e.message : "Could not load orders");
                   }
                 }}
               >
                 <ArrowRight size={15} /> Refresh orders
-              </Btn>
+              </Btn></div>
             </div>
             {!orders.length ? (
               <div className="sl-orders-empty">
@@ -963,6 +995,7 @@ export default function SelloraApp() {
                       <ArrowRight size={16} />
                     </summary>
                     <div className="sl-order-detail">
+                      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}><Btn onClick={() => printDeliverySlip(order)}><Printer size={15}/> Print delivery slip</Btn></div>
                       <div className="sl-order-customer">
                         <p>
                           <b>Customer</b>
