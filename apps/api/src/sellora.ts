@@ -238,6 +238,44 @@ router.patch("/auth/password", requireAuth, authenticated(async (req,res) => {
   res.json({success:true,message:"Password updated. Use the new password next time you sign in."});
 }));
 
+router.post("/auth/password/forgot", async (req,res) => {
+  const data = z.object({email:z.string().trim().email().max(160)}).parse(req.body);
+  const generic = {success:true,message:"If an account exists for that email, password reset instructions will be sent."};
+  const user = await prisma.user.findUnique({where:{email:data.email.toLowerCase()},select:{id:true,email:true}});
+  if (!user) return res.json(generic);
+  const token = crypto.randomBytes(32).toString("base64url");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  await prisma.passwordResetToken.create({data:{userId:user.id,tokenHash,expiresAt:new Date(Date.now()+30*60*1000)}});
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.MAIL_FROM;
+  const webOrigin = (process.env.WEB_ORIGIN || "http://localhost:5173").replace(/\/$/,"");
+  if (apiKey && from) {
+    const link = webOrigin + "/?resetToken=" + encodeURIComponent(token) + "&resetEmail=" + encodeURIComponent(user.email);
+    const response = await fetch("https://api.resend.com/emails",{
+      method:"POST",headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
+      body:JSON.stringify({from,to:[user.email],subject:"Reset your Sellora password",html:"<p>We received a request to reset your Sellora password.</p><p><a href=\""+link+"\">Reset password</a></p><p>This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>"})
+    });
+    if (!response.ok) {
+      await prisma.passwordResetToken.deleteMany({where:{tokenHash}});
+      // Do not expose provider errors or whether the account exists to the caller.
+    }
+  }
+  res.json(generic);
+});
+
+router.post("/auth/password/reset", async (req,res) => {
+  const data = z.object({token:z.string().min(20).max(200),newPassword:z.string().min(8).max(128)}).parse(req.body);
+  const tokenHash = crypto.createHash("sha256").update(data.token).digest("hex");
+  const reset = await prisma.passwordResetToken.findUnique({where:{tokenHash},include:{user:true}});
+  if (!reset || reset.usedAt || reset.expiresAt <= new Date()) return res.status(400).json({error:"This password reset link is invalid or expired. Request a new one."});
+  await prisma.$transaction([
+    prisma.user.update({where:{id:reset.userId},data:{passwordHash:await hashPassword(data.newPassword)}}),
+    prisma.passwordResetToken.update({where:{id:reset.id},data:{usedAt:new Date()}})
+  ]);
+  await prisma.passwordResetToken.deleteMany({where:{userId:reset.userId,usedAt:null}});
+  res.json({success:true,message:"Password reset successfully. You can now sign in."});
+});
+
 router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
   const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
   if (!user) return res.status(401).json({error:"Account not found."});
