@@ -447,25 +447,40 @@ export function ProductSection({
   async function refreshStock() {
     try {
       const result = await api("/workspace/inventory");
-      setStock(Object.fromEntries(result.products.map((p: any) => [p.id, String(p.stockQuantity ?? 0)])));
+      setStock(
+        Object.fromEntries(
+          result.products.map((p: any) => [p.id, String(p.stockQuantity ?? 0)]),
+        ),
+      );
       setMovements(result.movements || []);
     } catch {
       // Product management remains usable if stock data cannot be refreshed.
     }
   }
-  useEffect(() => { void refreshStock(); }, []);
+  useEffect(() => {
+    void refreshStock();
+  }, []);
   async function saveStock(product: Product) {
     const quantity = Number(stock[product.id] ?? "0");
     if (!Number.isFinite(quantity) || quantity < 0) return;
     setStockBusy(product.id);
     try {
-      await api("/workspace/inventory/" + encodeURIComponent(product.id) + "/adjust", {
-        method: "POST",
-        body: JSON.stringify({ quantity, reason: "ADJUSTMENT", note: "Product page stock adjustment" }),
-      });
+      await api(
+        "/workspace/inventory/" + encodeURIComponent(product.id) + "/adjust",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            quantity,
+            reason: "ADJUSTMENT",
+            note: "Product page stock adjustment",
+          }),
+        },
+      );
       await refreshStock();
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Could not update stock.");
+      window.alert(
+        error instanceof Error ? error.message : "Could not update stock.",
+      );
     } finally {
       setStockBusy("");
     }
@@ -524,13 +539,22 @@ export function ProductSection({
                   step="0.001"
                   aria-label={"Stock quantity for " + p.name}
                   value={stock[p.id] ?? String(p.stockQuantity ?? 0)}
-                  onChange={(e) => setStock((old) => ({ ...old, [p.id]: e.target.value }))}
+                  onChange={(e) =>
+                    setStock((old) => ({ ...old, [p.id]: e.target.value }))
+                  }
                 />
-                <Btn disabled={stockBusy === p.id} onClick={() => void saveStock(p)}>
+                <Btn
+                  disabled={stockBusy === p.id}
+                  onClick={() => void saveStock(p)}
+                >
                   {stockBusy === p.id ? "Saving…" : "Save stock"}
                 </Btn>
               </div>
-              <small>{p.stockEnabled ? "Stock tracking enabled" : "Stock tracking will enable when quantity is saved"}</small>
+              <small>
+                {p.stockEnabled
+                  ? "Stock tracking enabled"
+                  : "Stock tracking will enable when quantity is saved"}
+              </small>
             </div>
             <label
               className="sl-button sl-button-outline"
@@ -568,17 +592,44 @@ export function ProductSection({
       )}
       <div className="sl-stock-movements">
         <div className="sl-section-head">
-          <div><h3>Recent stock movements</h3><p>Stock adjustments and order-related changes for your products.</p></div>
-          <Btn kind="outline" onClick={() => void refreshStock()}>Refresh stock</Btn>
+          <div>
+            <h3>Recent stock movements</h3>
+            <p>
+              Stock adjustments and order-related changes for your products.
+            </p>
+          </div>
+          <Btn kind="outline" onClick={() => void refreshStock()}>
+            Refresh stock
+          </Btn>
         </div>
-        {!movements.length ? <p className="sl-muted">No stock movements recorded yet.</p> : (
+        {!movements.length ? (
+          <p className="sl-muted">No stock movements recorded yet.</p>
+        ) : (
           <div style={{ overflowX: "auto" }}>
-            <table><thead><tr><th>Date</th><th>Product</th><th>Change</th><th>Reason</th><th>Order</th></tr></thead>
-              <tbody>{movements.map((m) => <tr key={m.id}>
-                <td>{new Date(m.createdAt).toLocaleString()}</td><td>{m.product.name}</td>
-                <td>{Number(m.quantityDelta) > 0 ? "+" : ""}{m.quantityDelta}</td>
-                <td>{String(m.reason).replaceAll("_", " ")}</td><td>{m.order?.orderNumber || "—"}</td>
-              </tr>)}</tbody>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Product</th>
+                  <th>Change</th>
+                  <th>Reason</th>
+                  <th>Order</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movements.map((m) => (
+                  <tr key={m.id}>
+                    <td>{new Date(m.createdAt).toLocaleString()}</td>
+                    <td>{m.product.name}</td>
+                    <td>
+                      {Number(m.quantityDelta) > 0 ? "+" : ""}
+                      {m.quantityDelta}
+                    </td>
+                    <td>{String(m.reason).replaceAll("_", " ")}</td>
+                    <td>{m.order?.orderNumber || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         )}
