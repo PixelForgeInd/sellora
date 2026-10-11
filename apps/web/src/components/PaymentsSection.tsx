@@ -23,6 +23,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ALL");
   const [range, setRange] = useState("ALL");
+  const [sort, setSort] = useState("newest");
 
   const load = useCallback(async (refresh = false) => {
     refresh ? setRefreshing(true) : setLoading(true);
@@ -42,7 +43,8 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
       const matchesQuery = !q || [p.id,p.orderNumber,p.productName,p.customerName,p.customerEmail,p.customerPhone,p.razorpayOrderId,p.razorpayPaymentId].some(v => String(v || "").toLowerCase().includes(q));
       return matchesStatus && matchesDate && matchesQuery;
     });
-  }, [payments, query, status, range]);
+  }).sort((a,b) => sort === "oldest" ? Date.parse(a.createdAt)-Date.parse(b.createdAt) : sort === "amount-high" ? Number(b.totalAmount || b.amount)-Number(a.totalAmount || a.amount) : sort === "amount-low" ? Number(a.totalAmount || a.amount)-Number(b.totalAmount || b.amount) : Date.parse(b.createdAt)-Date.parse(a.createdAt));
+  }, [payments, query, status, range, sort]);
 
   const paid = payments.filter(p => p.status === "PAID");
   const pending = payments.filter(p => ["CREATED","PENDING","AUTHORIZED"].includes(p.status));
@@ -62,7 +64,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
       .sl-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:10px 13px;background:var(--sl-primary,#599c56);color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
       .sl-button-outline{background:transparent;color:inherit}
       .sl-button:disabled{opacity:.55;cursor:not-allowed}
-      .sl-payment-filters{display:grid;grid-template-columns:minmax(220px,1fr) 170px 150px;gap:10px;margin:20px 0}
+      .sl-payment-filters{display:grid;grid-template-columns:minmax(220px,1fr) 170px 150px 190px;gap:10px;margin:20px 0}
       .sl-payment-search{display:flex;align-items:center;gap:9px;border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:0 12px;min-height:42px}
       .sl-payment-search input{border:0;outline:0;background:transparent;color:inherit;width:100%;min-width:0;font:inherit}
       .sl-payment-filters select{border:1px solid var(--sl-border,#dce3dc);border-radius:10px;padding:10px;background:transparent;color:inherit;min-width:0}
@@ -103,6 +105,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
         <select value={range} onChange={e=>setRange(e.target.value)} aria-label="Filter payment date">
           <option value="ALL">All time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option>
         </select>
+        <select value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sort payments"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="amount-high">Amount: high to low</option><option value="amount-low">Amount: low to high</option></select>
       </div>
       {error && <div className="sl-payment-error" role="alert">{error}</div>}
       {loading ? <div className="sl-empty"><RefreshCw size={24}/><p>Loading payment records…</p></div> : filtered.length ? <div className="sl-payment-table-wrap"><table className="sl-payment-table">
