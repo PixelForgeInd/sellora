@@ -300,6 +300,7 @@ model SelloraOrder {
   totalAmount  Decimal  @default(0) @db.Decimal(12, 2)
   status       String   @default("PENDING")
   paymentStatus String @default("UNPAID")
+  paidAt       DateTime?
   customerId   String?
   customer     SelloraCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   refundStatus String @default("NONE")
