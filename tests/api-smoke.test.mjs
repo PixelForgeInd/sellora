@@ -103,9 +103,23 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     assert.equal(me.status, 200);
     assert.equal((await me.json()).email, email);
 
+    const wrongCurrentPassword = await jsonRequest("/api/auth/password", {
+      method: "PATCH", token,
+      body: { currentPassword: "Wrong-password-123!", newPassword: "New-password-456!" },
+    });
+    assert.equal(wrongCurrentPassword.status, 400);
+
+    const changedPassword = await jsonRequest("/api/auth/password", {
+      method: "PATCH", token,
+      body: { currentPassword: password, newPassword: "New-password-456!" },
+    });
+    assert.equal(changedPassword.status, 200);
+    assert.equal((await changedPassword.json()).success, true);
+
     const login = await jsonRequest("/api/auth/login", {
+
       method: "POST",
-      body: { email, password },
+      body: { email, password: "New-password-456!" },
     });
     assert.equal(login.status, 200);
     assert.ok((await login.json()).token);
