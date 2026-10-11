@@ -912,3 +912,42 @@
  .sl-app .sl-catalogue-cover>b{font-size:22px!important}
  .sl-app .sl-catalogue-actions .sl-button{font-size:11px!important;padding:8px 10px}
 }
+
+
+/* Readability pass: larger, consistent typography across all workspace screens. */
+.sl-app,.sl-app *{font-family:var(--sellora-font)!important}
+.sl-app .sl-workspace-top h1{font-size:36px!important;font-weight:600!important;line-height:1.22}
+.sl-app .sl-workspace-label{font-size:11px!important}
+.sl-app .sl-business-chip b{font-size:13px!important}
+.sl-app .sl-business-chip small{font-size:11px!important}
+.sl-app .sl-nav button{font-size:16px!important;line-height:1.4;min-height:46px}
+.sl-app .sl-user-email{font-size:12px!important}
+.sl-app .sl-signout{font-size:13px!important}
+.sl-app .sl-notice{font-size:13px!important;line-height:1.5;padding:13px 15px}
+.sl-app .sl-section-card>h3,.sl-app .sl-section-head h3{font-size:25px!important;line-height:1.35}
+.sl-app .sl-section-card>p,.sl-app .sl-section-head p{font-size:14px!important;line-height:1.6}
+.sl-app .sl-product-name b{font-size:15px!important;line-height:1.45}
+.sl-app .sl-product-name small{font-size:12px!important;line-height:1.55}
+.sl-app .sl-product-row>strong{font-size:14px!important}
+.sl-app .sl-catalogue-cover>b{font-size:28px!important;line-height:1.25}
+.sl-app .sl-catalogue-cover>span,.sl-app .sl-catalogue-cover>small{font-size:11px!important}
+.sl-app .sl-catalogue-title>b{font-size:15px!important;line-height:1.45}
+.sl-app .sl-catalogue-card-body>p{font-size:13px!important;line-height:1.6}
+.sl-app .sl-published,.sl-app .sl-draft{font-size:12px!important}
+.sl-app .sl-catalogue-actions .sl-button{font-size:13px!important;min-height:42px}
+.sl-app .sl-public-link{font-size:12px!important;line-height:1.6}
+.sl-app .sl-stat-grid span{font-size:10px!important}
+.sl-app .sl-stat-grid strong{font-family:var(--sellora-font)!important;font-size:29px!important;font-weight:600!important}
+.sl-app .sl-stat-grid small{font-size:12px!important;line-height:1.5}
+.sl-app .sl-check-row b{font-size:14px!important}
+.sl-app .sl-check-row small{font-size:12px!important;line-height:1.55}
+.sl-app .sl-empty h3{font-family:var(--sellora-font)!important;font-size:24px!important}
+.sl-app .sl-empty p{font-size:13px!important;line-height:1.65}
+.sl-app .sl-orders-filters :is(input,select){font-family:var(--sellora-font)!important;font-size:14px!important}
+.sl-app :is(button,a,input,select,textarea){font-family:var(--sellora-font)!important}
+@media(max-width:650px){
+ .sl-app .sl-workspace-top h1{font-size:30px!important}
+ .sl-app .sl-nav button{font-size:14px!important}
+ .sl-app .sl-catalogue-cover>b{font-size:24px!important}
+ .sl-app .sl-section-card>h3,.sl-app .sl-section-head h3{font-size:22px!important}
+}
