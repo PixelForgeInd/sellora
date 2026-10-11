@@ -431,6 +431,7 @@ type ProductSectionProps = {
   startProduct: (product?: Product) => void;
   deleteProduct: (product: Product) => Promise<void>;
   uploadProductImage: (product: Product, file: File) => Promise<void>;
+  removeProductImage: (product: Product) => Promise<void>;
 };
 export function ProductSection({
   category,
@@ -438,6 +439,7 @@ export function ProductSection({
   startProduct,
   deleteProduct,
   uploadProductImage,
+  removeProductImage,
 }: ProductSectionProps) {
   return (
     <section className="sl-section-card">
@@ -499,6 +501,11 @@ export function ProductSection({
                 }}
               />
             </label>
+            {p.imageUrl && (
+              <Btn kind="danger" onClick={() => void removeProductImage(p)}>
+                Remove image
+              </Btn>
+            )}
             <Btn kind="outline" onClick={() => startProduct(p)}>
               Edit
             </Btn>
