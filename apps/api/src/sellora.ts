@@ -653,7 +653,7 @@ router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=
   currency:order.currency,customerName:order.customerName,customerEmail:order.email,customerPhone:order.phone,address:order.address,notes:order.notes,
   status:order.paymentStatus==="PAID"?"PAID":order.status==="CANCELLED"?"CANCELLED":order.paymentStatus==="FAILED"?"FAILED":"PENDING",
   paymentStatus:order.paymentStatus,razorpayOrderId:order.razorpayOrderId||"",razorpayPaymentId:order.razorpayPaymentId,
-  createdAt:order.createdAt,paidAt:order.paymentStatus==="PAID"?order.updatedAt:null,updatedAt:order.updatedAt,
+  createdAt:order.createdAt,paidAt:order.paymentStatus==="PAID"?order.paidAt:null,updatedAt:order.updatedAt,
   items:order.items.map(item=>({productName:item.productName,sku:item.sku,quantity:item.quantity,unit:item.unit,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))
  }));
  res.json([...legacy,...checkout].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime()));
@@ -942,7 +942,7 @@ router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
     if(payment.status!=="captured") {
       return res.status(202).json({success:false,paymentStatus:payment.status,message:"Payment is not captured yet. Please wait for confirmation."});
     }
-    const updated=await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayPaymentId:payment.id,paymentStatus:"PAID",status:"CONFIRMED"}});
+    const updated=await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayPaymentId:payment.id,paymentStatus:"PAID",status:"CONFIRMED",paidAt:order.paidAt||new Date()}});
     await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"payment_confirmed",metadata:{orderNumber:updated.orderNumber}}}).catch(()=>{});
     res.json({success:true,orderNumber:updated.orderNumber,message:"Payment confirmed successfully."});
   } catch {
@@ -1104,22 +1104,29 @@ router.get("/workspace/reports", requireAuth, authenticated(async (req,res) => {
   const from = query.from ? new Date(query.from) : new Date(Date.now()-30*24*60*60*1000);
   const to = query.to ? new Date(query.to) : new Date();
   if (from > to) return res.status(400).json({error:"Report start date must be before the end date."});
-  const where = {businessId:business.id,createdAt:{gte:from,lte:to}};
-  const [orders, enquiries, products, movements] = await Promise.all([
-    prisma.selloraOrder.findMany({where,select:{id:true,orderNumber:true,status:true,paymentStatus:true,subtotal:true,taxAmount:true,totalAmount:true,createdAt:true}}),
-    prisma.selloraEnquiry.count({where:{businessId:business.id,createdAt:{gte:from,lte:to}}}),
+  const createdRange={gte:from,lte:to};
+  const [orders, legacyOrders, paidOrders, paidLegacy, enquiries, products, movements] = await Promise.all([
+    prisma.selloraOrder.findMany({where:{businessId:business.id,createdAt:createdRange},select:{id:true,orderNumber:true,status:true,paymentStatus:true,subtotal:true,taxAmount:true,totalAmount:true,createdAt:true,paidAt:true}}),
+    prisma.paymentOrder.findMany({where:{businessId:business.id,createdAt:createdRange},select:{id:true,status:true,amount:true,currency:true,createdAt:true,paidAt:true,customerName:true}}),
+    prisma.selloraOrder.findMany({where:{businessId:business.id,paymentStatus:"PAID",paidAt:createdRange},select:{subtotal:true,taxAmount:true,totalAmount:true,paidAt:true}}),
+    prisma.paymentOrder.findMany({where:{businessId:business.id,status:"PAID",paidAt:createdRange},select:{amount:true,paidAt:true}}),
+    prisma.selloraEnquiry.count({where:{businessId:business.id,createdAt:createdRange}}),
     prisma.selloraProduct.count({where:{businessId:business.id,isActive:true}}),
-    prisma.selloraStockMovement.count({where:{businessId:business.id,createdAt:{gte:from,lte:to}}})
+    prisma.selloraStockMovement.count({where:{businessId:business.id,createdAt:createdRange}})
   ]);
-  const paid = orders.filter(order=>order.paymentStatus==="PAID");
+  const unpaidOrderCount=orders.filter(order=>order.paymentStatus!=="PAID").length+legacyOrders.filter(order=>order.status!=="PAID").length;
+  const paidTotal=[...paidOrders.map(order=>order.totalAmount),...paidLegacy.map(order=>order.amount)].reduce((sum,amount)=>sum.add(amount),new Prisma.Decimal(0));
+  const paidSubtotal=paidOrders.reduce((sum,order)=>sum.add(order.subtotal),new Prisma.Decimal(0)).add(paidLegacy.reduce((sum,order)=>sum.add(order.amount),new Prisma.Decimal(0)));
+  const paidTax=paidOrders.reduce((sum,order)=>sum.add(order.taxAmount),new Prisma.Decimal(0));
+  const orderRows=[
+    ...orders.map(order=>({...order,recordType:"CATALOGUE_ORDER",subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString()})),
+    ...legacyOrders.map(order=>({id:"payment-"+order.id,orderNumber:order.id,recordType:"PAYMENT_ORDER",status:order.status==="PAID"?"CONFIRMED":order.status==="FAILED"?"PAYMENT_FAILED":"PENDING",paymentStatus:order.status,subtotal:order.amount.toString(),taxAmount:"0",totalAmount:order.amount.toString(),createdAt:order.createdAt,paidAt:order.paidAt}))
+  ].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime());
   res.json({
-    from:from.toISOString(),to:to.toISOString(),orderCount:orders.length,
-    paidOrderCount:paid.length,unpaidOrderCount:orders.length-paid.length,
-    paidSubtotal:paid.reduce((sum,order)=>sum.add(order.subtotal),new Prisma.Decimal(0)).toString(),
-    paidTax:paid.reduce((sum,order)=>sum.add(order.taxAmount),new Prisma.Decimal(0)).toString(),
-    paidTotal:paid.reduce((sum,order)=>sum.add(order.totalAmount),new Prisma.Decimal(0)).toString(),
-    enquiryCount:enquiries,activeProductCount:products,stockMovementCount:movements,
-    orders:orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString()}))
+    from:from.toISOString(),to:to.toISOString(),orderCount:orderRows.length,
+    paidOrderCount:paidOrders.length+paidLegacy.length,unpaidOrderCount,
+    paidSubtotal:paidSubtotal.toString(),paidTax:paidTax.toString(),paidTotal:paidTotal.toString(),
+    enquiryCount:enquiries,activeProductCount:products,stockMovementCount:movements,orders:orderRows
   });
 }));
 
