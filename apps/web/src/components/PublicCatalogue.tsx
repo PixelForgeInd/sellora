@@ -852,8 +852,16 @@ export function PublicCatalogue({
                 {enquirySuccess && <p role="status">{enquirySuccess}</p>}
                 <button
                   type="submit"
-                  className="sl-store-contact-primary"
+                  className="sl-store-contact-primary sl-store-enquiry-submit"
                   disabled={enquiryBusy}
+                  style={{
+                    fontFamily: "inherit",
+                    fontSize: 16,
+                    fontWeight: 600,
+                    letterSpacing: "0.01em",
+                    lineHeight: 1.2,
+                    WebkitFontSmoothing: "antialiased",
+                  }}
                 >
                   {enquiryBusy ? "Sending…" : "Send enquiry"}{" "}
                   <ArrowRight size={16} />
