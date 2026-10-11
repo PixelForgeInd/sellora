@@ -203,6 +203,23 @@ router.post("/auth/login", async (req, res) => {
   if (!user || !(await verifyPassword(data.password,user.passwordHash))) return res.status(401).json({error:"Email or password is incorrect."});
   res.json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
+router.patch("/auth/password", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({
+    currentPassword: z.string().min(1).max(128),
+    newPassword: z.string().min(8).max(128)
+  }).parse(req.body);
+  const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,passwordHash:true}});
+  if (!user) return res.status(404).json({error:"Account not found."});
+  if (!(await verifyPassword(data.currentPassword,user.passwordHash))) {
+    return res.status(400).json({error:"Current password is incorrect."});
+  }
+  if (data.currentPassword === data.newPassword) {
+    return res.status(400).json({error:"Choose a new password different from your current password."});
+  }
+  await prisma.user.update({where:{id:user.id},data:{passwordHash:await hashPassword(data.newPassword)}});
+  res.json({success:true,message:"Password updated. Use the new password next time you sign in."});
+}));
+
 router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
   const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
   if (!user) return res.status(401).json({error:"Account not found."});
