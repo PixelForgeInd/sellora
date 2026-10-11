@@ -716,6 +716,24 @@ export default function SelloraApp() {
     URL.revokeObjectURL(url);
   };
 
+  async function updateOrderStatus(order: any, status: string) {
+    if (!order.id || String(order.id).startsWith("payment-")) {
+      setError("This legacy payment record does not support fulfilment status changes.");
+      return;
+    }
+    try {
+      const updated = await api("/workspace/orders/" + encodeURIComponent(order.id) + "/status", {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      setOrders((old) => old.map((item) => item.id === updated.id ? { ...item, ...updated } : item));
+      setNotice("Order " + updated.orderNumber + " updated to " + updated.status.toLowerCase() + ".");
+      setError("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update order status.");
+    }
+  }
+
   const downloadBulkDeliverySlips = () => {
     if (!filteredOrders.length) {
       setNotice("There are no orders matching the current filters.");
@@ -1061,7 +1079,7 @@ export default function SelloraApp() {
                       <ArrowRight size={16} />
                     </summary>
                     <div className="sl-order-detail">
-                      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}><Btn onClick={() => printDeliverySlip(order)}><Printer size={15}/> Print delivery slip</Btn></div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginBottom:12}}><label style={{display:"flex",alignItems:"center",gap:8}}>Fulfilment status <select aria-label={"Update status for order " + (order.orderNumber || order.id)} value={order.status || "PENDING"} disabled={["DELIVERED","CANCELLED"].includes(order.status) || String(order.id).startsWith("payment-")} onChange={(e)=>void updateOrderStatus(order,e.target.value)}><option value="PENDING">Pending</option><option value="CONFIRMED">Confirmed</option><option value="PROCESSING">Processing</option><option value="DISPATCHED">Dispatched</option><option value="DELIVERED">Delivered</option><option value="CANCELLED">Cancelled</option></select></label><Btn onClick={() => printDeliverySlip(order)}><Printer size={15}/> Print delivery slip</Btn></div>
                       <div className="sl-order-customer">
                         <p>
                           <b>Customer</b>
