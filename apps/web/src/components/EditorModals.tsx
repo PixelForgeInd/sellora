@@ -13,6 +13,8 @@ type ProductForm = {
   currency: string;
   unit: string;
   imageUrl: string;
+  stockEnabled: boolean;
+  stockQuantity: string;
   fields: Record<string, string | number | boolean | string[]>;
 };
 type CatalogueForm = {
@@ -157,6 +159,21 @@ export function ProductModal({
                 value={pform.unit}
                 onChange={(e) => setPform({ ...pform, unit: e.target.value })}
               />
+            </label>
+          </div>
+          <div className="sl-field-divider">INVENTORY</div>
+          <div className="sl-form-row">
+            <label>
+              Available stock quantity
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                value={pform.stockQuantity}
+                onChange={(e) => setPform({ ...pform, stockQuantity: e.target.value, stockEnabled: true })}
+                placeholder="e.g. 100"
+              />
+              <span className="sl-muted">Enter 0 if currently out of stock. Saving a quantity enables stock validation at checkout.</span>
             </label>
           </div>
           <div className="sl-field-divider">
