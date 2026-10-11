@@ -726,7 +726,7 @@ router.post("/webhooks/razorpay", async (req,res) => {
       if(catalogueOrder) {
         if(eventType==="payment.captured"||eventType==="order.paid") {
           await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{
-            paymentStatus:"PAID",razorpayPaymentId:paymentId||catalogueOrder.razorpayPaymentId,
+            paymentStatus:"PAID",razorpayPaymentId:paymentId||catalogueOrder.razorpayPaymentId,paidAt:catalogueOrder.paidAt||new Date(),
             status:catalogueOrder.status==="PENDING"?"CONFIRMED":catalogueOrder.status
           }});
         } else if(eventType==="payment.failed" && catalogueOrder.paymentStatus!=="PAID") {
