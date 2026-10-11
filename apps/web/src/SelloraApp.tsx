@@ -58,6 +58,9 @@ export default function SelloraApp() {
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
+  const [orderSort, setOrderSort] = useState("newest");
   const [analytics, setAnalytics] = useState<Record<string, any>>({});
   const [analyticsBusy, setAnalyticsBusy] = useState("");
   const [catalogueActionMessage, setCatalogueActionMessage] = useState("");
@@ -694,6 +697,8 @@ export default function SelloraApp() {
     manualLaunchTasks.filter((t) => launchChecks[t.id]).length;
   const launchTotal = autoLaunchTasks.length + manualLaunchTasks.length;
 
+  const filteredOrders = orders.filter((order: any) => { const q = orderSearch.trim().toLowerCase(); const searchable = [order.orderNumber, order.id, order.customerName, order.phone, order.email, order.address, order.catalogue?.title, ...(order.items || []).map((item: any) => item.productName)].join(" ").toLowerCase(); return (!q || searchable.includes(q)) && (orderStatusFilter === "ALL" || order.status === orderStatusFilter || order.paymentStatus === orderStatusFilter); }).sort((a: any, b: any) => orderSort === "oldest" ? Date.parse(a.createdAt) - Date.parse(b.createdAt) : orderSort === "amount-high" ? Number(b.totalAmount ?? b.subtotal ?? 0) - Number(a.totalAmount ?? a.subtotal ?? 0) : orderSort === "amount-low" ? Number(a.totalAmount ?? a.subtotal ?? 0) - Number(b.totalAmount ?? b.subtotal ?? 0) : Date.parse(b.createdAt) - Date.parse(a.createdAt));
+
   const exportOrdersCsv = () => {
     const columns = ["Order number","Created at","Customer","Phone","Email","Catalogue","Product","SKU","Quantity","Unit","Unit price","Line total","Subtotal","Tax","Total","Currency","Order status","Payment status","Delivery address","Notes","Razorpay order ID","Razorpay payment ID"];
     const rows = orders.flatMap((order:any) => (order.items?.length ? order.items : [{productName:"",sku:"",quantity:"",unit:"",unitPrice:"",lineTotal:""}]).map((item:any) => [
@@ -992,6 +997,11 @@ export default function SelloraApp() {
                 <ArrowRight size={15} /> Refresh orders
               </Btn></div>
             </div>
+            <div className="sl-orders-filters">
+              <label className="sl-orders-search"><Search size={20}/><input value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} placeholder="Search customer, product or order ID" aria-label="Search orders"/></label>
+              <select value={orderStatusFilter} onChange={e=>setOrderStatusFilter(e.target.value)} aria-label="Filter order status"><option value="ALL">All statuses</option>{Array.from(new Set(orders.flatMap((o:any)=>[o.status,o.paymentStatus]).filter(Boolean))).map((status:any)=><option key={status} value={status}>{String(status).replaceAll("_"," ")}</option>)}</select>
+              <select value={orderSort} onChange={e=>setOrderSort(e.target.value)} aria-label="Sort orders"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="amount-high">Amount: high to low</option><option value="amount-low">Amount: low to high</option></select>
+            </div>
             {!orders.length ? (
               <div className="sl-orders-empty">
                 <ClipboardList size={32} />
@@ -1003,7 +1013,7 @@ export default function SelloraApp() {
               </div>
             ) : (
               <div className="sl-orders-list">
-                {orders.map((order) => (
+                {filteredOrders.map((order: any) => (
                   <details className="sl-order-card" key={order.id}>
                     <summary>
                       <span>
