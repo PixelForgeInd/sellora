@@ -563,48 +563,7 @@ export function ProductSection({
           </article>
         ))
       )}
-      <div className="sl-stock-movements">
-        <div className="sl-section-head">
-          <div>
-            <h3>Recent stock movements</h3>
-            <p>
-              Stock adjustments and order-related changes for your products.
-            </p>
-          </div>
-          <Btn kind="outline" onClick={() => void refreshStock()}>
-            Refresh stock
-          </Btn>
-        </div>
-        {!movements.length ? null : (
-          <div style={{ overflowX: "auto" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Product</th>
-                  <th>Change</th>
-                  <th>Reason</th>
-                  <th>Order</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movements.map((m) => (
-                  <tr key={m.id}>
-                    <td>{new Date(m.createdAt).toLocaleString()}</td>
-                    <td>{m.product.name}</td>
-                    <td>
-                      {Number(m.quantityDelta) > 0 ? "+" : ""}
-                      {m.quantityDelta}
-                    </td>
-                    <td>{String(m.reason).replaceAll("_", " ")}</td>
-                    <td>{m.order?.orderNumber || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+
     </section>
   );
 }
