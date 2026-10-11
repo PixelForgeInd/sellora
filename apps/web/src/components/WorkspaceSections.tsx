@@ -529,46 +529,6 @@ export function ProductSection({
               </small>
             </div>
             <strong>{money(p.price, p.currency, p.unit)}</strong>
-            <div className="sl-product-stock">
-              <span className="sl-muted">Stock quantity</span>
-              <div className="sl-product-stock-controls">
-                <input
-                  className="sl-stock-input"
-                  style={{
-                    width: 132,
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                    border: "1px solid #dce5da",
-                    borderRadius: 10,
-                    background: "#fff",
-                    color: "#26372d",
-                    padding: "11px 13px",
-                    font: "inherit",
-                    outline: "none",
-                    boxShadow: "0 1px 2px rgba(20, 35, 25, 0.04)",
-                  }}
-                  type="number"
-                  min="0"
-                  step="0.001"
-                  aria-label={"Stock quantity for " + p.name}
-                  value={stock[p.id] ?? String(p.stockQuantity ?? 0)}
-                  onChange={(e) =>
-                    setStock((old) => ({ ...old, [p.id]: e.target.value }))
-                  }
-                />
-                <Btn
-                  disabled={stockBusy === p.id}
-                  onClick={() => void saveStock(p)}
-                >
-                  {stockBusy === p.id ? "Saving…" : "Save stock"}
-                </Btn>
-              </div>
-              <small>
-                {p.stockEnabled
-                  ? "Stock tracking enabled"
-                  : "Stock tracking will enable when quantity is saved"}
-              </small>
-            </div>
             <label
               className="sl-button sl-button-outline"
               style={{ cursor: "pointer" }}
