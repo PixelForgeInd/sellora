@@ -337,6 +337,40 @@ export function PublicCatalogue({
       className="sl-storefront"
       style={{ "--store-brand": data.business.brandColor } as CSSProperties}
     >
+      <style>{`
+        .sl-storefront .sl-store-quote,
+        .sl-storefront .sl-store-secondary,
+        .sl-storefront .sl-store-whatsapp,
+        .sl-storefront .sl-store-cart-cta,
+        .sl-storefront .sl-store-enquire,
+        .sl-storefront .sl-store-contact-primary,
+        .sl-storefront .sl-store-contact-secondary,
+        .sl-storefront .sl-store-product-arrow,
+        .sl-storefront .sl-store-header-cart,
+        .sl-storefront .sl-checkout-remove,
+        .sl-storefront .sl-store-detail-close {
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          line-height: 1.25;
+          -webkit-font-smoothing: antialiased;
+        }
+        .sl-storefront .sl-store-enquiry-submit {
+          font-size: 16px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+        }
+        .sl-storefront .sl-store-contact-primary:focus-visible,
+        .sl-storefront .sl-store-contact-secondary:focus-visible,
+        .sl-storefront .sl-store-secondary:focus-visible,
+        .sl-storefront .sl-store-quote:focus-visible,
+        .sl-storefront .sl-store-whatsapp:focus-visible,
+        .sl-storefront .sl-store-enquire:focus-visible {
+          outline: 2px solid var(--store-brand, #599c56);
+          outline-offset: 3px;
+        }
+      `}</style>
       {demo && (
         <div className="sl-demo-ribbon">
           <span>SELLORA · DEFAULT CATALOGUE PREVIEW</span>
