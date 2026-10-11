@@ -396,6 +396,10 @@ export function PublicCatalogue({
         }
         .sl-storefront .sl-store-out-of-stock-message + .sl-store-enquire {
           display: inline-flex;
+          color: #ffffff !important;
+          font-size: 14px !important;
+          text-indent: 0 !important;
+          opacity: 1 !important;
           align-items: center;
           justify-content: center;
           gap: 10px;
@@ -409,6 +413,14 @@ export function PublicCatalogue({
           color: #fff;
           box-shadow: 0 6px 16px rgba(8, 13, 73, 0.14);
           cursor: pointer;
+        }
+        .sl-storefront .sl-store-out-of-stock-enquire-label {
+          display: inline !important;
+          visibility: visible !important;
+          color: #ffffff !important;
+          font-size: 14px !important;
+          line-height: 1.25 !important;
+          opacity: 1 !important;
         }
         .sl-storefront .sl-store-out-of-stock-message + .sl-store-enquire:hover {
           background: #11195f;
@@ -680,7 +692,10 @@ export function PublicCatalogue({
                         className="sl-store-enquire"
                         onClick={() => startEnquiry(p.id)}
                       >
-                        <MessageCircle size={15} /> Enquire about this product
+                        <MessageCircle size={15} aria-hidden="true" />
+                        <span className="sl-store-out-of-stock-enquire-label">
+                          Enquire about this product
+                        </span>
                       </button>
                     </div>
                   ) : data.checkoutReady && !demo && p.price != null ? (
