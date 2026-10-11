@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import path from "node:path";
@@ -8,14 +8,33 @@ import { z } from "zod";
 import { businessSchema, catalogueFieldTemplates } from "./business-schema.js";
 import selloraRouter, { requireAuth } from "./sellora.js";
 
+// npm workspace scripts run with apps/api as cwd; load the repository-root .env explicitly.
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
+dotenv.config();
+
 const app = express();
 const prisma = new PrismaClient();
 const port = Number(process.env.API_PORT || 4000);
 const webOrigin = process.env.WEB_ORIGIN || "http://localhost:5173";
+const allowedOrigins = new Set([
+  webOrigin,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
+]);
 const uploadDir = path.resolve(process.env.UPLOAD_DIR || "./uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
 
-app.use(cors({ origin: webOrigin }));
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (such as curl/health checks) and configured frontend origins.
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
+}));
 app.use(express.json({ limit: "6mb", verify: (req, _res, buffer) => { (req as express.Request & {rawBody?:Buffer}).rawBody = Buffer.from(buffer); } }));
 app.use("/uploads", express.static(uploadDir));
 app.use("/api", selloraRouter);
@@ -29,11 +48,7 @@ app.post("/api/catalogues/upload", (_req, res) => res.status(410).json({ error: 
 app.get("/api/enquiries", (_req, res) => res.status(410).json({ error: "Legacy global enquiry administration is retired." }));
 app.patch("/api/enquiries/:id/status", (_req, res) => res.status(410).json({ error: "Legacy global enquiry administration is retired." }));
 
-
-
-
 app.get("/api/health", (_req, res) => res.json({ ok: true, service: "sellora-api" }));
-
 
 app.post("/api/businesses", requireAuth, async (req, res, next) => {
   try {
@@ -74,7 +89,6 @@ app.get("/api/businesses", requireAuth, async (req, res, next) => {
     res.json(businesses);
   } catch (error) { next(error); }
 });
-
 
 app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (error instanceof z.ZodError) return res.status(400).json({ error: "Validation failed", details: error.issues });

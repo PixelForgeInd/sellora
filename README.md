@@ -10,7 +10,10 @@ Sellora is a self-service B2B catalogue platform. Businesses create an account, 
 4. Generic product library: SKU, description, optional price, currency, unit, image URL and industry-specific fields.
 5. Catalogue builder: create catalogues and choose which business-owned products they contain.
 6. Publish/share: publish or unpublish and share a public route at /c/:slug.
-7. Selling preferences: business owners can switch between catalogue-only and catalogue + online payments from dashboard Settings. Razorpay credentials can be configured in Settings; checkout creates server-side orders, verifies payment signatures and stores payment records.
+7. Selling preferences and payments: business owners can switch between catalogue-only and catalogue + online payments from Settings. Razorpay credentials are encrypted; checkout verifies payment signatures, webhooks reconcile asynchronous events idempotently, and verified payment timestamps power reports.
+8. Customer operations: public product enquiries are saved per business and managed in the Enquiries page; the customer directory combines enquiries and catalogue orders.
+9. Inventory: stock can be enabled and adjusted per product, stock movements are audited, and checkout reserves available stock atomically. Cancellation and confirmed refunds return reserved stock.
+10. Operations: the dashboard includes customer order detail editing, fulfilment status controls, full Razorpay refunds for verified paid catalogue orders, date-filtered reports, and product image upload/removal.
 
 The previous yarn-specific data models remain. Generic Sellora models are additive. Legacy yarn records are not automatically copied into a new workspace because the old records do not have reliable tenant ownership; importing them needs a deliberate mapping step.
 
@@ -32,10 +35,12 @@ The previous yarn-specific data models remain. Generic Sellora models are additi
    npm install
    npm run db:generate
 
-5. Apply migrations and seed reference data:
+5. Apply migrations and seed reference data. Before seeding, set `PLATFORM_OWNER_EMAIL` to your own email and `PLATFORM_OWNER_PASSWORD` to a unique password of at least 12 characters in `.env`:
 
    npm run db:migrate
    npm run db:seed
+
+The seed creates the PixelForge platform-owner account and workspace. It will not automatically promote an existing non-owner account.
 
 6. Start the apps:
 
@@ -47,9 +52,13 @@ For an existing development database, back it up before applying the new migrati
 
 ## Main API routes
 
-- POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me
+- POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/password, POST /api/auth/password/forgot, POST /api/auth/password/reset
 - GET /api/workspace/business, POST /api/workspace/business
-- GET/POST /api/workspace/products, PATCH/DELETE /api/workspace/products/:id
+- GET/POST /api/workspace/products, PATCH/DELETE /api/workspace/products/:id, POST /api/workspace/products/:id/image
+- GET /api/workspace/enquiries, PATCH /api/workspace/enquiries/:id; POST /api/public/catalogues/:slug/enquiries
+- GET /api/workspace/inventory, POST /api/workspace/inventory/:productId/adjust
+- GET /api/workspace/customers, GET /api/workspace/reports
+- PATCH /api/workspace/orders/:id, PATCH /api/workspace/orders/:id/status, POST /api/workspace/orders/:id/refund
 - GET/POST /api/workspace/catalogues, PATCH /api/workspace/catalogues/:id
 - GET /api/public/catalogues/:slug
 - PATCH /api/workspace/business/settings (authenticated; accepts `sellingMode: CATALOG_ONLY | ONLINE_PAYMENTS`)
@@ -59,10 +68,10 @@ Workspace routes require Authorization: Bearer <token>. Product and catalogue op
 
 ## Razorpay setup
 
-1. Configure `PAYMENT_ENCRYPTION_KEY` on the API server as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable.
+1. Configure `PAYMENT_ENCRYPTION_KEY` once in the Sellora API host environment as a unique 64-character hexadecimal key. Generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Keep it outside the repository and back it up securely; losing it makes saved credentials unreadable. Existing deployments with `RAZORPAY_ENCRYPTION_KEY` can use it as a fallback. This is a Sellora-managed server secret, not a value customers enter.
 2. Apply the included migration with `npm run db:migrate` after configuring `DATABASE_URL`. Test it against a backed-up staging database before production deployment. For a disposable development database, `npx prisma db push --schema apps/api/prisma/schema.prisma` is also available.
-3. In Sellora Settings, enter the Razorpay Key ID and Key Secret. Start with test credentials; Sellora checks the credentials with Razorpay before connecting.
-4. Add the webhook URL shown in Settings to Razorpay Dashboard and enter the same webhook secret in Sellora. Subscribe to `payment.captured`, `payment.failed` and `order.paid`.
+3. Business customers enter their own Razorpay Key ID and Key Secret in Sellora Settings. Start with test credentials; Sellora checks the credentials with Razorpay before connecting.
+4. Only the PixelForge platform owner sees the platform webhook endpoint in Settings. Set `PUBLIC_API_URL` to the public API origin (without `/api`) so the owner panel can display the complete endpoint. Configure it in the relevant Razorpay Dashboard and subscribe to `payment.captured`, `payment.failed` and `order.paid`. Each business's own webhook secret remains a separate tenant-level setting.
 5. Only fixed-price products in published catalogues can be purchased online. The API calculates the amount from the saved product price and verifies Razorpay's signature and payment details before marking an order paid.
 
 ## Production hardening still required
@@ -70,10 +79,10 @@ Workspace routes require Authorization: Bearer <token>. Product and catalogue op
 This is an MVP foundation, not a production launch approval.
 
 - Set a strong, unique AUTH_SECRET; never use the development fallback in production.
-- Add rate limiting, email verification, password reset, session revocation and abuse controls.
+- Add rate limiting, email verification, session revocation and abuse controls. Password recovery email delivery uses Resend and requires RESEND_API_KEY plus a verified MAIL_FROM sender.
 - Restrict or remove legacy unauthenticated admin endpoints in apps/api/src/index.ts before public deployment.
-- Add automated API/browser tests, including cross-tenant authorization tests.
-- Add image uploads/storage, catalogue SEO metadata and enquiry/order capture.
+- Add broader automated API/browser tests, including payment-webhook signature/idempotency tests, stock-concurrency tests and cross-tenant authorization tests.
+- Product images are stored on the API filesystem; production must mount a persistent volume at UPLOAD_DIR and configure PUBLIC_API_URL. Object storage/CDN integration and image lifecycle cleanup for all deployment topologies remain future hardening.
 - Configure HTTPS, production CORS, secret management, backups and monitoring.
 - Run migrations against a backed-up staging database before production.
 

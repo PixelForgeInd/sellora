@@ -52,6 +52,8 @@ Mark each item Pass or Fail and record the issue/steps to reproduce for failures
 - [ ] UI-10 — Verify a user cannot read or modify another business's data (use two separate test accounts).
 
 ### Catalogues and public access
+- [ ] UI-22 — With selling mode set to Catalogue only, verify the public catalogue shows contact/enquiry actions and no cart or checkout.
+- [ ] UI-23 — Switch selling mode to Online payments, refresh the public catalogue, and verify cart and checkout appear. Submit an order request and confirm the success message.
 - [ ] UI-11 — Create a catalogue and select products. Reopen it and verify selected products are retained.
 - [ ] UI-12 — Preview the catalogue before publishing.
 - [ ] UI-13 — Publish it and open its public URL in a private/logged-out browser window.
@@ -79,4 +81,4 @@ For every manual test run, record:
 
 ## Scope and limitations
 
-The automated suite now covers database-backed signup/login, workspace setup, product create/update, catalogue publish/public read/unpublish, authentication guards, and a cross-account access check using a disposable PostgreSQL database. It is not full browser automation: clicks, responsive layout, image uploads, WhatsApp sharing, and visual behavior remain manual. A green CI run means the build/type-check and listed API integration tests passed; it does not mean every UI flow was tested.
+The automated suite covers database-backed signup/login, workspace setup, product create/update, catalogue publish/public read/unpublish, authentication guards, a cross-account access check, and conditional checkout/order creation using a disposable PostgreSQL database. It is not full browser automation: clicks, responsive layout, image uploads, WhatsApp sharing, and visual behavior remain manual. A green CI run means the build/type-check and listed API integration tests passed; it does not mean every UI flow was tested.

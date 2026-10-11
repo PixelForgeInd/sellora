@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import {
   ArrowRight,
@@ -51,6 +52,7 @@ type AuthScreenProps = {
   setError: (value: string) => void;
   busy: boolean;
   auth: (event: FormEvent) => Promise<void>;
+  notice?: string;
 };
 export function AuthScreen({
   email,
@@ -65,6 +67,7 @@ export function AuthScreen({
   setError,
   busy,
   auth,
+  notice = "",
 }: AuthScreenProps) {
   return (
     <div className="sl-auth-layout">
@@ -99,78 +102,135 @@ export function AuthScreen({
         <div className="sl-auth-card">
           <Brand />
           <span className="sl-kicker">
-            {mode === "signup" ? "START YOUR WORKSPACE" : "WELCOME BACK"}
+            {mode === "signup"
+              ? "START YOUR WORKSPACE"
+              : mode === "forgot"
+                ? "PASSWORD RECOVERY"
+                : mode === "reset"
+                  ? "CHOOSE A NEW PASSWORD"
+                  : "WELCOME BACK"}
           </span>
           <h2>
             {mode === "signup"
               ? "Create your Sellora account"
-              : "Log in to Sellora"}
+              : mode === "forgot"
+                ? "Reset your password"
+                : mode === "reset"
+                  ? "Set a new password"
+                  : "Log in to Sellora"}
           </h2>
           <p>
             {mode === "signup"
               ? "Your catalogue journey starts here."
-              : "Continue managing products and catalogues."}
+              : mode === "forgot"
+                ? "We will email a secure reset link if the account exists."
+                : mode === "reset"
+                  ? "Choose a password you have not used before."
+                  : "Continue managing products and catalogues."}
           </p>
           <Err text={error} />
+          {notice && (
+            <p className="sl-notice" role="status">
+              {notice}
+            </p>
+          )}
           <form className="sl-form" onSubmit={auth}>
-            <label>
-              Email address
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-              />
-            </label>
-            <label>
-              Password
-              <div className="sl-password-wrap">
+            {mode !== "reset" && (
+              <label>
+                Email address
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="email"
                   required
-                  minLength={mode === "signup" ? 8 : 1}
-                  autoComplete={
-                    mode === "signup" ? "new-password" : "current-password"
-                  }
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    mode === "signup"
-                      ? "At least 8 characters"
-                      : "Your password"
-                  }
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
                 />
-                <button
-                  className="sl-password-toggle"
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </div>
-            </label>
+              </label>
+            )}
+            {mode !== "forgot" && (
+              <label>
+                {mode === "reset" ? "New password" : "Password"}
+                <div className="sl-password-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={mode === "signup" || mode === "reset" ? 8 : 1}
+                    autoComplete={
+                      mode === "signup" || mode === "reset"
+                        ? "new-password"
+                        : "current-password"
+                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={
+                      mode === "signup" || mode === "reset"
+                        ? "At least 8 characters"
+                        : "Your password"
+                    }
+                  />
+                  <button
+                    className="sl-password-toggle"
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  </button>
+                </div>
+              </label>
+            )}
             <Btn type="submit" disabled={busy}>
               {busy
                 ? "Please wait…"
                 : mode === "signup"
                   ? "Create account"
-                  : "Log in"}{" "}
+                  : mode === "forgot"
+                    ? "Send reset link"
+                    : mode === "reset"
+                      ? "Reset password"
+                      : "Log in"}{" "}
               <ArrowRight size={16} />
             </Btn>
           </form>
+          {mode === "login" && (
+            <p className="sl-auth-switch">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("forgot");
+                  setError("");
+                }}
+              >
+                Forgot password?
+              </button>
+            </p>
+          )}
           <p className="sl-auth-switch">
-            {mode === "signup" ? "Already have an account?" : "New to Sellora?"}{" "}
+            {mode === "forgot" || mode === "reset"
+              ? "Remember your password?"
+              : mode === "signup"
+                ? "Already have an account?"
+                : "New to Sellora?"}{" "}
             <button
+              type="button"
               onClick={() => {
-                setMode(mode === "signup" ? "login" : "signup");
+                setMode(
+                  mode === "signup" || mode === "forgot" || mode === "reset"
+                    ? "login"
+                    : "signup",
+                );
                 setError("");
               }}
             >
-              {mode === "signup" ? "Log in" : "Create account"}
+              {mode === "signup"
+                ? "Log in"
+                : mode === "forgot" || mode === "reset"
+                  ? "Back to log in"
+                  : "Create account"}
             </button>
           </p>
           <small className="sl-muted">
@@ -370,12 +430,16 @@ type ProductSectionProps = {
   products: Product[];
   startProduct: (product?: Product) => void;
   deleteProduct: (product: Product) => Promise<void>;
+  uploadProductImage: (product: Product, file: File) => Promise<void>;
+  removeProductImage: (product: Product) => Promise<void>;
 };
 export function ProductSection({
   category,
   products,
   startProduct,
   deleteProduct,
+  uploadProductImage,
+  removeProductImage,
 }: ProductSectionProps) {
   return (
     <section className="sl-section-card">
@@ -421,6 +485,27 @@ export function ProductSection({
               </small>
             </div>
             <strong>{money(p.price, p.currency, p.unit)}</strong>
+            <label
+              className="sl-button sl-button-outline"
+              style={{ cursor: "pointer" }}
+            >
+              Upload image
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadProductImage(p, file);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
+            {p.imageUrl && (
+              <Btn kind="danger" onClick={() => void removeProductImage(p)}>
+                Remove image
+              </Btn>
+            )}
             <Btn kind="outline" onClick={() => startProduct(p)}>
               Edit
             </Btn>
@@ -451,6 +536,9 @@ type CatalogueSectionProps = {
   publish: (catalogue: Catalogue) => Promise<void>;
   share: (catalogue: Catalogue) => Promise<void>;
   shareWhatsApp: (catalogue: Catalogue) => void;
+  analytics: Record<string, any>;
+  analyticsBusy: string;
+  loadAnalytics: (catalogue: Catalogue) => Promise<void>;
 };
 export function CatalogueSection({
   business,
@@ -465,7 +553,11 @@ export function CatalogueSection({
   publish,
   share,
   shareWhatsApp,
+  analytics,
+  analyticsBusy,
+  loadAnalytics,
 }: CatalogueSectionProps) {
+  const [selectedCatalogueId, setSelectedCatalogueId] = useState("");
   return (
     <section className="sl-section-card">
       <div className="sl-section-head">
@@ -510,16 +602,29 @@ export function CatalogueSection({
       ) : (
         <div className="sl-catalogue-grid">
           {catalogues.map((c) => (
-            <article className="sl-catalogue-card" key={c.id}>
-              <div
-                className="sl-catalogue-cover"
+            <article
+              className={
+                "sl-catalogue-card" +
+                (selectedCatalogueId === c.id ? " is-selected" : "")
+              }
+              key={c.id}
+            >
+              <button
+                type="button"
+                aria-expanded={selectedCatalogueId === c.id}
+                onClick={() => {
+                  const next = selectedCatalogueId === c.id ? "" : c.id;
+                  setSelectedCatalogueId(next);
+                  if (next) void loadAnalytics(c);
+                }}
+                className="sl-catalogue-cover sl-catalogue-open"
                 style={{ background: business.brandColor }}
               >
                 <span>{business.name.toUpperCase()}</span>
                 <BookOpen size={29} />
                 <b>{c.title}</b>
-                <small>{c.items.length} PRODUCTS</small>
-              </div>
+                <small>{c.items.length} PRODUCTS · CLICK FOR ANALYTICS</small>
+              </button>
               <div className="sl-catalogue-card-body">
                 <div className="sl-catalogue-title">
                   <b>{c.title}</b>
@@ -528,6 +633,66 @@ export function CatalogueSection({
                   </span>
                 </div>
                 <p>{c.description || "A catalogue from " + business.name}</p>
+                {selectedCatalogueId === c.id && (
+                  <div className="sl-catalogue-analytics-detail">
+                    <div className="sl-section-head">
+                      <div>
+                        <h4>Catalogue analytics</h4>
+                        <p>Performance for this catalogue link</p>
+                      </div>
+                      <Btn
+                        kind="outline"
+                        disabled={analyticsBusy === c.id}
+                        onClick={() => void loadAnalytics(c)}
+                      >
+                        {analyticsBusy === c.id ? "Loading…" : "Refresh"}
+                      </Btn>
+                    </div>
+                    {analytics[c.id] ? (
+                      <div className="sl-analytics-metrics">
+                        <span>
+                          <small>Catalogue opens</small>
+                          <b>{analytics[c.id].views ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Unique visitors</small>
+                          <b>{analytics[c.id].uniqueVisitors ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Product details opened</small>
+                          <b>{analytics[c.id].productOpens ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Add to cart</small>
+                          <b>{analytics[c.id].addToCart ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Checkout starts</small>
+                          <b>{analytics[c.id].checkoutStarted ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Payment gateway opened</small>
+                          <b>{analytics[c.id].paymentGatewayOpened ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Orders recorded</small>
+                          <b>{analytics[c.id].orders ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Payments confirmed</small>
+                          <b>{analytics[c.id].paymentsConfirmed ?? 0}</b>
+                        </span>
+                      </div>
+                    ) : analyticsBusy === c.id ? (
+                      <p>Loading catalogue metrics…</p>
+                    ) : (
+                      <p>
+                        Analytics could not be loaded yet. Use Refresh to try
+                        again.
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div className="sl-catalogue-actions">
                   <Btn kind="outline" onClick={() => setPreview(c)}>
                     <ExternalLink size={14} /> Preview

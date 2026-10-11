@@ -10,6 +10,7 @@
     "build": "npm run build --workspace @ganeshaa/api && npm run build --workspace @ganeshaa/web",
     "db:generate": "npm run db:generate --workspace @ganeshaa/api",
     "db:migrate": "npm run db:migrate --workspace @ganeshaa/api",
+    "db:deploy": "npm run db:deploy --workspace @ganeshaa/api",
     "db:seed": "npm run db:seed --workspace @ganeshaa/api",
     "test": "node --test tests/api-smoke.test.mjs"
   },

@@ -29,3 +29,15 @@
 .onboarding-footnote{display:flex;align-items:center;justify-content:center;gap:7px;color:#858b80;font-size:10px;margin:23px 0 0}
 .onboarding-footnote svg{flex-shrink:0}
 @media(max-width:620px){.onboarding-panel{padding:20px 16px;max-height:95vh}.onboarding-form .form-grid{grid-template-columns:1fr}.onboarding-actions .button{flex:1}.onboarding-subtitle{font-size:11px}}
+
+/* Workspace sidebar navigation: clearer, stronger hierarchy. */
+.sl-nav button {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.sl-sidebar .sl-nav button svg {
+  flex-shrink: 0;
+}
+
