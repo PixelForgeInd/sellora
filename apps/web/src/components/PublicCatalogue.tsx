@@ -107,6 +107,16 @@ export function PublicCatalogue({
       "noopener,noreferrer",
     );
   };
+  const startEnquiry = (productId = "") => {
+    setEnquiryProductId(productId);
+    setEnquiryError("");
+    setEnquirySuccess("");
+    setDetails(null);
+    window.location.hash = "contact";
+    window.setTimeout(() => {
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  };
   const copyCatalogue = async () => {
     try {
       await navigator.clipboard.writeText(publicUrl);
@@ -407,12 +417,14 @@ export function PublicCatalogue({
                 Explore products <ArrowRight size={16} />
               </a>
               <a
-                href={wa}
-                target="_blank"
-                rel="noreferrer"
+                href="#contact"
                 className="sl-store-secondary"
+                onClick={(event) => {
+                  event.preventDefault();
+                  startEnquiry();
+                }}
               >
-                <MessageCircle size={16} /> Enquire on WhatsApp
+                <MessageCircle size={16} /> Send an enquiry
               </a>
             </div>
             <div className="sl-store-benefits">
@@ -935,23 +947,13 @@ export function PublicCatalogue({
                   </span>
                 ))}
               </div>
-              <a
+              <button
+                type="button"
                 className="sl-store-contact-primary"
-                href={
-                  wa === "#contact"
-                    ? "#contact"
-                    : "https://wa.me/" +
-                      data.business.phone!.replace(/\D/g, "") +
-                      "?text=" +
-                      encodeURIComponent(
-                        "Hi, I'm interested in " + details.name + ".",
-                      )
-                }
-                target={wa === "#contact" ? "_self" : "_blank"}
-                rel="noreferrer"
+                onClick={() => startEnquiry(details.id)}
               >
                 <MessageCircle size={16} /> Enquire about this product
-              </a>
+              </button>
               {data.checkoutReady && !demo && details.price != null && (
                 <button
                   className="sl-store-contact-primary"
