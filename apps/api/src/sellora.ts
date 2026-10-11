@@ -2,10 +2,28 @@ import { Router, Request, Response, NextFunction } from "express";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { z } from "zod";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import multer from "multer";
 import { promisify } from "node:util";
 
 const router = Router();
 const prisma = new PrismaClient();
+const imageUploadDir = path.resolve(process.env.UPLOAD_DIR || "./uploads");
+fs.mkdirSync(imageUploadDir, { recursive: true });
+const productImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, callback) => callback(null, imageUploadDir),
+    filename: (_req, file, callback) => {
+      const ext = ({ "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif" } as Record<string,string>)[file.mimetype];
+      callback(null, crypto.randomUUID() + ext);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, callback) => callback(null, ["image/jpeg","image/png","image/webp","image/gif"].includes(file.mimetype))
+});
+
+
 
 function razorpayEncryptionKey(): Buffer {
   const configured = process.env.RAZORPAY_ENCRYPTION_KEY || "";
@@ -429,6 +447,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     description:z.string().trim().max(2000).optional(), price:z.number().positive().optional(),
     currency:z.string().length(3).default("INR"), unit:z.string().trim().min(1).max(20).default("piece"),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).optional(),
+    stockEnabled:z.boolean().default(false), stockQuantity:z.number().min(0).max(100000000).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).default({})
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
@@ -449,6 +468,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     description:z.string().trim().max(2000).nullable().optional(),price:z.number().positive().nullable().optional(),
     currency:z.string().length(3).optional(),unit:z.string().trim().min(1).max(20).optional(),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).nullable().optional(),
+    stockEnabled:z.boolean().optional(), stockQuantity:z.number().min(0).max(100000000).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).optional()
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
