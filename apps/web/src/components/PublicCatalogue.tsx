@@ -114,7 +114,9 @@ export function PublicCatalogue({
     setDetails(null);
     window.location.hash = "contact";
     window.setTimeout(() => {
-      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("contact")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   };
   const copyCatalogue = async () => {
