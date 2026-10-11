@@ -85,7 +85,6 @@ export function EnquiriesSection({
   }
   return (
     <section className="sl-section-card">
-      {datePickerStyles}
       <div className="sl-section-head">
         <div>
           <h3>Customer enquiries</h3>
@@ -416,6 +415,7 @@ export function ReportsSection({ setError = () => {} }: Props) {
   }, []);
   return (
     <section className="sl-section-card">
+      {datePickerStyles}
       <div className="sl-section-head">
         <div>
           <h3>Sales & payment reports</h3>
