@@ -533,7 +533,8 @@ export function ProductSection({
               <span className="sl-muted">Stock quantity</span>
               <div className="sl-product-stock-controls">
                 <input
-                  className="sl-input sl-stock-input"
+                  className="sl-stock-input"
+                  style={{ width: 132, minWidth: 0, boxSizing: "border-box", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#26372d", padding: "11px 13px", font: "inherit", outline: "none", boxShadow: "0 1px 2px rgba(20, 35, 25, 0.04)" }}
                   type="number"
                   min="0"
                   step="0.001"
