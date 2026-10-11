@@ -220,6 +220,7 @@ model SelloraProduct {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   catalogueItems CatalogueProduct[]
+  enquiries SelloraEnquiry[]
   stockMovements SelloraStockMovement[]
   @@index([businessId, createdAt])
   @@index([businessId, name])
@@ -237,6 +238,7 @@ model SelloraCatalogue {
   items       CatalogueProduct[]
   orders      SelloraOrder[]
   analyticsEvents CatalogueAnalyticsEvent[]
+  enquiries SelloraEnquiry[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   @@index([businessId, createdAt])
