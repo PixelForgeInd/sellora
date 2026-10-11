@@ -1061,8 +1061,8 @@ export default function SelloraApp() {
               <div>
                 <h3>Performance by catalogue</h3>
                 <p>
-                  Views, add-to-cart actions, checkout starts and submitted
-                  orders.
+                  Catalogue visits, product opens, cart additions, checkout starts,
+                  payment gateway launches and confirmed payments.
                 </p>
               </div>
             </div>
@@ -1115,12 +1115,24 @@ export default function SelloraApp() {
                             <b>{m.views}</b>
                           </span>
                           <span>
+                            <small>Unique visitors</small>
+                            <b>{m.uniqueVisitors ?? 0}</b>
+                          </span>
+                          <span>
+                            <small>Product details opened</small>
+                            <b>{m.productOpens ?? 0}</b>
+                          </span>
+                          <span>
                             <small>Add to cart</small>
                             <b>{m.addToCart}</b>
                           </span>
                           <span>
                             <small>Checkout starts</small>
                             <b>{m.checkoutStarted}</b>
+                          </span>
+                          <span>
+                            <small>Payment gateway opened</small>
+                            <b>{m.paymentGatewayOpened ?? 0}</b>
                           </span>
                           <span>
                             <small>Orders submitted</small>
