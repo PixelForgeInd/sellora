@@ -146,6 +146,7 @@ export default function SelloraApp() {
     if (b) setSellingMode(b.sellingMode || "CATALOG_ONLY");
     setProducts(p);
     setCatalogues(c);
+    try { setOrders(await api("/workspace/orders", {}, t)); } catch { /* Orders can refresh separately. */ }
   }
   async function addIndustryField(e: FormEvent) {
     e.preventDefault();
@@ -743,6 +744,7 @@ export default function SelloraApp() {
             { id: "overview", label: "Overview", icon: LayoutDashboard },
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
+            { id: "orders", label: "All orders", icon: ClipboardList },
             { id: "payments", label: "Payments", icon: CreditCard },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
