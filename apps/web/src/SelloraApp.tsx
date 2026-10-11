@@ -1528,6 +1528,27 @@ export default function SelloraApp() {
                               "Update status for order " +
                               (order.orderNumber || order.id)
                             }
+                            className="sl-fulfilment-select"
+                            style={{
+                              appearance: "none",
+                              WebkitAppearance: "none",
+                              minHeight: 44,
+                              minWidth: 154,
+                              padding: "10px 38px 10px 14px",
+                              border: "1px solid #dce5da",
+                              borderRadius: 12,
+                              backgroundColor: "#fff",
+                              backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23332f2f%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22m6 9 6 6 6-6%22/%3E%3C/svg%3E')",
+                              backgroundRepeat: "no-repeat",
+                              backgroundPosition: "right 12px center",
+                              color: "#332f2f",
+                              font: "inherit",
+                              fontWeight: 500,
+                              lineHeight: 1.35,
+                              boxShadow: "0 1px 2px rgba(28, 44, 33, 0.04)",
+                              cursor: ["DELIVERED", "CANCELLED"].includes(order.status) || String(order.id).startsWith("payment-") ? "not-allowed" : "pointer",
+                              outlineOffset: 2,
+                            }}
                             value={order.status || "PENDING"}
                             disabled={
                               ["DELIVERED", "CANCELLED"].includes(
