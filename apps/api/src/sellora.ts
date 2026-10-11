@@ -728,7 +728,7 @@ router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
     prisma.selloraOrder.findMany({where:{businessId:business.id},include:{catalogue:{select:{id:true,title:true,slug:true}},items:true},orderBy:{createdAt:"desc"}}),
     prisma.paymentOrder.findMany({where:{businessId:business.id},orderBy:{createdAt:"desc"}})
   ]);
-  const catalogueOrders=orders.map(order=>({...order,recordType:"CATALOGUE_ORDER",subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))}));
+  const catalogueOrders=orders.map(order=>({...order,recordType:"CATALOGUE_ORDER",paidAt:order.paymentStatus==="PAID"?order.updatedAt:null,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))}));
   const legacyOrders=payments.map(order=>({
     id:"payment-"+order.id,recordType:"PAYMENT_ORDER",orderNumber:order.id,
     businessId:order.businessId,catalogueId:null,catalogue:null,
@@ -736,7 +736,7 @@ router.get("/workspace/orders", requireAuth, authenticated(async (req,res) => {
     currency:order.currency,subtotal:order.amount.toString(),taxAmount:"0",totalAmount:order.amount.toString(),
     status:order.status==="PAID"?"CONFIRMED":order.status==="FAILED"?"PAYMENT_FAILED":"PENDING",
     paymentStatus:order.status,razorpayOrderId:order.razorpayOrderId,razorpayPaymentId:order.razorpayPaymentId,
-    createdAt:order.createdAt,updatedAt:order.updatedAt,items:[{id:"item-"+order.id,productName:order.productName,sku:null,quantity:order.quantity,unit:order.unit,unitPrice:order.amount.toString(),lineTotal:order.amount.toString()}]
+    createdAt:order.createdAt,paidAt:order.status==="PAID"?(order.paidAt||order.updatedAt):null,updatedAt:order.updatedAt,items:[{id:"item-"+order.id,productName:order.productName,sku:null,quantity:order.quantity,unit:order.unit,unitPrice:order.amount.toString(),lineTotal:order.amount.toString()}]
   }));
   res.json([...catalogueOrders,...legacyOrders].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime()));
 }));
