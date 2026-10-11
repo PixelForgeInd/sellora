@@ -832,11 +832,26 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
       });
       const prefix = sequence.slug.toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,32) || "COMPANY";
       const orderNumber = prefix + "-" + String(sequence.lastOrderNumber).padStart(5,"0");
-      return tx.selloraOrder.create({data:{
-        orderNumber,businessId:catalogue.businessId,catalogueId:catalogue.id,customerName:data.customerName,email:data.email||null,
+      const email=data.email?.trim().toLowerCase()||null;
+      let customer=await tx.selloraCustomer.findFirst({where:{businessId:catalogue.businessId,OR:[{phone:data.phone},...(email?[{email}]:[])]}});
+      if(customer) customer=await tx.selloraCustomer.update({where:{id:customer.id},data:{name:data.customerName,email:email||customer.email,phone:data.phone,address:data.address}});
+      else customer=await tx.selloraCustomer.create({data:{businessId:catalogue.businessId,name:data.customerName,email,phone:data.phone,address:data.address}});
+      const created=await tx.selloraOrder.create({data:{
+        orderNumber,businessId:catalogue.businessId,catalogueId:catalogue.id,customerId:customer.id,customerName:data.customerName,email,
         phone:data.phone,address:data.address,notes:data.notes||null,currency:"INR",subtotal:total,taxAmount,totalAmount:grandTotal,
         items:{create:orderItems}
       },select:{id:true,orderNumber:true,status:true,paymentStatus:true,currency:true,subtotal:true,createdAt:true}});
+      for(const [productId,quantity] of requested.entries()) {
+        const product=available.get(productId);
+        if(product?.stockEnabled) {
+          const stock=product.stockQuantity;
+          if(stock===null||stock===undefined||stock.lt(quantity)) throw Object.assign(new Error("Insufficient stock for "+product.name+"."),{status:409});
+          const changed=await tx.selloraProduct.updateMany({where:{id:productId,businessId:catalogue.businessId,stockEnabled:true,stockQuantity:{gte:new Prisma.Decimal(quantity)}},data:{stockQuantity:{decrement:new Prisma.Decimal(quantity)}}});
+          if(!changed.count) throw Object.assign(new Error("Stock changed while placing the order. Refresh the catalogue and try again."),{status:409});
+          await tx.selloraStockMovement.create({data:{businessId:catalogue.businessId,productId,orderId:created.id,quantityDelta:new Prisma.Decimal(-quantity),reason:"ORDER_RESERVED"}});
+        }
+      }
+      return created;
     });
     const razorpayOrder = await razorpayRequest<{id:string}>(
       keyId,keySecret,"/orders",
@@ -849,9 +864,21 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
       message:"Continue to Razorpay to complete your payment."
     });
   } catch (error) {
-    if (order) await prisma.selloraOrder.delete({where:{id:order.id}}).catch(()=>{});
+    const status = error && typeof error==="object" && "status" in error ? Number((error as {status?:number}).status) : 502;
+    if (order) {
+      await prisma.$transaction(async tx => {
+        for(const [productId,quantity] of requested.entries()) {
+          const product=available.get(productId);
+          if(product?.stockEnabled) {
+            await tx.selloraProduct.updateMany({where:{id:productId,businessId:catalogue.businessId,stockEnabled:true},data:{stockQuantity:{increment:new Prisma.Decimal(quantity)}}});
+            await tx.selloraStockMovement.create({data:{businessId:catalogue.businessId,productId,quantityDelta:new Prisma.Decimal(quantity),reason:"ORDER_RESERVATION_RELEASED",note:"Checkout could not be started."}});
+          }
+        }
+        await tx.selloraOrder.delete({where:{id:order!.id}});
+      }).catch(()=>{});
+    }
     const message = error instanceof Error ? error.message : "Could not start Razorpay checkout.";
-    res.status(502).json({error:"Could not start payment. " + message});
+    res.status(status===409?409:502).json({error:status===409?message:"Could not start payment. " + message});
   }
 });
 
