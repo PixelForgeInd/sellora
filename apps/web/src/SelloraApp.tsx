@@ -934,8 +934,14 @@ export default function SelloraApp() {
   }
 
   async function editOrderDetails(order: any) {
-    if (String(order.id).startsWith("payment-")) { setError("Legacy payment records cannot be edited here."); return; }
-    const customerName = window.prompt("Customer name", order.customerName || "");
+    if (String(order.id).startsWith("payment-")) {
+      setError("Legacy payment records cannot be edited here.");
+      return;
+    }
+    const customerName = window.prompt(
+      "Customer name",
+      order.customerName || "",
+    );
     if (customerName === null) return;
     const phone = window.prompt("Customer phone", order.phone || "");
     if (phone === null) return;
@@ -946,20 +952,50 @@ export default function SelloraApp() {
     const notes = window.prompt("Order notes", order.notes || "");
     if (notes === null) return;
     try {
-      const updated = await api("/workspace/orders/" + encodeURIComponent(order.id), { method: "PATCH", body: JSON.stringify({ customerName, phone, email, address, notes }) });
-      setOrders(old => old.map(item => item.id === updated.id ? { ...item, ...updated } : item));
+      const updated = await api(
+        "/workspace/orders/" + encodeURIComponent(order.id),
+        {
+          method: "PATCH",
+          body: JSON.stringify({ customerName, phone, email, address, notes }),
+        },
+      );
+      setOrders((old) =>
+        old.map((item) =>
+          item.id === updated.id ? { ...item, ...updated } : item,
+        ),
+      );
       setNotice("Order details updated.");
       setError("");
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not edit order."); }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not edit order.");
+    }
   }
 
   async function refundOrder(order: any) {
-    if (!window.confirm("Submit a full refund for " + (order.orderNumber || order.id) + " through Razorpay?")) return;
+    if (
+      !window.confirm(
+        "Submit a full refund for " +
+          (order.orderNumber || order.id) +
+          " through Razorpay?",
+      )
+    )
+      return;
     try {
-      const result = await api("/workspace/orders/" + encodeURIComponent(order.id) + "/refund", { method: "POST" });
-      setOrders(old => old.map(item => item.id === order.id ? { ...item, refundStatus: result.refundStatus } : item));
+      const result = await api(
+        "/workspace/orders/" + encodeURIComponent(order.id) + "/refund",
+        { method: "POST" },
+      );
+      setOrders((old) =>
+        old.map((item) =>
+          item.id === order.id
+            ? { ...item, refundStatus: result.refundStatus }
+            : item,
+        ),
+      );
       setNotice(result.message || "Refund submitted.");
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not submit refund."); }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not submit refund.");
+    }
   }
 
   const downloadBulkDeliverySlips = () => {
@@ -1488,10 +1524,36 @@ export default function SelloraApp() {
                             <option value="CANCELLED">Cancelled</option>
                           </select>
                         </label>
-                        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                          <Btn kind="outline" onClick={() => void editOrderDetails(order)} disabled={["DELIVERED","CANCELLED","DISPATCHED"].includes(order.status) || String(order.id).startsWith("payment-")}>Edit details</Btn>
-                          {order.recordType !== "PAYMENT_ORDER" && order.paymentStatus === "PAID" && order.refundStatus !== "REFUNDED" && <Btn kind="danger" onClick={() => void refundOrder(order)} disabled={order.refundStatus === "PENDING"}>{order.refundStatus === "PENDING" ? "Refund pending" : "Refund payment"}</Btn>}
-                          <Btn onClick={() => printDeliverySlip(order)}><Printer size={15} /> Print delivery slip</Btn>
+                        <div
+                          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+                        >
+                          <Btn
+                            kind="outline"
+                            onClick={() => void editOrderDetails(order)}
+                            disabled={
+                              ["DELIVERED", "CANCELLED", "DISPATCHED"].includes(
+                                order.status,
+                              ) || String(order.id).startsWith("payment-")
+                            }
+                          >
+                            Edit details
+                          </Btn>
+                          {order.recordType !== "PAYMENT_ORDER" &&
+                            order.paymentStatus === "PAID" &&
+                            order.refundStatus !== "REFUNDED" && (
+                              <Btn
+                                kind="danger"
+                                onClick={() => void refundOrder(order)}
+                                disabled={order.refundStatus === "PENDING"}
+                              >
+                                {order.refundStatus === "PENDING"
+                                  ? "Refund pending"
+                                  : "Refund payment"}
+                              </Btn>
+                            )}
+                          <Btn onClick={() => printDeliverySlip(order)}>
+                            <Printer size={15} /> Print delivery slip
+                          </Btn>
                         </div>
                       </div>
                       <div className="sl-order-customer">
