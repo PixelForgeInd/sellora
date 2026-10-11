@@ -1164,7 +1164,7 @@ export default function SelloraApp() {
                 : page === "settings" ? "Business settings"
                 : page === "payments" ? "Payments"
                 : "Workspace"}
-            </h1>       </h1>
+            </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
         </header>
