@@ -683,19 +683,49 @@ router.delete("/workspace/business/payment-gateway",requireAuth,authenticated(as
  await prisma.business.update({where:{id:b.id},data:{paymentGatewayProvider:null,paymentGatewayStatus:"NOT_CONNECTED",razorpayKeyId:null,razorpayKeySecretEncrypted:null,razorpayWebhookSecretEncrypted:null,sellingMode:"CATALOG_ONLY"}});
  res.json({status:"NOT_CONNECTED"});
 }));
-router.post("/webhooks/razorpay",async(req,res)=>{
- const raw=(req as Request & {rawBody?:Buffer}).rawBody,signature=String(req.headers["x-razorpay-signature"]||"");
- if(!raw||!signature)return res.status(400).json({error:"Missing webhook signature or raw payload."});
- const event=req.body as {event?:string;payload?:{payment?:{entity?:{order_id?:string;id?:string}};order?:{entity?:{id?:string}}}};
- const orderId=event.payload?.payment?.entity?.order_id||event.payload?.order?.entity?.id;
- if(!orderId)return res.json({received:true});
- const p=await prisma.paymentOrder.findUnique({where:{razorpayOrderId:orderId},include:{business:true}});
- if(!p?.business.razorpayWebhookSecretEncrypted)return res.status(400).json({error:"Webhook secret is not configured for this order."});
- const expected=crypto.createHmac("sha256",decryptPaymentSecret(p.business.razorpayWebhookSecretEncrypted)).update(raw).digest("hex");
- if(!safeEqualHex(signature,expected))return res.status(400).json({error:"Invalid webhook signature."});
- if(event.event==="payment.captured"||event.event==="order.paid")await prisma.paymentOrder.update({where:{id:p.id},data:{status:"PAID",razorpayPaymentId:event.payload?.payment?.entity?.id||p.razorpayPaymentId,paidAt:p.paidAt||new Date()}});
- else if(event.event==="payment.failed")await prisma.paymentOrder.update({where:{id:p.id},data:{status:"FAILED"}});
- res.json({received:true});
+router.post("/webhooks/razorpay", async (req,res) => {
+  const raw=(req as Request & {rawBody?:Buffer}).rawBody;
+  const signature=String(req.headers["x-razorpay-signature"]||"");
+  if(!raw||!signature)return res.status(400).json({error:"Missing webhook signature or raw payload."});
+  const event=req.body as {event?:string;payload?:{payment?:{entity?:{order_id?:string;id?:string}};order?:{entity?:{id?:string}};refund?:{entity?:{payment_id?:string;id?:string}}}};
+  const eventType=String(event.event||"unknown");
+  const orderId=event.payload?.payment?.entity?.order_id||event.payload?.order?.entity?.id;
+  const paymentId=event.payload?.payment?.entity?.id||event.payload?.refund?.entity?.payment_id;
+  let catalogueOrder = orderId ? await prisma.selloraOrder.findUnique({where:{razorpayOrderId:orderId},include:{business:true}}) : null;
+  if(!catalogueOrder && paymentId) catalogueOrder=await prisma.selloraOrder.findFirst({where:{razorpayPaymentId:paymentId},include:{business:true}});
+  const legacyPayment = orderId ? await prisma.paymentOrder.findUnique({where:{razorpayOrderId:orderId},include:{business:true}}) : null;
+  const business = catalogueOrder?.business || legacyPayment?.business;
+  if(!business?.razorpayWebhookSecretEncrypted)return res.status(400).json({error:"Webhook secret is not configured for this order."});
+  const expected=crypto.createHmac("sha256",decryptStoredGatewaySecret(business.razorpayWebhookSecretEncrypted)).update(raw).digest("hex");
+  if(!safeEqualHex(signature,expected))return res.status(400).json({error:"Invalid webhook signature."});
+  const eventId=String(req.headers["x-razorpay-event-id"]||crypto.createHash("sha256").update(raw).digest("hex"));
+  try {
+    await prisma.$transaction(async tx => {
+      await tx.paymentWebhookEvent.create({data:{businessId:business.id,eventId,eventType}});
+      if(catalogueOrder) {
+        if(eventType==="payment.captured"||eventType==="order.paid") {
+          await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{
+            paymentStatus:"PAID",razorpayPaymentId:paymentId||catalogueOrder.razorpayPaymentId,
+            status:catalogueOrder.status==="PENDING"?"CONFIRMED":catalogueOrder.status
+          }});
+        } else if(eventType==="payment.failed" && catalogueOrder.paymentStatus!=="PAID") {
+          await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{paymentStatus:"FAILED"}});
+        } else if(eventType==="refund.processed"||eventType==="payment.refunded") {
+          await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{refundStatus:"REFUNDED",paymentStatus:"REFUNDED"}});
+        } else if(eventType==="refund.failed") {
+          await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{refundStatus:"FAILED"}});
+        }
+      }
+      if(legacyPayment) {
+        if(eventType==="payment.captured"||eventType==="order.paid") await tx.paymentOrder.update({where:{id:legacyPayment.id},data:{status:"PAID",razorpayPaymentId:paymentId||legacyPayment.razorpayPaymentId,paidAt:legacyPayment.paidAt||new Date()}});
+        else if(eventType==="payment.failed" && legacyPayment.status!=="PAID") await tx.paymentOrder.update({where:{id:legacyPayment.id},data:{status:"FAILED"}});
+      }
+    });
+    res.json({received:true});
+  } catch(error) {
+    if(error && typeof error==="object" && "code" in error && (error as {code?:string}).code==="P2002") return res.json({received:true,duplicate:true});
+    throw error;
+  }
 });
 
 
