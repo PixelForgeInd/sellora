@@ -460,9 +460,13 @@ export function PublicCatalogue({
               )}
             </button>
           ) : (
-            <a className="sl-store-quote" href="#contact">
+            <button
+              type="button"
+              className="sl-store-quote"
+              onClick={() => startEnquiry()}
+            >
               Get a quote <ArrowRight size={15} />
-            </a>
+            </button>
           )}
           <span className="sl-powered-by">
             <b>SELLORA</b>
@@ -668,23 +672,13 @@ export function PublicCatalogue({
                       )}
                     </div>
                   ) : (
-                    <a
+                    <button
+                      type="button"
                       className="sl-store-enquire"
-                      href={
-                        wa === "#contact"
-                          ? "#contact"
-                          : "https://wa.me/" +
-                            data.business.phone!.replace(/\D/g, "") +
-                            "?text=" +
-                            encodeURIComponent(
-                              "Hi, I'm interested in " + p.name + ".",
-                            )
-                      }
-                      target={wa === "#contact" ? "_self" : "_blank"}
-                      rel="noreferrer"
+                      onClick={() => startEnquiry(p.id)}
                     >
                       <MessageCircle size={15} /> Enquire about this product
-                    </a>
+                    </button>
                   )}
                 </div>
               </article>
