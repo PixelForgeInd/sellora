@@ -518,8 +518,22 @@ export function CatalogueSection({
       ) : (
         <div className="sl-catalogue-grid">
           {catalogues.map((c) => (
-            <article className={"sl-catalogue-card" + (selectedCatalogueId === c.id ? " is-selected" : "")} key={c.id}>
-              <button type="button" aria-expanded={selectedCatalogueId === c.id} onClick={() => { const next = selectedCatalogueId === c.id ? "" : c.id; setSelectedCatalogueId(next); if (next) void loadAnalytics(c); }} className="sl-catalogue-cover sl-catalogue-open"
+            <article
+              className={
+                "sl-catalogue-card" +
+                (selectedCatalogueId === c.id ? " is-selected" : "")
+              }
+              key={c.id}
+            >
+              <button
+                type="button"
+                aria-expanded={selectedCatalogueId === c.id}
+                onClick={() => {
+                  const next = selectedCatalogueId === c.id ? "" : c.id;
+                  setSelectedCatalogueId(next);
+                  if (next) void loadAnalytics(c);
+                }}
+                className="sl-catalogue-cover sl-catalogue-open"
                 style={{ background: business.brandColor }}
               >
                 <span>{business.name.toUpperCase()}</span>
@@ -538,21 +552,61 @@ export function CatalogueSection({
                 {selectedCatalogueId === c.id && (
                   <div className="sl-catalogue-analytics-detail">
                     <div className="sl-section-head">
-                      <div><h4>Catalogue analytics</h4><p>Performance for this catalogue link</p></div>
-                      <Btn kind="outline" disabled={analyticsBusy === c.id} onClick={() => void loadAnalytics(c)}>{analyticsBusy === c.id ? "Loading…" : "Refresh"}</Btn>
+                      <div>
+                        <h4>Catalogue analytics</h4>
+                        <p>Performance for this catalogue link</p>
+                      </div>
+                      <Btn
+                        kind="outline"
+                        disabled={analyticsBusy === c.id}
+                        onClick={() => void loadAnalytics(c)}
+                      >
+                        {analyticsBusy === c.id ? "Loading…" : "Refresh"}
+                      </Btn>
                     </div>
                     {analytics[c.id] ? (
                       <div className="sl-analytics-metrics">
-                        <span><small>Catalogue opens</small><b>{analytics[c.id].views ?? 0}</b></span>
-                        <span><small>Unique visitors</small><b>{analytics[c.id].uniqueVisitors ?? 0}</b></span>
-                        <span><small>Product details opened</small><b>{analytics[c.id].productOpens ?? 0}</b></span>
-                        <span><small>Add to cart</small><b>{analytics[c.id].addToCart ?? 0}</b></span>
-                        <span><small>Checkout starts</small><b>{analytics[c.id].checkoutStarted ?? 0}</b></span>
-                        <span><small>Payment gateway opened</small><b>{analytics[c.id].paymentGatewayOpened ?? 0}</b></span>
-                        <span><small>Orders recorded</small><b>{analytics[c.id].orders ?? 0}</b></span>
-                        <span><small>Payments confirmed</small><b>{analytics[c.id].paymentsConfirmed ?? 0}</b></span>
+                        <span>
+                          <small>Catalogue opens</small>
+                          <b>{analytics[c.id].views ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Unique visitors</small>
+                          <b>{analytics[c.id].uniqueVisitors ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Product details opened</small>
+                          <b>{analytics[c.id].productOpens ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Add to cart</small>
+                          <b>{analytics[c.id].addToCart ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Checkout starts</small>
+                          <b>{analytics[c.id].checkoutStarted ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Payment gateway opened</small>
+                          <b>{analytics[c.id].paymentGatewayOpened ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Orders recorded</small>
+                          <b>{analytics[c.id].orders ?? 0}</b>
+                        </span>
+                        <span>
+                          <small>Payments confirmed</small>
+                          <b>{analytics[c.id].paymentsConfirmed ?? 0}</b>
+                        </span>
                       </div>
-                    ) : analyticsBusy === c.id ? <p>Loading catalogue metrics…</p> : <p>Analytics could not be loaded yet. Use Refresh to try again.</p>}
+                    ) : analyticsBusy === c.id ? (
+                      <p>Loading catalogue metrics…</p>
+                    ) : (
+                      <p>
+                        Analytics could not be loaded yet. Use Refresh to try
+                        again.
+                      </p>
+                    )}
                   </div>
                 )}
                 <div className="sl-catalogue-actions">
