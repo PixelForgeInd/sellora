@@ -1086,6 +1086,14 @@ router.patch("/workspace/enquiries/:id", requireAuth, authenticated(async (req,r
 router.get("/workspace/customers", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const legacyPayments=await prisma.paymentOrder.findMany({where:{businessId:business.id},select:{customerName:true,customerEmail:true,customerPhone:true}});
+  for(const legacy of legacyPayments) {
+    const email=legacy.customerEmail?.toLowerCase()||null;
+    const phone=legacy.customerPhone||null;
+    if(!email&&!phone) continue;
+    const existing=await prisma.selloraCustomer.findFirst({where:{businessId:business.id,OR:[...(phone?[{phone}]:[]),...(email?[{email}]:[])]}});
+    if(!existing) await prisma.selloraCustomer.create({data:{businessId:business.id,name:legacy.customerName,email,phone}});
+  }
   const customers = await prisma.selloraCustomer.findMany({
     where:{businessId:business.id},
     include:{orders:{orderBy:{createdAt:"desc"},include:{items:true}},enquiries:{orderBy:{createdAt:"desc"},select:{id:true,reference:true,status:true,createdAt:true,message:true}}},
