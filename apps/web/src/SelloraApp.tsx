@@ -745,7 +745,6 @@ export default function SelloraApp() {
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
             { id: "orders", label: "All orders", icon: ClipboardList },
-            { id: "analytics", label: "Catalogue analytics", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
