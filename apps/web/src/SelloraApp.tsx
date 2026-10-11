@@ -2039,7 +2039,6 @@ export default function SelloraApp() {
         )}
         <footer className="sl-workspace-footer">
           Sellora · Digital Catalogues. Smarter Sales.{" "}
-          <span>Phase 1–6 MVP + selling mode</span>
         </footer>
       </main>
       {modal === "product" && (
