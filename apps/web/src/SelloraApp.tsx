@@ -957,6 +957,19 @@ export default function SelloraApp() {
             publish={publish}
             share={share}
             shareWhatsApp={shareWhatsApp}
+            analytics={analytics}
+            analyticsBusy={analyticsBusy}
+            loadAnalytics={async (catalogue) => {
+              setAnalyticsBusy(catalogue.id);
+              try {
+                const result = await api("/workspace/catalogues/" + catalogue.id + "/analytics");
+                setAnalytics((old) => ({ ...old, [catalogue.id]: result }));
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "Could not load catalogue analytics");
+              } finally {
+                setAnalyticsBusy("");
+              }
+            }}
           />
         )}
         {page === "orders" && (
