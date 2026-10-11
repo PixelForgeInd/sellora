@@ -415,10 +415,7 @@ export function ReportsSection({ setError = () => {} }: Props) {
       <div className="sl-section-head">
         <div>
           <h3>Sales & payment reports</h3>
-          <p>
-            Order and enquiry counts use creation date. Revenue uses verified
-            payment timestamps and includes legacy Razorpay records.
-          </p>
+          <p>Choose a date range to prepare a report. Report figures and order details are not displayed on this page.</p>
         </div>
       </div>
       <div className="sl-orders-filters">
@@ -446,66 +443,9 @@ export function ReportsSection({ setError = () => {} }: Props) {
           {busy ? "Loading…" : "Apply dates"}
         </Btn>
       </div>
-      {report && (
-        <>
-          <div className="sl-stat-grid">
-            <div>
-              <span>ORDERS</span>
-              <strong>{report.orderCount}</strong>
-              <small>Created in selected period</small>
-            </div>
-            <div>
-              <span>PAID ORDERS</span>
-              <strong>{report.paidOrderCount}</strong>
-              <small>Payments verified in period</small>
-            </div>
-            <div>
-              <span>VERIFIED REVENUE</span>
-              <strong>{moneyINR(report.paidTotal)}</strong>
-              <small>Captured payments</small>
-            </div>
-            <div>
-              <span>ENQUIRIES</span>
-              <strong>{report.enquiryCount}</strong>
-              <small>Submitted in period</small>
-            </div>
-            <div>
-              <span>ACTIVE PRODUCTS</span>
-              <strong>{report.activeProductCount}</strong>
-              <small>Current catalogue</small>
-            </div>
-            <div>
-              <span>STOCK MOVEMENTS</span>
-              <strong>{report.stockMovementCount}</strong>
-              <small>Recorded in period</small>
-            </div>
-          </div>
-          <div style={{ overflowX: "auto" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Date</th>
-                  <th>Fulfilment</th>
-                  <th>Payment</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.orders.map((o: any) => (
-                  <tr key={o.id}>
-                    <td>{o.orderNumber}</td>
-                    <td>{new Date(o.createdAt).toLocaleDateString()}</td>
-                    <td>{o.status}</td>
-                    <td>{o.paymentStatus}</td>
-                    <td>{moneyINR(o.totalAmount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      <div className="sl-report-private-note">
+        <p>Report figures and order details are hidden in this view.</p>
+      </div>
     </section>
   );
 }
