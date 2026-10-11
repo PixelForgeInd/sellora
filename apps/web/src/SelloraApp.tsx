@@ -1144,20 +1144,19 @@ export default function SelloraApp() {
           <div>
             <span className="sl-kicker">SELLORA WORKSPACE</span>
             <h1>
-              {page === "overview"
-                ? "Your business at a glance"
-                : page === "products"
-                  ? "Your products"
-                  : page === "catalogues"
-                    ? "Your catalogues"
-                    : page === "launch"
-                      ? "Launch checklist"
-                      : page === "settings"
-                        ? "Business settings"
-                        : page === "payments"
-                          ? "Payments"
-                          : "Workspace"}
-            </h1>
+              {page === "overview" ? "Your business at a glance"
+                : page === "products" ? "Your products"
+                : page === "catalogues" ? "Your catalogues"
+                : page === "orders" ? "Customer orders"
+                : page === "enquiries" ? "Customer enquiries"
+                : page === "inventory" ? "Inventory management"
+                : page === "customers" ? "Customer directory"
+                : page === "reports" ? "Sales reports"
+                : page === "launch" ? "Launch checklist"
+                : page === "settings" ? "Business settings"
+                : page === "payments" ? "Payments"
+                : "Workspace"}
+            </h1>       </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
         </header>
@@ -1228,18 +1227,15 @@ export default function SelloraApp() {
                 <span>PAYMENTS RECEIVED TODAY</span>
                 <CreditCard />
                 <strong>
-                  {money(
+                  {formatCurrency(
                     orders
                       .filter(
                         (o: any) =>
-                          (o.paymentStatus === "PAID" ||
-                            o.status === "CONFIRMED" ||
-                            o.status === "PAID") &&
-                          (o.paidAt || o.updatedAt) &&
-                          new Date(o.paidAt || o.updatedAt).toLocaleDateString(
-                            "en-CA",
-                            { timeZone: "Asia/Kolkata" },
-                          ) ===
+                          o.paymentStatus === "PAID" &&
+                          o.paidAt &&
+                          new Date(o.paidAt).toLocaleDateString("en-CA", {
+                            timeZone: "Asia/Kolkata",
+                          }) ===
                             new Date().toLocaleDateString("en-CA", {
                               timeZone: "Asia/Kolkata",
                             }),
