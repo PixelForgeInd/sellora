@@ -348,28 +348,31 @@ export function ReportsSection({ setError = () => {} }: Props) {
         padding: 11px 14px;
         border: 1px solid #dce5da;
         border-radius: 12px;
-        background: #fff;
+        background: #f9faf7;
         color: #26372d;
         font: inherit;
         font-size: 15px;
         line-height: 1.35;
-        box-shadow: 0 1px 2px rgba(28, 44, 33, 0.04);
+        box-shadow: none;
         accent-color: #599c56;
         color-scheme: light;
         cursor: pointer;
-        transition: border-color 150ms ease, box-shadow 150ms ease;
+        transition: border-color 150ms ease, background-color 150ms ease;
       }
       .sl-section-card .sl-report-date-input:hover {
-        border-color: #aabca6;
+        border-color: #cbd8c8;
+        background: #fff;
       }
+      .sl-section-card .sl-report-date-input:focus,
       .sl-section-card .sl-report-date-input:focus-visible {
-        outline: 2px solid #599c56;
-        outline-offset: 2px;
+        outline: none;
         border-color: #599c56;
+        box-shadow: 0 0 0 3px rgba(89, 156, 86, 0.14);
+        background: #fff;
       }
       .sl-section-card .sl-report-date-input::-webkit-calendar-picker-indicator {
         cursor: pointer;
-        opacity: 0.72;
+        opacity: 0.65;
         margin-left: 8px;
       }
       @media (max-width: 640px) {
@@ -425,7 +428,7 @@ export function ReportsSection({ setError = () => {} }: Props) {
         <label>
           From{" "}
           <input
-            className="sl-report-date-input"
+            className="sl-report-date-input sl-orders-date-input"
             type="date"
             value={from}
             max={to}
