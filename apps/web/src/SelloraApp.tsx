@@ -238,8 +238,11 @@ export default function SelloraApp() {
         industry: updated.industry,
         productCategory: updated.productCategory,
         businessModel: updated.businessModel,
+        email: updated.email || "",
         phone: updated.phone || "",
+        address: updated.address || "",
         website: updated.website || "",
+        logoUrl: updated.logoUrl || "",
         brandColor: updated.brandColor,
       });
       setNotice("Business details updated.");
