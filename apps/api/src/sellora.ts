@@ -9,11 +9,14 @@ import { promisify } from "node:util";
 
 const router = Router();
 const prisma = new PrismaClient();
-const imageUploadDir = path.resolve(process.env.UPLOAD_DIR || "./uploads");
-fs.mkdirSync(imageUploadDir, { recursive: true });
+function getImageUploadDir() {
+  const directory = path.resolve(process.env.UPLOAD_DIR || "./uploads");
+  fs.mkdirSync(directory, { recursive: true });
+  return directory;
+}
 const productImageUpload = multer({
   storage: multer.diskStorage({
-    destination: (_req, _file, callback) => callback(null, imageUploadDir),
+    destination: (_req, _file, callback) => { try { callback(null, getImageUploadDir()); } catch (error) { callback(error as Error, ""); } },
     filename: (_req, file, callback) => {
       const ext = ({ "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif" } as Record<string,string>)[file.mimetype];
       callback(null, crypto.randomUUID() + ext);
@@ -544,7 +547,7 @@ router.post("/workspace/products/:id/image", requireAuth, productImageUpload.sin
   const imageUrl = publicApiOrigin + "/uploads/" + file.filename;
   await prisma.selloraProduct.update({where:{id:product.id},data:{imageUrl}});
   if (product.imageUrl?.startsWith("/uploads/")) {
-    await fs.promises.unlink(path.join(imageUploadDir, path.basename(product.imageUrl))).catch(()=>{});
+    await fs.promises.unlink(path.join(getImageUploadDir(), path.basename(product.imageUrl))).catch(()=>{});
   }
   res.status(201).json({imageUrl});
 }));
