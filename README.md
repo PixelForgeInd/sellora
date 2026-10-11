@@ -10,7 +10,10 @@ Sellora is a self-service B2B catalogue platform. Businesses create an account, 
 4. Generic product library: SKU, description, optional price, currency, unit, image URL and industry-specific fields.
 5. Catalogue builder: create catalogues and choose which business-owned products they contain.
 6. Publish/share: publish or unpublish and share a public route at /c/:slug.
-7. Selling preferences: business owners can switch between catalogue-only and catalogue + online payments from dashboard Settings. Razorpay credentials can be configured in Settings; checkout creates server-side orders, verifies payment signatures and stores payment records.
+7. Selling preferences and payments: business owners can switch between catalogue-only and catalogue + online payments from Settings. Razorpay credentials are encrypted; checkout verifies payment signatures, webhooks reconcile asynchronous events idempotently, and verified payment timestamps power reports.
+8. Customer operations: public product enquiries are saved per business and managed in the Enquiries page; the customer directory combines enquiries and catalogue orders.
+9. Inventory: stock can be enabled and adjusted per product, stock movements are audited, and checkout reserves available stock atomically. Cancellation and confirmed refunds return reserved stock.
+10. Operations: the dashboard includes customer order detail editing, fulfilment status controls, full Razorpay refunds for verified paid catalogue orders, date-filtered reports, and product image upload/removal.
 
 The previous yarn-specific data models remain. Generic Sellora models are additive. Legacy yarn records are not automatically copied into a new workspace because the old records do not have reliable tenant ownership; importing them needs a deliberate mapping step.
 
@@ -49,9 +52,13 @@ For an existing development database, back it up before applying the new migrati
 
 ## Main API routes
 
-- POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me
+- POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me, PATCH /api/auth/password, POST /api/auth/password/forgot, POST /api/auth/password/reset
 - GET /api/workspace/business, POST /api/workspace/business
-- GET/POST /api/workspace/products, PATCH/DELETE /api/workspace/products/:id
+- GET/POST /api/workspace/products, PATCH/DELETE /api/workspace/products/:id, POST /api/workspace/products/:id/image
+- GET /api/workspace/enquiries, PATCH /api/workspace/enquiries/:id; POST /api/public/catalogues/:slug/enquiries
+- GET /api/workspace/inventory, POST /api/workspace/inventory/:productId/adjust
+- GET /api/workspace/customers, GET /api/workspace/reports
+- PATCH /api/workspace/orders/:id, PATCH /api/workspace/orders/:id/status, POST /api/workspace/orders/:id/refund
 - GET/POST /api/workspace/catalogues, PATCH /api/workspace/catalogues/:id
 - GET /api/public/catalogues/:slug
 - PATCH /api/workspace/business/settings (authenticated; accepts `sellingMode: CATALOG_ONLY | ONLINE_PAYMENTS`)
@@ -72,10 +79,10 @@ Workspace routes require Authorization: Bearer <token>. Product and catalogue op
 This is an MVP foundation, not a production launch approval.
 
 - Set a strong, unique AUTH_SECRET; never use the development fallback in production.
-- Add rate limiting, email verification, password reset, session revocation and abuse controls.
+- Add rate limiting, email verification, session revocation and abuse controls. Password recovery email delivery uses Resend and requires RESEND_API_KEY plus a verified MAIL_FROM sender.
 - Restrict or remove legacy unauthenticated admin endpoints in apps/api/src/index.ts before public deployment.
-- Add automated API/browser tests, including cross-tenant authorization tests.
-- Add image uploads/storage, catalogue SEO metadata and enquiry/order capture.
+- Add broader automated API/browser tests, including payment-webhook signature/idempotency tests, stock-concurrency tests and cross-tenant authorization tests.
+- Product images are stored on the API filesystem; production must mount a persistent volume at UPLOAD_DIR and configure PUBLIC_API_URL. Object storage/CDN integration and image lifecycle cleanup for all deployment topologies remain future hardening.
 - Configure HTTPS, production CORS, secret management, backups and monitoring.
 - Run migrations against a backed-up staging database before production.
 
