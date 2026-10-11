@@ -676,6 +676,40 @@ router.get("/public/catalogues/:slug", async (req,res) => {
 });
 
 
+router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
+  const data = z.object({
+    customerName:z.string().trim().min(2).max(120),
+    email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
+    phone:z.string().trim().max(30).optional(),
+    companyName:z.string().trim().max(160).optional(),
+    message:z.string().trim().min(3).max(2000),
+    productId:z.string().optional()
+  }).refine(v => Boolean(v.phone?.trim() || v.email?.trim()), {message:"Provide a phone number or email address."}).parse(req.body);
+  const catalogue = await prisma.selloraCatalogue.findFirst({
+    where:{slug:String(req.params.slug),isPublished:true},
+    include:{business:{select:{id:true}},items:{select:{productId:true}}}
+  });
+  if (!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  if (data.productId && !catalogue.items.some(item=>item.productId===data.productId)) {
+    return res.status(400).json({error:"This product is not part of the published catalogue."});
+  }
+  const reference = "ENQ-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+  const enquiry = await prisma.$transaction(async tx => {
+    const email = data.email?.trim().toLowerCase() || null;
+    const phone = data.phone?.trim() || null;
+    let customer = phone ? await tx.selloraCustomer.findFirst({where:{businessId:catalogue.business.id,phone}}) : null;
+    if (!customer && email) customer = await tx.selloraCustomer.findFirst({where:{businessId:catalogue.business.id,email}});
+    if (customer) customer = await tx.selloraCustomer.update({where:{id:customer.id},data:{name:data.customerName,email:email||customer.email,phone:phone||customer.phone}});
+    else customer = await tx.selloraCustomer.create({data:{businessId:catalogue.business.id,name:data.customerName,email,phone,notes:data.companyName || null}});
+    return tx.selloraEnquiry.create({data:{
+      reference,businessId:catalogue.business.id,catalogueId:catalogue.id,productId:data.productId||null,
+      customerId:customer.id,customerName:data.customerName,email,phone,companyName:data.companyName||null,message:data.message
+    },select:{reference:true,createdAt:true}});
+  });
+  await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"enquiry_submitted",metadata:{reference:enquiry.reference,productId:data.productId||""}}}).catch(()=>{});
+  res.status(201).json({success:true,reference:enquiry.reference,message:"Your enquiry has been sent to the business."});
+});
+
 router.post("/public/catalogues/:slug/orders", async (req,res) => {
 
   const catalogue=await prisma.selloraCatalogue.findFirst({
@@ -851,6 +885,62 @@ router.patch("/workspace/orders/:id/status", requireAuth, authenticated(async (r
     select:{id:true,orderNumber:true,status:true,paymentStatus:true,updatedAt:true}
   });
   res.json(updated);
+}));
+
+router.get("/workspace/enquiries", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const enquiries = await prisma.selloraEnquiry.findMany({where:{businessId:business.id},include:{catalogue:{select:{title:true,slug:true}},product:{select:{name:true,sku:true}},customer:{select:{id:true,name:true,email:true,phone:true}}},orderBy:{createdAt:"desc"}});
+  res.json(enquiries);
+}));
+
+router.patch("/workspace/enquiries/:id", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({status:z.enum(["NEW","CONTACTED","QUOTATION_SENT","CONVERTED","LOST"]),message:z.string().trim().max(2000).optional()}).parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const enquiry = await prisma.selloraEnquiry.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true}});
+  if (!enquiry) return res.status(404).json({error:"Enquiry not found."});
+  res.json(await prisma.selloraEnquiry.update({where:{id:enquiry.id},data,include:{catalogue:{select:{title:true}},product:{select:{name:true}},customer:{select:{id:true,name:true,email:true,phone:true}}}}));
+}));
+
+router.get("/workspace/customers", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const customers = await prisma.selloraCustomer.findMany({
+    where:{businessId:business.id},
+    include:{orders:{orderBy:{createdAt:"desc"},include:{items:true}},enquiries:{orderBy:{createdAt:"desc"},select:{id:true,reference:true,status:true,createdAt:true,message:true}}},
+    orderBy:{updatedAt:"desc"}
+  });
+  res.json(customers.map(customer=>({
+    ...customer,
+    orders:customer.orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))}))
+  })));
+}));
+
+router.get("/workspace/reports", requireAuth, authenticated(async (req,res) => {
+  const query = z.object({from:z.string().datetime().optional(),to:z.string().datetime().optional()}).parse(req.query);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const from = query.from ? new Date(query.from) : new Date(Date.now()-30*24*60*60*1000);
+  const to = query.to ? new Date(query.to) : new Date();
+  if (from > to) return res.status(400).json({error:"Report start date must be before the end date."});
+  const where = {businessId:business.id,createdAt:{gte:from,lte:to}};
+  const [orders, enquiries, products, movements] = await Promise.all([
+    prisma.selloraOrder.findMany({where,select:{id:true,orderNumber:true,status:true,paymentStatus:true,subtotal:true,taxAmount:true,totalAmount:true,createdAt:true}}),
+    prisma.selloraEnquiry.count({where:{businessId:business.id,createdAt:{gte:from,lte:to}}}),
+    prisma.selloraProduct.count({where:{businessId:business.id,isActive:true}}),
+    prisma.selloraStockMovement.count({where:{businessId:business.id,createdAt:{gte:from,lte:to}}})
+  ]);
+  const paid = orders.filter(order=>order.paymentStatus==="PAID");
+  res.json({
+    from:from.toISOString(),to:to.toISOString(),orderCount:orders.length,
+    paidOrderCount:paid.length,unpaidOrderCount:orders.length-paid.length,
+    paidSubtotal:paid.reduce((sum,order)=>sum.add(order.subtotal),new Prisma.Decimal(0)).toString(),
+    paidTax:paid.reduce((sum,order)=>sum.add(order.taxAmount),new Prisma.Decimal(0)).toString(),
+    paidTotal:paid.reduce((sum,order)=>sum.add(order.totalAmount),new Prisma.Decimal(0)).toString(),
+    enquiryCount:enquiries,activeProductCount:products,stockMovementCount:movements,
+    orders:orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString()}))
+  });
 }));
 
 router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(async (req,res) => {
