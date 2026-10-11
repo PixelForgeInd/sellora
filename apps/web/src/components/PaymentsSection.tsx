@@ -42,8 +42,7 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
       const matchesDate = new Date(p.createdAt).getTime() >= cutoff;
       const matchesQuery = !q || [p.id,p.orderNumber,p.productName,p.customerName,p.customerEmail,p.customerPhone,p.razorpayOrderId,p.razorpayPaymentId].some(v => String(v || "").toLowerCase().includes(q));
       return matchesStatus && matchesDate && matchesQuery;
-    });
-  }).sort((a,b) => sort === "oldest" ? Date.parse(a.createdAt)-Date.parse(b.createdAt) : sort === "amount-high" ? Number(b.totalAmount || b.amount)-Number(a.totalAmount || a.amount) : sort === "amount-low" ? Number(a.totalAmount || a.amount)-Number(b.totalAmount || b.amount) : Date.parse(b.createdAt)-Date.parse(a.createdAt));
+    }).sort((a,b) => sort === "oldest" ? Date.parse(a.createdAt)-Date.parse(b.createdAt) : sort === "amount-high" ? Number(b.totalAmount || b.amount)-Number(a.totalAmount || a.amount) : sort === "amount-low" ? Number(a.totalAmount || a.amount)-Number(b.totalAmount || b.amount) : Date.parse(b.createdAt)-Date.parse(a.createdAt));
   }, [payments, query, status, range, sort]);
 
   const paid = payments.filter(p => p.status === "PAID");
