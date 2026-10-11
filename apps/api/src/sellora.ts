@@ -458,7 +458,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
   const product = await prisma.selloraProduct.create({data:{
     businessId:business.id,name:data.name,sku:data.sku || null,description:data.description || null,
     price:data.price === undefined ? null : new Prisma.Decimal(data.price),currency:data.currency,unit:data.unit,
-    imageUrl:data.imageUrl || null,fields:data.fields
+    imageUrl:data.imageUrl || null,stockEnabled:data.stockEnabled,stockQuantity:data.stockEnabled && data.stockQuantity !== undefined && data.stockQuantity !== null ? new Prisma.Decimal(data.stockQuantity) : null,fields:data.fields
   }});
   res.status(201).json(product);
 }));
@@ -489,6 +489,52 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
   }});
   res.json(product);
 }));
+router.post("/workspace/products/:id/image", requireAuth, productImageUpload.single("image"), authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  const file = (req as AuthedRequest & {file?: Express.Multer.File}).file;
+  if (!business) {
+    if (file) await fs.promises.unlink(file.path).catch(()=>{});
+    return res.status(409).json({error:"Complete business setup first."});
+  }
+  const product = await prisma.selloraProduct.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true,imageUrl:true}});
+  if (!product) {
+    if (file) await fs.promises.unlink(file.path).catch(()=>{});
+    return res.status(404).json({error:"Product not found."});
+  }
+  if (!file) return res.status(400).json({error:"Choose a PNG, JPEG, WebP or GIF image up to 5 MB."});
+  const imageUrl = "/uploads/" + file.filename;
+  await prisma.selloraProduct.update({where:{id:product.id},data:{imageUrl}});
+  if (product.imageUrl?.startsWith("/uploads/")) {
+    await fs.promises.unlink(path.join(imageUploadDir, path.basename(product.imageUrl))).catch(()=>{});
+  }
+  res.status(201).json({imageUrl});
+}));
+
+router.get("/workspace/inventory", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const products = await prisma.selloraProduct.findMany({where:{businessId:business.id},orderBy:{name:"asc"},select:{id:true,name:true,sku:true,unit:true,stockEnabled:true,stockQuantity:true,updatedAt:true}});
+  const movements = await prisma.selloraStockMovement.findMany({where:{businessId:business.id},include:{product:{select:{name:true,sku:true}},order:{select:{orderNumber:true}}},orderBy:{createdAt:"desc"},take:100});
+  res.json({products,movements});
+}));
+
+router.post("/workspace/inventory/:productId/adjust", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({quantity:z.number().min(0).max(100000000),reason:z.enum(["RECEIVED","ADJUSTMENT","RETURNED"]),note:z.string().trim().max(500).optional()}).parse(req.body);
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) return res.status(409).json({error:"Complete business setup first."});
+  const result = await prisma.$transaction(async tx => {
+    const product = await tx.selloraProduct.findFirst({where:{id:String(req.params.productId),businessId:business.id},select:{id:true,stockEnabled:true,stockQuantity:true}});
+    if (!product) throw Object.assign(new Error("Product not found."),{status:404});
+    const current = product.stockEnabled && product.stockQuantity ? product.stockQuantity : new Prisma.Decimal(0);
+    const next = new Prisma.Decimal(data.quantity);
+    const delta = next.sub(current);
+    await tx.selloraProduct.update({where:{id:product.id},data:{stockEnabled:true,stockQuantity:next}});
+    if (!delta.isZero()) await tx.selloraStockMovement.create({data:{businessId:business.id,productId:product.id,quantityDelta:delta,reason:data.reason,note:data.note || null}});
+    return {productId:product.id,stockEnabled:true,stockQuantity:next.toString(),movement:delta.toString()};
+  });
+  res.json(result);
+}));
+
 router.delete("/workspace/products/:id", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(404).json({error:"Business not found."});
