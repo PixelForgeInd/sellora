@@ -530,11 +530,16 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     const fieldError = validateProductFields(mergedFields, definitions);
     if (fieldError) return res.status(400).json({error:fieldError});
   }
-  const {price,...rest}=data;
+  const {price,stockQuantity,...rest}=data;
   const product=await prisma.selloraProduct.update({where:{id:owned.id},data:{
     ...rest,imageUrl:rest.imageUrl === "" ? null : rest.imageUrl,
+    ...(stockQuantity !== undefined ? {stockQuantity:stockQuantity===null?null:new Prisma.Decimal(stockQuantity)} : {}),
+    ...(rest.stockEnabled === false ? {stockQuantity:null} : {}),
     ...(price !== undefined ? {price:price===null?null:new Prisma.Decimal(price)} : {})
   }});
+  if(owned.imageUrl?.startsWith("/uploads/") && product.imageUrl!==owned.imageUrl) {
+    await fs.promises.unlink(path.join(getImageUploadDir(),path.basename(owned.imageUrl))).catch(()=>{});
+  }
   res.json(product);
 }));
 router.post("/workspace/products/:id/image", requireAuth, productImageUpload.single("image"), authenticated(async (req,res) => {
