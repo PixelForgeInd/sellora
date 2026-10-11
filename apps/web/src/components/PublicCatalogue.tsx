@@ -112,10 +112,10 @@ export function PublicCatalogue({
     setEnquiryError("");
     setEnquirySuccess("");
     setDetails(null);
-    window.location.hash = "contact";
+    window.location.hash = "enquiry-form";
     window.setTimeout(() => {
       document
-        .getElementById("contact")
+        .getElementById("enquiry-form")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   };
@@ -791,6 +791,7 @@ export function PublicCatalogue({
         </section>
         <section
           className="sl-store-contact"
+          id="enquiry-form"
           aria-label="Send a product enquiry"
         >
           <div style={{ width: "100%", maxWidth: 760, margin: "0 auto" }}>
