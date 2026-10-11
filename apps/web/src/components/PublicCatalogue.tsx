@@ -642,7 +642,10 @@ export function PublicCatalogue({
                   </div>
                   {isOutOfStock(p) ? (
                     <div className="sl-store-cart-cta">
-                      <p className="sl-store-out-of-stock-message" role="status">
+                      <p
+                        className="sl-store-out-of-stock-message"
+                        role="status"
+                      >
                         Currently unavailable. Please enquire for availability.
                       </p>
                       <button
@@ -1046,21 +1049,26 @@ export function PublicCatalogue({
               </button>
               {isOutOfStock(details) ? (
                 <p className="sl-store-out-of-stock-message" role="status">
-                  Out of stock — checkout is unavailable. Please enquire for availability.
+                  Out of stock — checkout is unavailable. Please enquire for
+                  availability.
                 </p>
-              ) : data.checkoutReady && !demo && details.price != null && (
-                <button
-                  className="sl-store-contact-primary"
-                  onClick={() => {
-                    addToCart(details);
-                    recordEvent("add_to_cart");
-                    setDetails(null);
-                    setCheckoutStep("cart");
-                    setCartOpen(true);
-                  }}
-                >
-                  <Package size={16} /> Add to cart
-                </button>
+              ) : (
+                data.checkoutReady &&
+                !demo &&
+                details.price != null && (
+                  <button
+                    className="sl-store-contact-primary"
+                    onClick={() => {
+                      addToCart(details);
+                      recordEvent("add_to_cart");
+                      setDetails(null);
+                      setCheckoutStep("cart");
+                      setCartOpen(true);
+                    }}
+                  >
+                    <Package size={16} /> Add to cart
+                  </button>
+                )
               )}
             </div>
           </section>
