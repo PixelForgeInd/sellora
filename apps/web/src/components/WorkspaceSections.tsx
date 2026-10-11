@@ -563,7 +563,6 @@ export function ProductSection({
           </article>
         ))
       )}
-
     </section>
   );
 }
