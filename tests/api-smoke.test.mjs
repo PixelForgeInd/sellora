@@ -64,6 +64,29 @@ test("legacy product endpoints remain retired", async () => {
   }
 });
 
+test("password recovery avoids account enumeration and rejects invalid tokens", async () => {
+  const forgot = await jsonRequest("/api/auth/password/forgot", {
+    method: "POST",
+    body: { email: "unknown-account@example.test" },
+  });
+  assert.equal(forgot.status, 200);
+  assert.match((await forgot.json()).message, /if an account exists/i);
+
+  const reset = await jsonRequest("/api/auth/password/reset", {
+    method: "POST",
+    body: { token: "invalid-reset-token-that-is-long-enough", newPassword: "New-password-456!" },
+  });
+  assert.equal(reset.status, 400);
+});
+
+test("Razorpay webhook rejects unsigned payloads", async () => {
+  const response = await jsonRequest("/api/webhooks/razorpay", {
+    method: "POST",
+    body: { event: "payment.captured", payload: { payment: { entity: { order_id: "untrusted-order" } } } },
+  });
+  assert.equal(response.status, 400);
+});
+
 test("signup and login reject malformed input", async () => {
   const signup = await jsonRequest("/api/auth/signup", {
     method: "POST",
