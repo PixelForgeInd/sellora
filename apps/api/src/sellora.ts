@@ -720,7 +720,7 @@ router.post("/webhooks/razorpay", async (req,res) => {
                 if(!item.productId) continue;
                 const product=await tx.selloraProduct.findFirst({where:{id:item.productId,businessId:business.id},select:{id:true,stockEnabled:true}});
                 if(product?.stockEnabled) {
-                  await tx.selloraProduct.update({where:{id:product.id},data:{stockQuantity:{increment:new Prisma.Decimal(item.quantity)}});
+                  await tx.selloraProduct.update({where:{id:product.id},data:{stockQuantity:{increment:new Prisma.Decimal(item.quantity)}}});
                   await tx.selloraStockMovement.create({data:{businessId:business.id,productId:product.id,orderId:current.id,quantityDelta:new Prisma.Decimal(item.quantity),reason:"ORDER_REFUNDED"}});
                 }
               }
