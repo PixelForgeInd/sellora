@@ -64,6 +64,9 @@ export function PublicCatalogue({
     }[];
   } | null>(null);
   const products = data?.products || [];
+  const isOutOfStock = (p: Product) =>
+    Boolean(p.stockEnabled) &&
+    (p.stockQuantity == null || Number(p.stockQuantity) <= 0);
   const productCategory = (p: Product) =>
     String(
       p.fields?.category ||
@@ -598,6 +601,11 @@ export function PublicCatalogue({
                   <span className={"sl-store-product-badge badge-" + (i % 3)}>
                     {productCategory(p)}
                   </span>
+                  {isOutOfStock(p) && (
+                    <span className="sl-store-stock-status" role="status">
+                      Out of stock
+                    </span>
+                  )}
                   <button
                     className="sl-store-product-arrow"
                     onClick={() => openProduct(p)}
@@ -632,7 +640,20 @@ export function PublicCatalogue({
                       Details <ArrowRight size={14} />
                     </button>
                   </div>
-                  {data.checkoutReady && !demo && p.price != null ? (
+                  {isOutOfStock(p) ? (
+                    <div className="sl-store-cart-cta">
+                      <p className="sl-store-out-of-stock-message" role="status">
+                        Currently unavailable. Please enquire for availability.
+                      </p>
+                      <button
+                        type="button"
+                        className="sl-store-enquire"
+                        onClick={() => startEnquiry(p.id)}
+                      >
+                        <MessageCircle size={15} /> Enquire about this product
+                      </button>
+                    </div>
+                  ) : data.checkoutReady && !demo && p.price != null ? (
                     <div className="sl-store-cart-cta">
                       <button
                         type="button"
@@ -1023,7 +1044,11 @@ export function PublicCatalogue({
               >
                 <MessageCircle size={16} /> Enquire about this product
               </button>
-              {data.checkoutReady && !demo && details.price != null && (
+              {isOutOfStock(details) ? (
+                <p className="sl-store-out-of-stock-message" role="status">
+                  Out of stock — checkout is unavailable. Please enquire for availability.
+                </p>
+              ) : data.checkoutReady && !demo && details.price != null && (
                 <button
                   className="sl-store-contact-primary"
                   onClick={() => {
