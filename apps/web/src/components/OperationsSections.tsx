@@ -8,7 +8,7 @@ type Props = {
 };
 
 const datePickerStyles = (
-    <style>{`
+  <style>{`
       .sl-section-card .sl-report-date-input {
         box-sizing: border-box;
         min-height: 42px;
@@ -384,7 +384,6 @@ export function CustomersSection({ setError = () => {} }: Props) {
 }
 
 export function ReportsSection({ setError = () => {} }: Props) {
-
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
