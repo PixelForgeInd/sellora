@@ -1079,8 +1079,9 @@ router.post("/workspace/orders/:id/refund", requireAuth, authenticated(async (re
     const refund=await razorpayRequest<{id:string;status:string}>(business.razorpayKeyId,secret,"/payments/"+encodeURIComponent(order.razorpayPaymentId)+"/refund",{
       method:"POST",body:JSON.stringify({amount:order.totalAmount.mul(100).toDecimalPlaces(0).toNumber(),notes:{selloraOrderId:order.id,orderNumber:order.orderNumber}})
     });
-    const updated=await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayRefundId:refund.id,refundStatus:"PENDING"}});
-    res.json({orderNumber:updated.orderNumber,refundStatus:updated.refundStatus,refundId:refund.id,message:"Refund submitted to Razorpay. Final status will be reconciled by webhook."});
+    await prisma.selloraOrder.updateMany({where:{id:order.id,businessId:business.id,refundStatus:"PENDING"},data:{razorpayRefundId:refund.id}});
+    const updated=await prisma.selloraOrder.findUnique({where:{id:order.id},select:{orderNumber:true,refundStatus:true}});
+    res.json({orderNumber:updated?.orderNumber||order.orderNumber,refundStatus:updated?.refundStatus||"PENDING",refundId:refund.id,message:"Refund submitted to Razorpay. Final status will be reconciled by webhook."});
   } catch(error) {
     await prisma.selloraOrder.update({where:{id:order.id},data:{refundStatus:"FAILED"}}).catch(()=>{});
     res.status(502).json({error:error instanceof Error?"Razorpay refund failed: "+error.message:"Could not submit refund."});
