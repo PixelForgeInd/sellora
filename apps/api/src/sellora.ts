@@ -965,7 +965,7 @@ router.patch("/workspace/orders/:id/status", requireAuth, authenticated(async (r
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const order = await prisma.selloraOrder.findFirst({
     where:{id:String(req.params.id),businessId:business.id},
-    select:{id:true,status:true,paymentStatus:true,orderNumber:true}
+    select:{id:true,status:true,paymentStatus:true,orderNumber:true,items:true}
   });
   if (!order) return res.status(404).json({error:"Order not found."});
   if (order.status === "CANCELLED" || order.status === "DELIVERED") {
@@ -974,12 +974,70 @@ router.patch("/workspace/orders/:id/status", requireAuth, authenticated(async (r
   if (data.status === "CANCELLED" && order.paymentStatus === "PAID") {
     return res.status(409).json({error:"This order has a verified payment. Process the refund before cancelling it."});
   }
-  const updated = await prisma.selloraOrder.update({
-    where:{id:order.id},
-    data:{status:data.status},
-    select:{id:true,orderNumber:true,status:true,paymentStatus:true,updatedAt:true}
+  const updated = await prisma.$transaction(async tx => {
+    if(data.status==="CANCELLED") {
+      for(const item of order.items) {
+        if(!item.productId) continue;
+        const product=await tx.selloraProduct.findFirst({where:{id:item.productId,businessId:business.id},select:{id:true,stockEnabled:true}});
+        if(product?.stockEnabled) {
+          await tx.selloraProduct.update({where:{id:product.id},data:{stockQuantity:{increment:new Prisma.Decimal(item.quantity)}}});
+          await tx.selloraStockMovement.create({data:{businessId:business.id,productId:product.id,orderId:order.id,quantityDelta:new Prisma.Decimal(item.quantity),reason:"ORDER_CANCELLED"}});
+        }
+      }
+    }
+    return tx.selloraOrder.update({where:{id:order.id},data:{status:data.status},select:{id:true,orderNumber:true,status:true,paymentStatus:true,updatedAt:true}});
   });
   res.json(updated);
+}));
+
+router.patch("/workspace/orders/:id", requireAuth, authenticated(async (req,res) => {
+  const data=z.object({
+    customerName:z.string().trim().min(2).max(120).optional(),
+    email:z.union([z.string().trim().email().max(160),z.literal("")]).nullable().optional(),
+    phone:z.string().trim().min(7).max(30).optional(),
+    address:z.string().trim().min(5).max(1000).nullable().optional(),
+    notes:z.string().trim().max(1000).nullable().optional()
+  }).refine(v=>Object.values(v).some(value=>value!==undefined),{message:"Provide at least one order field to update."}).parse(req.body);
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if(!business)return res.status(409).json({error:"Complete business setup first."});
+  const order=await prisma.selloraOrder.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true,status:true,paymentStatus:true,customerId:true}});
+  if(!order)return res.status(404).json({error:"Order not found."});
+  if(["DELIVERED","CANCELLED","DISPATCHED"].includes(order.status))return res.status(409).json({error:"Customer details cannot be changed after dispatch or completion."});
+  const fields={...data,email:data.email===""?null:data.email,address:data.address===""?null:data.address};
+  const updated=await prisma.$transaction(async tx=>{
+    const saved=await tx.selloraOrder.update({where:{id:order.id},data:fields,include:{items:true}});
+    if(order.customerId) await tx.selloraCustomer.update({where:{id:order.customerId},data:{
+      ...(data.customerName!==undefined?{name:data.customerName}:{}),
+      ...(data.email!==undefined?{email:fields.email}:{}),
+      ...(data.phone!==undefined?{phone:data.phone}:{}),
+      ...(data.address!==undefined?{address:fields.address}:{})
+    }});
+    return saved;
+  });
+  res.json({...updated,subtotal:updated.subtotal.toString(),taxAmount:updated.taxAmount.toString(),totalAmount:updated.totalAmount.toString(),items:updated.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))});
+}));
+
+router.post("/workspace/orders/:id/refund", requireAuth, authenticated(async (req,res) => {
+  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,razorpayKeyId:true,razorpayKeySecretEncrypted:true}});
+  if(!business)return res.status(409).json({error:"Complete business setup first."});
+  const order=await prisma.selloraOrder.findFirst({where:{id:String(req.params.id),businessId:business.id},include:{items:true}});
+  if(!order)return res.status(404).json({error:"Order not found."});
+  if(order.paymentStatus!=="PAID"||!order.razorpayPaymentId)return res.status(409).json({error:"Only verified, paid catalogue orders can be refunded."});
+  if(order.refundStatus!=="NONE"&&order.refundStatus!=="FAILED")return res.status(409).json({error:"A refund is already pending or completed for this order."});
+  if(!business.razorpayKeyId||!business.razorpayKeySecretEncrypted)return res.status(409).json({error:"Razorpay credentials are not configured."});
+  const claim=await prisma.selloraOrder.updateMany({where:{id:order.id,businessId:business.id,refundStatus:order.refundStatus},data:{refundStatus:"PENDING"}});
+  if(!claim.count)return res.status(409).json({error:"The refund state changed. Refresh and try again."});
+  try {
+    const secret=decryptStoredGatewaySecret(business.razorpayKeySecretEncrypted);
+    const refund=await razorpayRequest<{id:string;status:string}>(business.razorpayKeyId,secret,"/payments/"+encodeURIComponent(order.razorpayPaymentId)+"/refund",{
+      method:"POST",body:JSON.stringify({amount:order.totalAmount.mul(100).toDecimalPlaces(0).toNumber(),notes:{selloraOrderId:order.id,orderNumber:order.orderNumber}})
+    });
+    const updated=await prisma.selloraOrder.update({where:{id:order.id},data:{razorpayRefundId:refund.id,refundStatus:refund.status==="processed"?"REFUNDED":"PENDING"}});
+    res.json({orderNumber:updated.orderNumber,refundStatus:updated.refundStatus,refundId:refund.id,message:"Refund submitted to Razorpay. Final status will be reconciled by webhook."});
+  } catch(error) {
+    await prisma.selloraOrder.update({where:{id:order.id},data:{refundStatus:"FAILED"}}).catch(()=>{});
+    res.status(502).json({error:error instanceof Error?"Razorpay refund failed: "+error.message:"Could not submit refund."});
+  }
 }));
 
 router.get("/workspace/enquiries", requireAuth, authenticated(async (req,res) => {
