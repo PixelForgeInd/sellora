@@ -1106,7 +1106,7 @@ router.patch("/workspace/enquiries/:id", requireAuth, authenticated(async (req,r
 router.get("/workspace/customers", requireAuth, authenticated(async (req,res) => {
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
-  const legacyPayments=await prisma.paymentOrder.findMany({where:{businessId:business.id},select:{customerName:true,customerEmail:true,customerPhone:true}});
+  const legacyPayments=await prisma.paymentOrder.findMany({where:{businessId:business.id},select:{id:true,customerName:true,customerEmail:true,customerPhone:true,productName:true,quantity:true,unit:true,amount:true,currency:true,status:true,createdAt:true,paidAt:true,updatedAt:true,razorpayOrderId:true,razorpayPaymentId:true}});
   for(const legacy of legacyPayments) {
     const email=legacy.customerEmail?.toLowerCase()||null;
     const phone=legacy.customerPhone||null;
@@ -1119,10 +1119,21 @@ router.get("/workspace/customers", requireAuth, authenticated(async (req,res) =>
     include:{orders:{orderBy:{createdAt:"desc"},include:{items:true}},enquiries:{orderBy:{createdAt:"desc"},select:{id:true,reference:true,status:true,createdAt:true,message:true}}},
     orderBy:{updatedAt:"desc"}
   });
-  res.json(customers.map(customer=>({
-    ...customer,
-    orders:customer.orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))}))
-  })));
+  res.json(customers.map(customer=>{
+    const legacyOrders=legacyPayments.filter(payment=>
+      (customer.phone && payment.customerPhone===customer.phone) ||
+      (customer.email && payment.customerEmail?.toLowerCase()===customer.email.toLowerCase())
+    ).map(payment=>({
+      id:"payment-"+payment.id,orderNumber:payment.id,recordType:"PAYMENT_ORDER",
+      status:payment.status==="PAID"?"CONFIRMED":payment.status==="FAILED"?"PAYMENT_FAILED":"PENDING",
+      paymentStatus:payment.status,currency:payment.currency,subtotal:payment.amount.toString(),taxAmount:"0",totalAmount:payment.amount.toString(),
+      createdAt:payment.createdAt,paidAt:payment.paidAt,updatedAt:payment.updatedAt,
+      razorpayOrderId:payment.razorpayOrderId,razorpayPaymentId:payment.razorpayPaymentId,
+      items:[{id:"item-"+payment.id,productName:payment.productName,sku:null,quantity:payment.quantity,unit:payment.unit,unitPrice:payment.amount.toString(),lineTotal:payment.amount.toString()}]
+    }));
+    const catalogueOrders=customer.orders.map(order=>({...order,subtotal:order.subtotal.toString(),taxAmount:order.taxAmount.toString(),totalAmount:order.totalAmount.toString(),items:order.items.map(item=>({...item,unitPrice:item.unitPrice.toString(),lineTotal:item.lineTotal.toString()}))}));
+    return {...customer,orders:[...catalogueOrders,...legacyOrders].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())};
+  }));
 }));
 
 router.get("/workspace/reports", requireAuth, authenticated(async (req,res) => {
