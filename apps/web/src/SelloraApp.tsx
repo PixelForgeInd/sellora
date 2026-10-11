@@ -150,7 +150,11 @@ export default function SelloraApp() {
     if (b) setSellingMode(b.sellingMode || "CATALOG_ONLY");
     setProducts(p);
     setCatalogues(c);
-    try { setOrders(await api("/workspace/orders", {}, t)); } catch { /* Orders can refresh separately. */ }
+    try {
+      setOrders(await api("/workspace/orders", {}, t));
+    } catch {
+      /* Orders can refresh separately. */
+    }
   }
   async function addIndustryField(e: FormEvent) {
     e.preventDefault();
@@ -698,21 +702,119 @@ export default function SelloraApp() {
     manualLaunchTasks.filter((t) => launchChecks[t.id]).length;
   const launchTotal = autoLaunchTasks.length + manualLaunchTasks.length;
 
-  const filteredOrders = orders.filter((order: any) => { const q = orderSearch.trim().toLowerCase(); const searchable = [order.orderNumber, order.id, order.customerName, order.phone, order.email, order.address, order.catalogue?.title, ...(order.items || []).map((item: any) => item.productName)].join(" ").toLowerCase(); return (!q || searchable.includes(q)) && (orderStatusFilter === "ALL" || order.status === orderStatusFilter || order.paymentStatus === orderStatusFilter); }).sort((a: any, b: any) => orderSort === "oldest" ? Date.parse(a.createdAt) - Date.parse(b.createdAt) : orderSort === "amount-high" ? Number(b.totalAmount ?? b.subtotal ?? 0) - Number(a.totalAmount ?? a.subtotal ?? 0) : orderSort === "amount-low" ? Number(a.totalAmount ?? a.subtotal ?? 0) - Number(b.totalAmount ?? b.subtotal ?? 0) : Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const filteredOrders = orders
+    .filter((order: any) => {
+      const q = orderSearch.trim().toLowerCase();
+      const searchable = [
+        order.orderNumber,
+        order.id,
+        order.customerName,
+        order.phone,
+        order.email,
+        order.address,
+        order.catalogue?.title,
+        ...(order.items || []).map((item: any) => item.productName),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return (
+        (!q || searchable.includes(q)) &&
+        (orderStatusFilter === "ALL" ||
+          order.status === orderStatusFilter ||
+          order.paymentStatus === orderStatusFilter)
+      );
+    })
+    .sort((a: any, b: any) =>
+      orderSort === "oldest"
+        ? Date.parse(a.createdAt) - Date.parse(b.createdAt)
+        : orderSort === "amount-high"
+          ? Number(b.totalAmount ?? b.subtotal ?? 0) -
+            Number(a.totalAmount ?? a.subtotal ?? 0)
+          : orderSort === "amount-low"
+            ? Number(a.totalAmount ?? a.subtotal ?? 0) -
+              Number(b.totalAmount ?? b.subtotal ?? 0)
+            : Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
 
   const exportOrdersCsv = () => {
-    const columns = ["Order number","Created at","Customer","Phone","Email","Catalogue","Product","SKU","Quantity","Unit","Unit price","Line total","Subtotal","Tax","Total","Currency","Order status","Payment status","Delivery address","Notes","Razorpay order ID","Razorpay payment ID"];
-    const rows = orders.flatMap((order:any) => (order.items?.length ? order.items : [{productName:"",sku:"",quantity:"",unit:"",unitPrice:"",lineTotal:""}]).map((item:any) => [
-      order.orderNumber || order.id, order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "",
-      order.customerName, order.phone || "", order.email || "", order.catalogue?.title || "",
-      item.productName || "", item.sku || "", item.quantity, item.unit || "", item.unitPrice || "",
-      item.lineTotal || "", order.subtotal ?? "", order.taxAmount ?? "0", order.totalAmount ?? order.subtotal ?? "",
-      order.currency || "INR", order.status || "", order.paymentStatus || "", order.address || "", order.notes || "",
-      order.razorpayOrderId || "", order.razorpayPaymentId || ""
-    ]));
-    const csv = [columns, ...rows].map(row => row.map((v:any) => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(",")).join("\r\n");
-    const url = URL.createObjectURL(new Blob(["\\uFEFF", csv], {type:"text/csv;charset=utf-8;"}));
-    const a = document.createElement("a"); a.href = url; a.download = "sellora-orders.csv"; a.click();
+    const columns = [
+      "Order number",
+      "Created at",
+      "Customer",
+      "Phone",
+      "Email",
+      "Catalogue",
+      "Product",
+      "SKU",
+      "Quantity",
+      "Unit",
+      "Unit price",
+      "Line total",
+      "Subtotal",
+      "Tax",
+      "Total",
+      "Currency",
+      "Order status",
+      "Payment status",
+      "Delivery address",
+      "Notes",
+      "Razorpay order ID",
+      "Razorpay payment ID",
+    ];
+    const rows = orders.flatMap((order: any) =>
+      (order.items?.length
+        ? order.items
+        : [
+            {
+              productName: "",
+              sku: "",
+              quantity: "",
+              unit: "",
+              unitPrice: "",
+              lineTotal: "",
+            },
+          ]
+      ).map((item: any) => [
+        order.orderNumber || order.id,
+        order.createdAt
+          ? new Date(order.createdAt).toLocaleString("en-IN")
+          : "",
+        order.customerName,
+        order.phone || "",
+        order.email || "",
+        order.catalogue?.title || "",
+        item.productName || "",
+        item.sku || "",
+        item.quantity,
+        item.unit || "",
+        item.unitPrice || "",
+        item.lineTotal || "",
+        order.subtotal ?? "",
+        order.taxAmount ?? "0",
+        order.totalAmount ?? order.subtotal ?? "",
+        order.currency || "INR",
+        order.status || "",
+        order.paymentStatus || "",
+        order.address || "",
+        order.notes || "",
+        order.razorpayOrderId || "",
+        order.razorpayPaymentId || "",
+      ]),
+    );
+    const csv = [columns, ...rows]
+      .map((row) =>
+        row
+          .map((v: any) => '"' + String(v ?? "").replace(/"/g, '""') + '"')
+          .join(","),
+      )
+      .join("\r\n");
+    const url = URL.createObjectURL(
+      new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8;" }),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sellora-orders.csv";
+    a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -721,35 +823,74 @@ export default function SelloraApp() {
       setNotice("There are no orders matching the current filters.");
       return;
     }
-    const esc = (value:any) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char] || char));
-    const slips = filteredOrders.map((order:any) => {
-      const itemRows = (order.items || []).map((item:any) => `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`).join("");
-      return `<section class="slip">
+    const esc = (value: any) =>
+      String(value ?? "").replace(
+        /[&<>"']/g,
+        (char) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[char] || char,
+      );
+    const slips = filteredOrders
+      .map((order: any) => {
+        const itemRows = (order.items || [])
+          .map(
+            (item: any) =>
+              `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`,
+          )
+          .join("");
+        return `<section class="slip">
         <div class="top"><div><h1>${esc(business.name || "Delivery Slip")}</h1><p class="muted">DELIVERY SLIP · NOT A TAX INVOICE</p></div><div><p><b>Order:</b> ${esc(order.orderNumber || order.id)}</p><p><b>Date:</b> ${esc(order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "—")}</p></div></div>
         <div class="box"><h2>SHIP TO</h2><p class="address">${esc(order.customerName || "Customer")}</p><p>${esc(order.address || "Delivery address not provided")}</p><p><b>Phone:</b> ${esc(order.phone || "—")}</p><p><b>Email:</b> ${esc(order.email || "—")}</p></div>
         <h2>ITEMS TO DISPATCH</h2><table><thead><tr><th>Product</th><th>SKU</th><th>Quantity</th></tr></thead><tbody>${itemRows || "<tr><td colspan='3'>No item details available</td></tr>"}</tbody></table>
         ${order.notes ? `<div class="box"><h2>ORDER NOTES</h2><p>${esc(order.notes)}</p></div>` : ""}
         <div class="footer">Please verify items and quantities before dispatch. Order status: ${esc(order.status || "—")} · Payment status: ${esc(order.paymentStatus || "—")}</div>
       </section>`;
-    }).join("");
+      })
+      .join("");
     const popup = window.open("", "_blank", "width=900,height=900");
     if (!popup) {
       window.alert("Please allow pop-ups to download the bulk delivery slips.");
       return;
     }
-    popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bulk delivery slips</title><style>
+    popup.document
+      .write(`<!doctype html><html><head><meta charset="utf-8"><title>Bulk delivery slips</title><style>
       body{font:14px Arial,sans-serif;color:#172b25;margin:24px}h1{font-size:22px;margin:0 0 5px}h2{font-size:15px;margin:24px 0 10px}p{margin:5px 0;line-height:1.5}.muted{color:#68766d;font-size:12px}.top{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #dce5da;padding-bottom:16px}.box{border:1px solid #dce5da;border-radius:8px;padding:14px;margin-top:16px}.address{white-space:pre-wrap;font-size:16px;font-weight:600;line-height:1.6}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;border-bottom:1px solid #e4e9e4;padding:10px 8px}th{background:#f4f7f1;font-size:11px;text-transform:uppercase}.footer{margin-top:32px;border-top:1px solid #dce5da;padding-top:12px;font-size:11px;color:#68766d}.slip{break-after:page;page-break-after:always}.slip:last-of-type{break-after:auto;page-break-after:auto}.no-print{margin:0 0 20px}@media print{body{margin:12mm}.no-print{display:none}.slip{break-after:page;page-break-after:always}.slip:last-of-type{break-after:auto;page-break-after:auto}}</style></head><body>
       <p class="no-print"><b>${filteredOrders.length} delivery slips</b> · Use your browser's print dialog and choose “Save as PDF” to download them as one PDF. <button onclick="window.print()">Print / Save as PDF</button></p>
       ${slips}<script>window.onload=()=>window.print()<\/script></body></html>`);
     popup.document.close();
   };
 
-  const printDeliverySlip = (order:any) => {
-    const esc = (value:any) => String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char] || char));
-    const itemRows = (order.items || []).map((item:any) => `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`).join("");
+  const printDeliverySlip = (order: any) => {
+    const esc = (value: any) =>
+      String(value ?? "").replace(
+        /[&<>"']/g,
+        (char) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[char] || char,
+      );
+    const itemRows = (order.items || [])
+      .map(
+        (item: any) =>
+          `<tr><td>${esc(item.productName)}</td><td>${esc(item.sku || "—")}</td><td>${esc(item.quantity)} ${esc(item.unit || "")}</td></tr>`,
+      )
+      .join("");
     const popup = window.open("", "_blank", "width=800,height=900");
-    if (!popup) { window.alert("Please allow pop-ups to print the delivery slip."); return; }
-    popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Delivery slip - ${esc(order.orderNumber || order.id)}</title><style>
+    if (!popup) {
+      window.alert("Please allow pop-ups to print the delivery slip.");
+      return;
+    }
+    popup.document
+      .write(`<!doctype html><html><head><meta charset="utf-8"><title>Delivery slip - ${esc(order.orderNumber || order.id)}</title><style>
       body{font:14px Arial,sans-serif;color:#172b25;margin:32px}h1{font-size:22px;margin:0 0 5px}h2{font-size:15px;margin:24px 0 10px}p{margin:5px 0;line-height:1.5}.muted{color:#68766d;font-size:12px}.top{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #dce5da;padding-bottom:16px}.box{border:1px solid #dce5da;border-radius:8px;padding:14px;margin-top:16px}.address{white-space:pre-wrap;font-size:16px;font-weight:600;line-height:1.6}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;border-bottom:1px solid #e4e9e4;padding:10px 8px}th{background:#f4f7f1;font-size:11px;text-transform:uppercase}.footer{margin-top:32px;border-top:1px solid #dce5da;padding-top:12px;font-size:11px;color:#68766d}@media print{body{margin:12mm}.no-print{display:none}}</style></head><body>
       <div class="top"><div><h1>${esc(business.name || "Delivery Slip")}</h1><p class="muted">DELIVERY SLIP · NOT A TAX INVOICE</p></div><div><p><b>Order:</b> ${esc(order.orderNumber || order.id)}</p><p><b>Date:</b> ${esc(order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN") : "—")}</p></div></div>
       <div class="box"><h2>SHIP TO</h2><p class="address">${esc(order.customerName || "Customer")}</p><p>${esc(order.address || "Delivery address not provided")}</p><p><b>Phone:</b> ${esc(order.phone || "—")}</p><p><b>Email:</b> ${esc(order.email || "—")}</p></div>
@@ -884,13 +1025,48 @@ export default function SelloraApp() {
               <div>
                 <span>ORDERS TODAY</span>
                 <ClipboardList />
-                <strong>{orders.filter((o: any) => new Date(o.createdAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).length}</strong>
+                <strong>
+                  {
+                    orders.filter(
+                      (o: any) =>
+                        new Date(o.createdAt).toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }) ===
+                        new Date().toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }),
+                    ).length
+                  }
+                </strong>
                 <small>Orders created today</small>
               </div>
               <div>
                 <span>PAYMENTS RECEIVED TODAY</span>
                 <CreditCard />
-                <strong>{formatCurrency(orders.filter((o: any) => (o.paymentStatus === "PAID" || o.status === "CONFIRMED" || o.status === "PAID") && (o.paidAt || o.updatedAt) && new Date(o.paidAt || o.updatedAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).reduce((sum: number, o: any) => sum + Number(o.totalAmount ?? o.subtotal ?? 0), 0))}</strong>
+                <strong>
+                  {formatCurrency(
+                    orders
+                      .filter(
+                        (o: any) =>
+                          (o.paymentStatus === "PAID" ||
+                            o.status === "CONFIRMED" ||
+                            o.status === "PAID") &&
+                          (o.paidAt || o.updatedAt) &&
+                          new Date(o.paidAt || o.updatedAt).toLocaleDateString(
+                            "en-CA",
+                            { timeZone: "Asia/Kolkata" },
+                          ) ===
+                            new Date().toLocaleDateString("en-CA", {
+                              timeZone: "Asia/Kolkata",
+                            }),
+                      )
+                      .reduce(
+                        (sum: number, o: any) =>
+                          sum + Number(o.totalAmount ?? o.subtotal ?? 0),
+                        0,
+                      ),
+                  )}
+                </strong>
                 <small>Verified payments received today</small>
               </div>
               <div>
@@ -995,10 +1171,16 @@ export default function SelloraApp() {
             loadAnalytics={async (catalogue) => {
               setAnalyticsBusy(catalogue.id);
               try {
-                const result = await api("/workspace/catalogues/" + catalogue.id + "/analytics");
+                const result = await api(
+                  "/workspace/catalogues/" + catalogue.id + "/analytics",
+                );
                 setAnalytics((old) => ({ ...old, [catalogue.id]: result }));
               } catch (e) {
-                setError(e instanceof Error ? e.message : "Could not load catalogue analytics");
+                setError(
+                  e instanceof Error
+                    ? e.message
+                    : "Could not load catalogue analytics",
+                );
               } finally {
                 setAnalyticsBusy("");
               }
@@ -1014,22 +1196,71 @@ export default function SelloraApp() {
                   Order requests, customer details and item-level breakdowns.
                 </p>
               </div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Btn onClick={downloadBulkDeliverySlips} disabled={!filteredOrders.length}><Download size={15}/> Download bulk delivery slips</Btn><Btn onClick={exportOrdersCsv} disabled={!orders.length}><Download size={15}/> Export CSV</Btn><Btn
-                onClick={async () => {
-                  try {
-                    setOrders(await api("/workspace/orders"));
-                  } catch (e) {
-                    setError(e instanceof Error ? e.message : "Could not load orders");
-                  }
-                }}
-              >
-                <ArrowRight size={15} /> Refresh orders
-              </Btn></div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Btn
+                  onClick={downloadBulkDeliverySlips}
+                  disabled={!filteredOrders.length}
+                >
+                  <Download size={15} /> Download bulk delivery slips
+                </Btn>
+                <Btn onClick={exportOrdersCsv} disabled={!orders.length}>
+                  <Download size={15} /> Export CSV
+                </Btn>
+                <Btn
+                  onClick={async () => {
+                    try {
+                      setOrders(await api("/workspace/orders"));
+                    } catch (e) {
+                      setError(
+                        e instanceof Error
+                          ? e.message
+                          : "Could not load orders",
+                      );
+                    }
+                  }}
+                >
+                  <ArrowRight size={15} /> Refresh orders
+                </Btn>
+              </div>
             </div>
             <div className="sl-orders-filters">
-              <label className="sl-orders-search"><Search size={20}/><input value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} placeholder="Search customer, product or order ID" aria-label="Search orders"/></label>
-              <select value={orderStatusFilter} onChange={e=>setOrderStatusFilter(e.target.value)} aria-label="Filter order status"><option value="ALL">All statuses</option>{Array.from(new Set(orders.flatMap((o:any)=>[o.status,o.paymentStatus]).filter(Boolean))).map((status:any)=><option key={status} value={status}>{String(status).replaceAll("_"," ")}</option>)}</select>
-              <select value={orderSort} onChange={e=>setOrderSort(e.target.value)} aria-label="Sort orders"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="amount-high">Amount: high to low</option><option value="amount-low">Amount: low to high</option></select>
+              <label className="sl-orders-search">
+                <Search size={20} />
+                <input
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Search customer, product or order ID"
+                  aria-label="Search orders"
+                />
+              </label>
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                aria-label="Filter order status"
+              >
+                <option value="ALL">All statuses</option>
+                {Array.from(
+                  new Set(
+                    orders
+                      .flatMap((o: any) => [o.status, o.paymentStatus])
+                      .filter(Boolean),
+                  ),
+                ).map((status: any) => (
+                  <option key={status} value={status}>
+                    {String(status).replaceAll("_", " ")}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={orderSort}
+                onChange={(e) => setOrderSort(e.target.value)}
+                aria-label="Sort orders"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="amount-high">Amount: high to low</option>
+                <option value="amount-low">Amount: low to high</option>
+              </select>
             </div>
             {!orders.length ? (
               <div className="sl-orders-empty">
@@ -1053,7 +1284,12 @@ export default function SelloraApp() {
                         </small>
                       </span>
                       <span>
-                        <b>{money(order.totalAmount ?? order.subtotal, order.currency)}</b>
+                        <b>
+                          {money(
+                            order.totalAmount ?? order.subtotal,
+                            order.currency,
+                          )}
+                        </b>
                         <small>
                           {order.status} · {order.paymentStatus}
                         </small>
@@ -1061,7 +1297,17 @@ export default function SelloraApp() {
                       <ArrowRight size={16} />
                     </summary>
                     <div className="sl-order-detail">
-                      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}><Btn onClick={() => printDeliverySlip(order)}><Printer size={15}/> Print delivery slip</Btn></div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <Btn onClick={() => printDeliverySlip(order)}>
+                          <Printer size={15} /> Print delivery slip
+                        </Btn>
+                      </div>
                       <div className="sl-order-customer">
                         <p>
                           <b>Customer</b>
@@ -1094,7 +1340,27 @@ export default function SelloraApp() {
                           {order.notes || "None"}
                         </p>
                       </div>
-                      <div className="sl-order-totals"><p><span>Subtotal</span><b>{money(order.subtotal, order.currency)}</b></p>{Number(order.taxAmount || 0) > 0 && <p><span>Tax</span><b>{money(order.taxAmount, order.currency)}</b></p>}<p className="grand"><span>Total</span><b>{money(order.totalAmount ?? order.subtotal, order.currency)}</b></p></div>
+                      <div className="sl-order-totals">
+                        <p>
+                          <span>Subtotal</span>
+                          <b>{money(order.subtotal, order.currency)}</b>
+                        </p>
+                        {Number(order.taxAmount || 0) > 0 && (
+                          <p>
+                            <span>Tax</span>
+                            <b>{money(order.taxAmount, order.currency)}</b>
+                          </p>
+                        )}
+                        <p className="grand">
+                          <span>Total</span>
+                          <b>
+                            {money(
+                              order.totalAmount ?? order.subtotal,
+                              order.currency,
+                            )}
+                          </b>
+                        </p>
+                      </div>
                       <h4>Ordered items</h4>
                       {order.items.map((item: any) => (
                         <div className="sl-order-item" key={item.id}>
@@ -1127,8 +1393,8 @@ export default function SelloraApp() {
               <div>
                 <h3>Performance by catalogue</h3>
                 <p>
-                  Catalogue visits, product opens, cart additions, checkout starts,
-                  payment gateway launches and confirmed payments.
+                  Catalogue visits, product opens, cart additions, checkout
+                  starts, payment gateway launches and confirmed payments.
                 </p>
               </div>
             </div>

@@ -77,26 +77,60 @@ export function SettingsSection({
   const [webhookSaved, setWebhookSaved] = useState(false);
   const [gatewayBusy, setGatewayBusy] = useState(false);
   const [gatewayMessage, setGatewayMessage] = useState("");
-  const [platformPaymentSettings, setPlatformPaymentSettings] = useState<any>(null);
+  const [platformPaymentSettings, setPlatformPaymentSettings] =
+    useState<any>(null);
   const [platformSettingsError, setPlatformSettingsError] = useState("");
   const [taxEnabled, setTaxEnabled] = useState(false);
   const [taxRate, setTaxRate] = useState("0");
   const [taxBusy, setTaxBusy] = useState(false);
   const [taxMessage, setTaxMessage] = useState("");
   useEffect(() => {
-    api("/workspace/business/tax-settings").then((v) => { setTaxEnabled(Boolean(v.enabled)); setTaxRate(String(v.rate ?? "0")); }).catch((err) => setTaxMessage(err instanceof Error ? err.message : "Could not load tax settings."));
+    api("/workspace/business/tax-settings")
+      .then((v) => {
+        setTaxEnabled(Boolean(v.enabled));
+        setTaxRate(String(v.rate ?? "0"));
+      })
+      .catch((err) =>
+        setTaxMessage(
+          err instanceof Error ? err.message : "Could not load tax settings.",
+        ),
+      );
   }, []);
   async function saveTaxSettings(e: FormEvent) {
-    e.preventDefault(); setTaxBusy(true); setTaxMessage("");
-    try { const v = await api("/workspace/business/tax-settings", { method: "PUT", body: JSON.stringify({ enabled: taxEnabled, rate: Number(taxRate) }) }); setTaxEnabled(Boolean(v.enabled)); setTaxRate(String(v.rate)); setTaxMessage(v.enabled ? "Tax settings saved. Tax will be calculated on new orders." : "Tax disabled. New orders will have no tax."); }
-    catch (err) { setTaxMessage(err instanceof Error ? err.message : "Could not save tax settings."); }
-    finally { setTaxBusy(false); }
+    e.preventDefault();
+    setTaxBusy(true);
+    setTaxMessage("");
+    try {
+      const v = await api("/workspace/business/tax-settings", {
+        method: "PUT",
+        body: JSON.stringify({ enabled: taxEnabled, rate: Number(taxRate) }),
+      });
+      setTaxEnabled(Boolean(v.enabled));
+      setTaxRate(String(v.rate));
+      setTaxMessage(
+        v.enabled
+          ? "Tax settings saved. Tax will be calculated on new orders."
+          : "Tax disabled. New orders will have no tax.",
+      );
+    } catch (err) {
+      setTaxMessage(
+        err instanceof Error ? err.message : "Could not save tax settings.",
+      );
+    } finally {
+      setTaxBusy(false);
+    }
   }
   useEffect(() => {
     if (!isPlatformOwner) return;
     api("/platform/admin/payment-settings")
       .then(setPlatformPaymentSettings)
-      .catch((err) => setPlatformSettingsError(err instanceof Error ? err.message : "Could not load platform payment settings."));
+      .catch((err) =>
+        setPlatformSettingsError(
+          err instanceof Error
+            ? err.message
+            : "Could not load platform payment settings.",
+        ),
+      );
   }, [isPlatformOwner]);
   async function saveGateway(e: FormEvent) {
     e.preventDefault();
@@ -499,20 +533,46 @@ export function SettingsSection({
           <section className="sl-section-card sl-settings-page">
             <span className="sl-kicker">PIXELFORGE PLATFORM ADMIN</span>
             <h3>Payment infrastructure</h3>
-            <p>Owner-only operational settings for managing Sellora's payment integration. Encryption secrets are never displayed here.</p>
-            {platformSettingsError && <p role="alert" className="sl-gateway-note">{platformSettingsError}</p>}
+            <p>
+              Owner-only operational settings for managing Sellora's payment
+              integration. Encryption secrets are never displayed here.
+            </p>
+            {platformSettingsError && (
+              <p role="alert" className="sl-gateway-note">
+                {platformSettingsError}
+              </p>
+            )}
             {platformPaymentSettings && (
               <>
                 <label>
                   Razorpay webhook endpoint
-                  <input readOnly value={platformPaymentSettings.webhookUrl || "Set PUBLIC_API_URL on the API server to display the public webhook URL"} />
+                  <input
+                    readOnly
+                    value={
+                      platformPaymentSettings.webhookUrl ||
+                      "Set PUBLIC_API_URL on the API server to display the public webhook URL"
+                    }
+                  />
                 </label>
                 {platformPaymentSettings.webhookUrl && (
                   <div className="sl-modal-actions">
-                    <Btn type="button" kind="outline" onClick={() => void navigator.clipboard.writeText(platformPaymentSettings.webhookUrl)}>Copy webhook URL</Btn>
+                    <Btn
+                      type="button"
+                      kind="outline"
+                      onClick={() =>
+                        void navigator.clipboard.writeText(
+                          platformPaymentSettings.webhookUrl,
+                        )
+                      }
+                    >
+                      Copy webhook URL
+                    </Btn>
                   </div>
                 )}
-                <p className="sl-gateway-note">The encryption key is managed only through the API environment file. Customer workspaces do not see this panel.</p>
+                <p className="sl-gateway-note">
+                  The encryption key is managed only through the API environment
+                  file. Customer workspaces do not see this panel.
+                </p>
               </>
             )}
           </section>
@@ -522,18 +582,49 @@ export function SettingsSection({
       <section className="sl-section-card sl-settings-page">
         <span className="sl-kicker">TAX SETTINGS</span>
         <h3>Optional order tax</h3>
-        <p>Enable tax calculation for new online orders. Leave it disabled if your prices already include tax or you do not need tax added at checkout.</p>
+        <p>
+          Enable tax calculation for new online orders. Leave it disabled if
+          your prices already include tax or you do not need tax added at
+          checkout.
+        </p>
         <form className="sl-form" onSubmit={saveTaxSettings}>
           <label className="sl-field-required-toggle">
-            <input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={taxEnabled}
+              onChange={(e) => setTaxEnabled(e.target.checked)}
+            />
             Calculate tax on online orders
           </label>
-          {taxEnabled && <label>Tax rate (%)
-            <input type="number" min="0" max="100" step="0.01" required value={taxRate} onChange={(e) => setTaxRate(e.target.value)} placeholder="e.g. 5 or 18" />
-            <small>Enter the applicable rate for your products. Confirm the correct tax treatment with your accountant.</small>
-          </label>}
-          {taxMessage && <p role="status" className="sl-gateway-note">{taxMessage}</p>}
-          <div className="sl-modal-actions"><Btn type="submit" disabled={taxBusy}>{taxBusy ? "Saving…" : "Save tax settings"} <Check size={15}/></Btn></div>
+          {taxEnabled && (
+            <label>
+              Tax rate (%)
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                required
+                value={taxRate}
+                onChange={(e) => setTaxRate(e.target.value)}
+                placeholder="e.g. 5 or 18"
+              />
+              <small>
+                Enter the applicable rate for your products. Confirm the correct
+                tax treatment with your accountant.
+              </small>
+            </label>
+          )}
+          {taxMessage && (
+            <p role="status" className="sl-gateway-note">
+              {taxMessage}
+            </p>
+          )}
+          <div className="sl-modal-actions">
+            <Btn type="submit" disabled={taxBusy}>
+              {taxBusy ? "Saving…" : "Save tax settings"} <Check size={15} />
+            </Btn>
+          </div>
         </form>
       </section>
 
