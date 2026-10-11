@@ -1007,6 +1007,8 @@ router.patch("/workspace/orders/:id/status", requireAuth, authenticated(async (r
     return res.status(409).json({error:"This order has a verified payment. Process the refund before cancelling it."});
   }
   const updated = await prisma.$transaction(async tx => {
+    const claimed=await tx.selloraOrder.updateMany({where:{id:order.id,businessId:business.id,status:order.status},data:{status:data.status}});
+    if(!claimed.count) return null;
     if(data.status==="CANCELLED") {
       for(const item of order.items) {
         if(!item.productId) continue;
@@ -1017,8 +1019,9 @@ router.patch("/workspace/orders/:id/status", requireAuth, authenticated(async (r
         }
       }
     }
-    return tx.selloraOrder.update({where:{id:order.id},data:{status:data.status},select:{id:true,orderNumber:true,status:true,paymentStatus:true,updatedAt:true}});
+    return tx.selloraOrder.findUnique({where:{id:order.id},select:{id:true,orderNumber:true,status:true,paymentStatus:true,updatedAt:true}});
   });
+  if(!updated) return res.status(409).json({error:"The order status changed. Refresh and try again."});
   res.json(updated);
 }));
 
