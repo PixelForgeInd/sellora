@@ -44,7 +44,12 @@ import {
 import { SettingsSection } from "./components/SettingsSection";
 import { PaymentsSection } from "./components/PaymentsSection";
 import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
-import { EnquiriesSection, InventorySection, CustomersSection, ReportsSection } from "./components/OperationsSections";
+import {
+  EnquiriesSection,
+  InventorySection,
+  CustomersSection,
+  ReportsSection,
+} from "./components/OperationsSections";
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import type {
@@ -484,12 +489,23 @@ export default function SelloraApp() {
     const form = new FormData();
     form.append("image", file);
     try {
-      const result = await api("/workspace/products/" + encodeURIComponent(product.id) + "/image", { method: "POST", body: form });
-      setProducts(old => old.map(item => item.id === product.id ? { ...item, imageUrl: result.imageUrl } : item));
+      const result = await api(
+        "/workspace/products/" + encodeURIComponent(product.id) + "/image",
+        { method: "POST", body: form },
+      );
+      setProducts((old) =>
+        old.map((item) =>
+          item.id === product.id
+            ? { ...item, imageUrl: result.imageUrl }
+            : item,
+        ),
+      );
       setNotice("Image uploaded for " + product.name + ".");
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not upload product image.");
+      setError(
+        e instanceof Error ? e.message : "Could not upload product image.",
+      );
     }
   }
 
@@ -1782,8 +1798,12 @@ export default function SelloraApp() {
         {page === "payments" && (
           <PaymentsSection onSettings={() => setPage("settings")} />
         )}
-        {page === "enquiries" && <EnquiriesSection setError={setError} setNotice={setNotice} />}
-        {page === "inventory" && <InventorySection setError={setError} setNotice={setNotice} />}
+        {page === "enquiries" && (
+          <EnquiriesSection setError={setError} setNotice={setNotice} />
+        )}
+        {page === "inventory" && (
+          <InventorySection setError={setError} setNotice={setNotice} />
+        )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
         {page === "settings" && (
