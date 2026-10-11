@@ -711,7 +711,7 @@ router.post("/public/catalogues/:slug/payments/verify", async (req,res) => {
 // Lightweight public funnel tracking; never accepts payment-completed events from browsers.
 router.post("/public/catalogues/:slug/events", async (req,res) => {
   const data=z.object({
-    eventType:z.enum(["page_view","add_to_cart","checkout_started"]),
+    eventType:z.enum(["page_view","product_opened","add_to_cart","checkout_started","payment_gateway_opened"]),
     sessionId:z.string().trim().min(8).max(100).optional(),
     metadata:z.record(z.string(),z.union([z.string().max(200),z.number(),z.boolean()])).optional()
   }).parse(req.body);
@@ -746,9 +746,10 @@ router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(asy
   if(!business) return res.status(409).json({error:"Complete business setup first."});
   const catalogue=await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true}});
   if(!catalogue) return res.status(404).json({error:"Catalogue not found."});
-  const [events,orders]=await Promise.all([
+  const [events,orders,visitorSessions]=await Promise.all([
     prisma.catalogueAnalyticsEvent.groupBy({by:["eventType"],where:{catalogueId:catalogue.id},_count:{_all:true}}),
-    prisma.selloraOrder.groupBy({by:["paymentStatus"],where:{catalogueId:catalogue.id},_count:{_all:true},_sum:{subtotal:true}})
+    prisma.selloraOrder.groupBy({by:["paymentStatus"],where:{catalogueId:catalogue.id},_count:{_all:true},_sum:{subtotal:true}}),
+    prisma.catalogueAnalyticsEvent.findMany({where:{catalogueId:catalogue.id,eventType:"page_view",sessionId:{not:null}},select:{sessionId:true},distinct:["sessionId"]})
   ]);
   const counts=Object.fromEntries(events.map(event=>[event.eventType,event._count._all]));
   const orderCount=orders.reduce((sum,item)=>sum+item._count._all,0);
@@ -756,8 +757,11 @@ router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(asy
   res.json({
     catalogueId:catalogue.id,
     views:counts.page_view||0,
+    uniqueVisitors:visitorSessions.length,
+    productOpens:counts.product_opened||0,
     addToCart:counts.add_to_cart||0,
     checkoutStarted:counts.checkout_started||0,
+    paymentGatewayOpened:counts.payment_gateway_opened||0,
     ordersSubmitted:counts.order_submitted||0,
     orders:orderCount,
     paymentsConfirmed:paymentCount,
