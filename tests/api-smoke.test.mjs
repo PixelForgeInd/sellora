@@ -251,6 +251,63 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
     assert.equal(metrics.paymentsConfirmed, 0);
   });
 
+  await t.test("captures enquiries, manages stock, customers, uploads and reports", async () => {
+    const enquiry = await jsonRequest("/api/public/catalogues/" + catalogueSlug + "/enquiries", {
+      method: "POST",
+      body: {
+        customerName: "Enquiry Customer",
+        email: "buyer-" + suffix + "@example.test",
+        phone: "+919876543211",
+        companyName: "Test Handloom",
+        message: "Please share bulk pricing and availability.",
+        productId,
+      },
+    });
+    assert.equal(enquiry.status, 201);
+    const enquiryBody = await enquiry.json();
+    assert.match(enquiryBody.reference, /^ENQ-/);
+
+    const enquiries = await jsonRequest("/api/workspace/enquiries", { token });
+    assert.equal(enquiries.status, 200);
+    const enquiryList = await enquiries.json();
+    assert.ok(enquiryList.some((item) => item.reference === enquiryBody.reference && item.product?.name === "Updated Yarn " + suffix));
+
+    const adjusted = await jsonRequest("/api/workspace/inventory/" + productId + "/adjust", {
+      method: "POST", token, body: { quantity: 40, reason: "RECEIVED", note: "Initial stock" },
+    });
+    assert.equal(adjusted.status, 200);
+    assert.equal((await adjusted.json()).stockQuantity, "40");
+
+    const inventory = await jsonRequest("/api/workspace/inventory", { token });
+    assert.equal(inventory.status, 200);
+    const inventoryBody = await inventory.json();
+    assert.ok(inventoryBody.products.some((item) => item.id === productId && item.stockEnabled));
+    assert.ok(inventoryBody.movements.some((item) => item.productId === productId && item.reason === "RECEIVED"));
+
+    const customers = await jsonRequest("/api/workspace/customers", { token });
+    assert.equal(customers.status, 200);
+    const customerList = await customers.json();
+    assert.ok(customerList.some((item) => item.phone === "+919876543211" && item.enquiries.length > 0));
+
+    const from = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const to = new Date(Date.now() + 60 * 1000).toISOString();
+    const reports = await jsonRequest("/api/workspace/reports?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to), { token });
+    assert.equal(reports.status, 200);
+    const report = await reports.json();
+    assert.ok(report.enquiryCount >= 1);
+    assert.ok(report.activeProductCount >= 1);
+    assert.ok(report.stockMovementCount >= 1);
+
+    const form = new FormData();
+    form.append("image", new Blob([Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jxL8AAAAASUVORK5CYII=", "base64")], { type: "image/png" }), "pixel.png");
+    const uploaded = await request("/api/workspace/products/" + productId + "/image", {
+      method: "POST", headers: { authorization: "Bearer " + token }, body: form,
+    });
+    assert.equal(uploaded.status, 201);
+    const image = await uploaded.json();
+    assert.match(image.imageUrl, /\/uploads\/.+\.png$/);
+  });
+
   await t.test("isolates another account from the first account's products", async () => {
     const secondSignup = await jsonRequest("/api/auth/signup", {
       method: "POST",
