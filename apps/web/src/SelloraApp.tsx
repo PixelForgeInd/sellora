@@ -30,7 +30,7 @@ import {
   categories as cats,
   fallbackFields as fallback,
 } from "./sellora/catalogue-fields";
-import { formatMoney as money } from "./sellora/formatters";
+import { formatCurrency, formatMoney as money } from "./sellora/formatters";
 import { PublicCatalogue } from "./components/PublicCatalogue";
 import {
   AuthScreen,
@@ -862,7 +862,7 @@ export default function SelloraApp() {
               <div>
                 <span>PAYMENTS RECEIVED TODAY</span>
                 <CreditCard />
-                <strong>{money(orders.filter((o: any) => (o.paymentStatus === "PAID" || o.status === "CONFIRMED" || o.status === "PAID") && (o.paidAt || o.updatedAt) && new Date(o.paidAt || o.updatedAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).reduce((sum: number, o: any) => sum + Number(o.totalAmount ?? o.subtotal ?? 0), 0), "INR")}</strong>
+                <strong>{formatCurrency(orders.filter((o: any) => (o.paymentStatus === "PAID" || o.status === "CONFIRMED" || o.status === "PAID") && (o.paidAt || o.updatedAt) && new Date(o.paidAt || o.updatedAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).reduce((sum: number, o: any) => sum + Number(o.totalAmount ?? o.subtotal ?? 0), 0))}</strong>
                 <small>Verified payments received today</small>
               </div>
               <div>
