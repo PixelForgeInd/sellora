@@ -30,7 +30,7 @@ import {
   categories as cats,
   fallbackFields as fallback,
 } from "./sellora/catalogue-fields";
-import { formatMoney as money } from "./sellora/formatters";
+import { formatCurrency, formatMoney as money } from "./sellora/formatters";
 import { PublicCatalogue } from "./components/PublicCatalogue";
 import {
   AuthScreen,
