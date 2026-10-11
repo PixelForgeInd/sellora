@@ -713,19 +713,19 @@ router.post("/webhooks/razorpay", async (req,res) => {
           await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{paymentStatus:"FAILED"}});
         } else if(eventType==="refund.processed"||eventType==="payment.refunded") {
           const current=await tx.selloraOrder.findUnique({where:{id:catalogueOrder.id},include:{items:true}});
-          if(current && current.refundStatus!=="REFUNDED") {
-            for(const item of current.items) {
-              if(!item.productId) continue;
-              const product=await tx.selloraProduct.findFirst({where:{id:item.productId,businessId:business.id},select:{id:true,stockEnabled:true}});
-              if(product?.stockEnabled) {
-                await tx.selloraProduct.update({where:{id:product.id},data:{stockQuantity:{increment:new Prisma.Decimal(item.quantity)}});
-                await tx.selloraStockMovement.create({data:{businessId:business.id,productId:product.id,orderId:current.id,quantityDelta:new Prisma.Decimal(item.quantity),reason:"ORDER_REFUNDED"}});
+          if(current) {
+            const claimed=await tx.selloraOrder.updateMany({where:{id:current.id,refundStatus:{not:"REFUNDED"}},data:{refundStatus:"REFUNDED",paymentStatus:"REFUNDED"}});
+            if(claimed.count) {
+              for(const item of current.items) {
+                if(!item.productId) continue;
+                const product=await tx.selloraProduct.findFirst({where:{id:item.productId,businessId:business.id},select:{id:true,stockEnabled:true}});
+                if(product?.stockEnabled) {
+                  await tx.selloraProduct.update({where:{id:product.id},data:{stockQuantity:{increment:new Prisma.Decimal(item.quantity)}});
+                  await tx.selloraStockMovement.create({data:{businessId:business.id,productId:product.id,orderId:current.id,quantityDelta:new Prisma.Decimal(item.quantity),reason:"ORDER_REFUNDED"}});
+                }
               }
+              if(!["DISPATCHED","DELIVERED"].includes(current.status)) await tx.selloraOrder.update({where:{id:current.id},data:{status:"CANCELLED"}});
             }
-            await tx.selloraOrder.update({where:{id:current.id},data:{
-              refundStatus:"REFUNDED",paymentStatus:"REFUNDED",
-              ...(!["DISPATCHED","DELIVERED"].includes(current.status)?{status:"CANCELLED"}:{})
-            }});
           }
         } else if(eventType==="refund.failed") {
           await tx.selloraOrder.update({where:{id:catalogueOrder.id},data:{refundStatus:"FAILED"}});
