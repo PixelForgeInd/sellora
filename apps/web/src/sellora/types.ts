@@ -45,6 +45,7 @@ export type Catalogue = {
   title: string;
   slug: string;
   description?: string | null;
+  shareImageUrl?: string | null;
   isPublished: boolean;
   items: { product: Product }[];
 };

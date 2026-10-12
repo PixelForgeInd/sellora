@@ -57,6 +57,7 @@ import type {
   Product,
   PublicData,
 } from "./sellora/types";
+import type { CatalogueForm } from "./components/WorkspaceSections";
 export default function SelloraApp() {
   // Session and workspace data
   const [access, setAccess] = useState(getSessionToken());
@@ -140,10 +141,12 @@ export default function SelloraApp() {
     stockQuantity: "",
     fields: {} as Record<string, string | number | boolean | string[]>,
   });
-  const [cform, setCform] = useState({
+  const [cform, setCform] = useState<CatalogueForm>({
     title: "",
     description: "",
-    productIds: [] as string[],
+    shareImageUrl: "",
+    shareImageFile: null,
+    productIds: [],
   });
   const [editingCatalogue, setEditingCatalogue] = useState("");
   const [modal, setModal] = useState("");
@@ -668,6 +671,8 @@ export default function SelloraApp() {
     setCform({
       title: c.title,
       description: c.description || "",
+      shareImageUrl: c.shareImageUrl || "",
+      shareImageFile: null,
       productIds: c.items.map((item) => item.product.id),
     });
     setError("");
@@ -1355,6 +1360,8 @@ export default function SelloraApp() {
                     setCform({
                       title: business.name + " Product Catalogue",
                       description: "",
+                      shareImageUrl: "",
+                      shareImageFile: null,
                       productIds: products.map((p) => p.id),
                     });
                     setModal("catalogue");
