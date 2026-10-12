@@ -102,8 +102,12 @@ export function PublicCatalogue({
     : "#contact";
   const publicUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareText =
-    "View " + (data?.title || "catalogue") + " from " +
-    (data?.business.name || "our business") + ": " + publicUrl;
+    "View " +
+    (data?.title || "catalogue") +
+    " from " +
+    (data?.business.name || "our business") +
+    ": " +
+    publicUrl;
   const shareCatalogue = () => {
     window.open(
       "https://wa.me/?text=" + encodeURIComponent(shareText),

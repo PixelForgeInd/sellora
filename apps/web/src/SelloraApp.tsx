@@ -652,10 +652,13 @@ export default function SelloraApp() {
       if (shareImageFile) {
         const upload = new FormData();
         upload.append("image", shareImageFile);
-        const imageResult = await api("/workspace/catalogues/" + c.id + "/image", {
-          method: "POST",
-          body: upload,
-        });
+        const imageResult = await api(
+          "/workspace/catalogues/" + c.id + "/image",
+          {
+            method: "POST",
+            body: upload,
+          },
+        );
         c = { ...c, shareImageUrl: imageResult.shareImageUrl };
       }
       setCatalogues((old) =>
