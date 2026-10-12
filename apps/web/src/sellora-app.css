@@ -1052,3 +1052,95 @@ body{border-top:0;}
   font-size: 12px;
   font-weight: 500;
 }
+
+
+/* Catalogue product search and bulk selection controls. */
+.sl-modal .sl-product-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.sl-modal .sl-product-search {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 0 11px;
+  border: 1px solid #dfe5da;
+  border-radius: 8px;
+  background: #fff;
+  color: #737c70;
+}
+
+.sl-modal .sl-product-search:focus-within {
+  border-color: #599c56;
+  box-shadow: 0 0 0 3px #599c561a;
+}
+
+.sl-modal .sl-form .sl-product-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+  color: #332f2f;
+  font-size: 12px;
+}
+
+.sl-modal .sl-product-search > button {
+  display: inline-flex;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: #f1f4ef;
+  color: #596454;
+}
+
+.sl-modal .sl-product-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sl-modal .sl-product-bulk-actions button {
+  min-height: 32px;
+  padding: 7px 11px;
+  border: 1px solid #dce5d8;
+  border-radius: 7px;
+  background: #f7faf5;
+  color: #315e43;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sl-modal .sl-product-bulk-actions button:hover:not(:disabled) {
+  border-color: #b9ceb2;
+  background: #edf4e9;
+}
+
+.sl-modal .sl-product-bulk-actions button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .sl-modal .sl-product-search input {
+    font-size: 11px;
+  }
+  .sl-modal .sl-product-bulk-actions button {
+    flex: 1;
+  }
+}
