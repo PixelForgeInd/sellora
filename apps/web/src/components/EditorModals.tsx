@@ -373,8 +373,9 @@ export function CatalogueModal({
           </div>
           <div className="sl-product-picker">
             {products.map((p) => (
-              <label key={p.id}>
+              <label className="sl-product-option" key={p.id}>
                 <input
+                  className="sl-product-option-checkbox"
                   type="checkbox"
                   checked={cform.productIds.includes(p.id)}
                   onChange={(e) =>
@@ -386,7 +387,7 @@ export function CatalogueModal({
                     })
                   }
                 />
-                <span>
+                <span className="sl-product-option-details">
                   <b>{p.name}</b>
                   <small>{money(p.price, p.currency, p.unit)}</small>
                 </span>
