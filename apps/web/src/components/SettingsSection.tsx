@@ -277,8 +277,11 @@ export function SettingsSection({
               </select>
             </label>
             <label>
-              Phone
+              Phone number *
               <input
+                type="tel"
+                required
+                minLength={7}
                 value={profileForm.phone}
                 maxLength={30}
                 onChange={(e) =>
