@@ -1,6 +1,14 @@
 import { useMemo, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { ArrowRight, Check, ImagePlus, Package, Search, Trash2, X } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ImagePlus,
+  Package,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { ErrorMessage as Err } from "./ui";
 import { formatMoney as money } from "../sellora/formatters";
 import { Button as Btn } from "./ui";
@@ -404,16 +412,28 @@ export function CatalogueModal({
                 aria-label="Search catalogue products"
               />
               {productSearch && (
-                <button type="button" onClick={() => setProductSearch("")} aria-label="Clear search">
+                <button
+                  type="button"
+                  onClick={() => setProductSearch("")}
+                  aria-label="Clear search"
+                >
                   <X size={14} />
                 </button>
               )}
             </label>
             <div className="sl-product-bulk-actions">
-              <button type="button" onClick={selectVisibleProducts} disabled={!filteredProducts.length}>
+              <button
+                type="button"
+                onClick={selectVisibleProducts}
+                disabled={!filteredProducts.length}
+              >
                 Select all{productSearch ? " results" : ""}
               </button>
-              <button type="button" onClick={removeAllProducts} disabled={!cform.productIds.length}>
+              <button
+                type="button"
+                onClick={removeAllProducts}
+                disabled={!cform.productIds.length}
+              >
                 Remove all
               </button>
             </div>
@@ -448,7 +468,11 @@ export function CatalogueModal({
             })}
           </div>
           {!products.length && (
-            <p>{products.length ? "No products match your search." : "Add products first before creating a catalogue."}</p>
+            <p>
+              {products.length
+                ? "No products match your search."
+                : "Add products first before creating a catalogue."}
+            </p>
           )}
           <div className="sl-modal-actions">
             <Btn kind="outline" onClick={() => setModal("")}>
