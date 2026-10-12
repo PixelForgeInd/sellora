@@ -372,27 +372,33 @@ export function CatalogueModal({
             <span>{cform.productIds.length} selected</span>
           </div>
           <div className="sl-product-picker">
-            {products.map((p) => (
-              <label className="sl-product-option" key={p.id}>
-                <input
-                  className="sl-product-option-checkbox"
-                  type="checkbox"
-                  checked={cform.productIds.includes(p.id)}
-                  onChange={(e) =>
-                    setCform({
-                      ...cform,
-                      productIds: e.target.checked
-                        ? [...cform.productIds, p.id]
-                        : cform.productIds.filter((id) => id !== p.id),
-                    })
-                  }
-                />
-                <span className="sl-product-option-details">
-                  <b>{p.name}</b>
-                  <small>{money(p.price, p.currency, p.unit)}</small>
-                </span>
-              </label>
-            ))}
+            {products.map((p) => {
+              const selected = cform.productIds.includes(p.id);
+              return (
+                <div className="sl-product-option" key={p.id}>
+                  <button
+                    type="button"
+                    className={`sl-product-option-toggle${selected ? " is-selected" : ""}`}
+                    aria-pressed={selected}
+                    aria-label={`${selected ? "Remove" : "Add"} ${p.name} ${selected ? "from" : "to"} catalogue`}
+                    onClick={() =>
+                      setCform({
+                        ...cform,
+                        productIds: selected
+                          ? cform.productIds.filter((id) => id !== p.id)
+                          : [...cform.productIds, p.id],
+                      })
+                    }
+                  >
+                    {selected ? <Check size={16} strokeWidth={3} /> : null}
+                  </button>
+                  <div className="sl-product-option-details">
+                    <b>{p.name}</b>
+                    <small>{money(p.price, p.currency, p.unit)}</small>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           {!products.length && (
             <p>Add products first before creating a catalogue.</p>
