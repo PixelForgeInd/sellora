@@ -143,6 +143,8 @@ export default function SelloraApp() {
   const [cform, setCform] = useState({
     title: "",
     description: "",
+    shareImageUrl: "",
+    shareImageFile: null as File | null,
     productIds: [] as string[],
   });
   const [editingCatalogue, setEditingCatalogue] = useState("");
