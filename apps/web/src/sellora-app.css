@@ -961,3 +961,94 @@ body{border-top:0;}
 .sl-signout{width:100%;min-height:42px;padding:10px 12px;border:1px solid #dfe5db;border-radius:8px;background:#f8faf6;color:#354332;font-size:13px;font-weight:700;}
 .sl-signout:hover{background:#edf4e9;border-color:#cbdac5;}
 @media(max-width:650px){.sl-sidebar{position:sticky;top:0;height:auto;min-height:0;max-height:none;overflow:visible;z-index:30;}.sl-sidebar-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;border-top:1px solid #edf0e9;padding:9px 0 0;position:sticky;bottom:0;}.sl-user-email{min-width:0;max-width:65%;font-size:11px;}.sl-signout{width:auto;flex-shrink:0;min-height:36px;padding:8px 11px;font-size:12px;}}
+
+
+/* Catalogue create/edit product picker — this is the stylesheet imported by main.tsx. */
+.sl-modal .sl-form .sl-product-picker {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e1e7dd;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.sl-modal .sl-form .sl-product-picker .sl-product-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px;
+  text-align: left;
+  background: #fff;
+  border-bottom: 1px solid #edf0e9;
+}
+
+.sl-modal .sl-form .sl-product-picker .sl-product-option:last-child {
+  border-bottom: 0;
+}
+
+.sl-modal .sl-form .sl-product-picker .sl-product-option:hover {
+  background: #f8faf6;
+}
+
+.sl-modal .sl-form .sl-product-picker button.sl-product-option-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid #aeb8a8;
+  border-radius: 4px;
+  background: #fff;
+  color: #fff;
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+}
+
+.sl-modal .sl-form .sl-product-picker button.sl-product-option-toggle.is-selected {
+  border-color: #599c56;
+  background: #599c56;
+  color: #fff;
+}
+
+.sl-modal .sl-form .sl-product-picker .sl-product-option-details {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  color: #332f2f;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.sl-modal .sl-form .sl-product-picker .sl-product-option-details b {
+  display: block;
+  margin: 0;
+  font-weight: 650;
+}
+
+.sl-modal .sl-form .sl-product-picker .sl-product-option-details small {
+  display: block;
+  margin: 0;
+  color: #72776f;
+  font-size: 12px;
+  font-weight: 500;
+}
