@@ -41,3 +41,119 @@
   flex-shrink: 0;
 }
 
+
+
+/* Catalogue create/edit modal: keep product selection compact and buttons consistent. */
+.sl-product-picker {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e1e7dd;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.sl-product-picker .sl-product-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  margin: 0;
+  cursor: pointer;
+  background: #fff;
+  border-bottom: 1px solid #edf0e9;
+}
+
+.sl-product-picker .sl-product-option:last-child {
+  border-bottom: 0;
+}
+
+.sl-product-picker .sl-product-option:hover {
+  background: #f8faf6;
+}
+
+.sl-product-picker .sl-product-option-checkbox {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  accent-color: #599c56;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sl-product-picker .sl-product-option-details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: #332f2f;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.sl-product-picker .sl-product-option-details b {
+  font-weight: 650;
+}
+
+.sl-product-picker .sl-product-option-details small {
+  color: #72776f;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sl-modal-actions .sl-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sl-modal-actions .sl-primary {
+  background: #0b124f;
+  color: #fff;
+  border: 1px solid #0b124f;
+}
+
+.sl-modal-actions .sl-primary:hover:not(:disabled) {
+  background: #151d68;
+  border-color: #151d68;
+}
+
+.sl-modal-actions .sl-outline {
+  background: #fff;
+  color: #315e43;
+  border: 1px solid #dce5d8;
+}
+
+.sl-modal-actions .sl-outline:hover:not(:disabled) {
+  background: #f7faf5;
+  border-color: #b9ceb2;
+}
+
+@media (max-width: 520px) {
+  .sl-modal-actions {
+    gap: 10px;
+  }
+  .sl-modal-actions .sl-button {
+    min-width: 0;
+    flex: 1;
+    padding: 11px 10px;
+    font-size: 12px;
+  }
+}
