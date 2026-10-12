@@ -57,6 +57,7 @@ import type {
   Product,
   PublicData,
 } from "./sellora/types";
+import type { CatalogueForm } from "./components/WorkspaceSections";
 export default function SelloraApp() {
   // Session and workspace data
   const [access, setAccess] = useState(getSessionToken());
@@ -140,12 +141,12 @@ export default function SelloraApp() {
     stockQuantity: "",
     fields: {} as Record<string, string | number | boolean | string[]>,
   });
-  const [cform, setCform] = useState({
+  const [cform, setCform] = useState<CatalogueForm>({
     title: "",
     description: "",
     shareImageUrl: "",
-    shareImageFile: null as File | null,
-    productIds: [] as string[],
+    shareImageFile: null,
+    productIds: [],
   });
   const [editingCatalogue, setEditingCatalogue] = useState("");
   const [modal, setModal] = useState("");
