@@ -426,7 +426,7 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     industry: z.string().trim().min(2).max(100).optional(),
     productCategory: z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]).optional(),
     businessModel: z.enum(["B2B","B2C","B2B2C"]).optional(),
-    phone: z.string().trim().max(30).nullable().optional(),
+    phone: z.string().trim().min(7, "Enter a valid phone number.").max(30).nullable().optional(),
     email: z.union([z.string().trim().email().max(160), z.literal("")]).nullable().optional(),
     address: z.string().trim().max(1000).nullable().optional(),
     logoUrl: z.union([z.string().trim().url().max(500), z.literal("")]).nullable().optional(),
@@ -455,7 +455,7 @@ router.post("/workspace/business", requireAuth, authenticated(async (req,res) =>
   const data = z.object({
     name:z.string().trim().min(2).max(120), industry:z.string().trim().min(2).max(100),
     productCategory:z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]),
-    businessModel:z.enum(["B2B","B2C","B2B2C"]), phone:z.string().trim().max(30).optional(),
+    businessModel:z.enum(["B2B","B2C","B2B2C"]), phone:z.string().trim().min(7, "Enter a valid phone number.").max(30),
     website:z.union([z.string().trim().url().max(200),z.literal("")]).optional(),
     brandColor:z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56"),
     sellingMode:z.enum(["CATALOG_ONLY","ONLINE_PAYMENTS"]).default("ONLINE_PAYMENTS")
@@ -466,7 +466,7 @@ router.post("/workspace/business", requireAuth, authenticated(async (req,res) =>
   const fields = templates[data.productCategory] || templates.other;
   const business = await prisma.business.create({data:{
     ownerUserId:req.userId!, name:data.name, slug, industry:data.industry, productCategory:data.productCategory,
-    businessModel:data.businessModel, phone:data.phone || null, website:data.website || null, brandColor:data.brandColor, sellingMode:data.sellingMode,
+    businessModel:data.businessModel, phone:data.phone, website:data.website || null, brandColor:data.brandColor, sellingMode:data.sellingMode,
     catalogueFields:{create:fields.map((f,i)=>({key:f.key,label:f.label,type:f.type,required:f.required || false,options:f.options,sortOrder:i}))}
   },include:{catalogueFields:{orderBy:{sortOrder:"asc"}}}});
   res.status(201).json(business);
