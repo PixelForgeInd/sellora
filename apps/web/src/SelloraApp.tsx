@@ -670,6 +670,8 @@ export default function SelloraApp() {
     setCform({
       title: c.title,
       description: c.description || "",
+      shareImageUrl: c.shareImageUrl || "",
+      shareImageFile: null,
       productIds: c.items.map((item) => item.product.id),
     });
     setError("");
@@ -1357,6 +1359,8 @@ export default function SelloraApp() {
                     setCform({
                       title: business.name + " Product Catalogue",
                       description: "",
+                      shareImageUrl: "",
+                      shareImageFile: null,
                       productIds: products.map((p) => p.id),
                     });
                     setModal("catalogue");
