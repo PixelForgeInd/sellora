@@ -157,3 +157,56 @@
     font-size: 12px;
   }
 }
+
+
+/* Catalogue product selector uses a button, not a themed form checkbox.
+   This avoids global input styles expanding checkboxes into large green tiles. */
+.sl-product-picker .sl-product-option {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  text-align: left !important;
+}
+
+.sl-product-picker button.sl-product-option-toggle {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: inline-flex !important;
+  flex: 0 0 20px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1.5px solid #aeb8a8 !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: pointer;
+}
+
+.sl-product-picker button.sl-product-option-toggle.is-selected {
+  border-color: #599c56 !important;
+  background: #599c56 !important;
+  color: #fff !important;
+}
+
+.sl-product-picker .sl-product-option-details {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+}
