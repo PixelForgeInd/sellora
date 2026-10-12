@@ -36,6 +36,8 @@ type BusinessForm = {
 type CatalogueForm = {
   title: string;
   description: string;
+  shareImageUrl: string;
+  shareImageFile: File | null;
   productIds: string[];
 };
 
@@ -571,6 +573,8 @@ export function CatalogueSection({
             setCform({
               title: business.name + " Product Catalogue",
               description: "",
+              shareImageUrl: "",
+              shareImageFile: null,
               productIds: products.map((p) => p.id),
             });
             setError("");
