@@ -648,6 +648,7 @@ export default function SelloraApp() {
           body: JSON.stringify(cataloguePayload),
         },
       );
+      if (!editingCatalogue) setEditingCatalogue(c.id);
       if (shareImageFile) {
         const upload = new FormData();
         upload.append("image", shareImageFile);
