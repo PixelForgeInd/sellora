@@ -47,7 +47,7 @@ export default async (request) => {
   if (catalogue) {
     const canonical = `${incoming.origin}/c/${encodeURIComponent(slug)}`;
     const businessName = catalogue.business?.name || catalogue.title || "Product catalogue";
-    const title = `${businessName} | Sellora`;
+    const title = `${catalogue.title || businessName} | ${businessName} | Sellora`;
     const description = (
       catalogue.description ||
       `Explore products from ${businessName} on Sellora. View product details and contact the supplier directly.`
