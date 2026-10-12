@@ -638,15 +638,25 @@ export default function SelloraApp() {
     setBusy(true);
     setError("");
     try {
-      const c = await api(
+      const { shareImageFile, ...cataloguePayload } = cform;
+      let c = await api(
         editingCatalogue
           ? "/workspace/catalogues/" + editingCatalogue
           : "/workspace/catalogues",
         {
           method: editingCatalogue ? "PATCH" : "POST",
-          body: JSON.stringify(cform),
+          body: JSON.stringify(cataloguePayload),
         },
       );
+      if (shareImageFile) {
+        const upload = new FormData();
+        upload.append("image", shareImageFile);
+        const imageResult = await api("/workspace/catalogues/" + c.id + "/image", {
+          method: "POST",
+          body: upload,
+        });
+        c = { ...c, shareImageUrl: imageResult.shareImageUrl };
+      }
       setCatalogues((old) =>
         editingCatalogue
           ? old.map((x) => (x.id === c.id ? c : x))
