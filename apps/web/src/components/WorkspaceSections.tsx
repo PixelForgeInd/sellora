@@ -324,8 +324,12 @@ export function OnboardingScreen({
           </div>
           <div className="sl-form-row">
             <label>
-              Phone (optional)
+              Phone number *
               <input
+                type="tel"
+                required
+                minLength={7}
+                maxLength={30}
                 value={bform.phone}
                 onChange={(e) => setBform({ ...bform, phone: e.target.value })}
                 placeholder="+91…"
