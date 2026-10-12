@@ -1,5 +1,6 @@
+import { useMemo, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { ArrowRight, Check, ImagePlus, Package, Trash2, X } from "lucide-react";
+import { ArrowRight, Check, ImagePlus, Package, Search, Trash2, X } from "lucide-react";
 import { ErrorMessage as Err } from "./ui";
 import { formatMoney as money } from "../sellora/formatters";
 import { Button as Btn } from "./ui";
@@ -329,6 +330,27 @@ export function CatalogueModal({
   setModal,
   saveCatalogue,
 }: CatalogueModalProps) {
+  const [productSearch, setProductSearch] = useState("");
+  const filteredProducts = useMemo(() => {
+    const query = productSearch.trim().toLocaleLowerCase();
+    if (!query) return products;
+    return products.filter((product) =>
+      [product.name, product.sku, product.description]
+        .filter(Boolean)
+        .some((value) => value!.toLocaleLowerCase().includes(query)),
+    );
+  }, [products, productSearch]);
+
+  const selectVisibleProducts = () => {
+    const visibleIds = filteredProducts.map((product) => product.id);
+    setCform({
+      ...cform,
+      productIds: [...new Set([...cform.productIds, ...visibleIds])],
+    });
+  };
+
+  const removeAllProducts = () => setCform({ ...cform, productIds: [] });
+
   return (
     <div className="sl-modal-backdrop">
       <section className="sl-modal">
@@ -371,8 +393,33 @@ export function CatalogueModal({
             <b>Choose products</b>
             <span>{cform.productIds.length} selected</span>
           </div>
+          <div className="sl-product-tools">
+            <label className="sl-product-search">
+              <Search size={16} aria-hidden="true" />
+              <input
+                type="search"
+                value={productSearch}
+                onChange={(event) => setProductSearch(event.target.value)}
+                placeholder="Search products by name, SKU or description"
+                aria-label="Search catalogue products"
+              />
+              {productSearch && (
+                <button type="button" onClick={() => setProductSearch("")} aria-label="Clear search">
+                  <X size={14} />
+                </button>
+              )}
+            </label>
+            <div className="sl-product-bulk-actions">
+              <button type="button" onClick={selectVisibleProducts} disabled={!filteredProducts.length}>
+                Select all{productSearch ? " results" : ""}
+              </button>
+              <button type="button" onClick={removeAllProducts} disabled={!cform.productIds.length}>
+                Remove all
+              </button>
+            </div>
+          </div>
           <div className="sl-product-picker">
-            {products.map((p) => {
+            {filteredProducts.map((p) => {
               const selected = cform.productIds.includes(p.id);
               return (
                 <div className="sl-product-option" key={p.id}>
@@ -401,7 +448,7 @@ export function CatalogueModal({
             })}
           </div>
           {!products.length && (
-            <p>Add products first before creating a catalogue.</p>
+            <p>{products.length ? "No products match your search." : "Add products first before creating a catalogue."}</p>
           )}
           <div className="sl-modal-actions">
             <Btn kind="outline" onClick={() => setModal("")}>
