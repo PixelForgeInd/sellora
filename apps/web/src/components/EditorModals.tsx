@@ -20,6 +20,8 @@ type ProductForm = {
 type CatalogueForm = {
   title: string;
   description: string;
+  shareImageUrl: string;
+  shareImageFile: File | null;
   productIds: string[];
 };
 
