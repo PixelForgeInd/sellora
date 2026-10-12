@@ -21,25 +21,20 @@ export default async (request) => {
     return new Response("Catalogue not found", { status: 404 });
   }
 
-  let catalogue;
+  // Always serve the SPA for a valid /c/:slug route. The React app loads
+  // catalogue data from its configured API origin. A separate API lookup here
+  // must not prevent the page from loading if Netlify's function env differs.
+  let catalogue = null;
   try {
     const response = await fetch(
       `${API_ORIGIN}/api/public/catalogues/${encodeURIComponent(slug)}`,
       { headers: { accept: "application/json" } },
     );
-    if (response.status === 404) {
-      return new Response("Catalogue not found", { status: 404 });
-    }
-    if (!response.ok) {
-      return new Response("Catalogue is temporarily unavailable", { status: 502 });
-    }
-    catalogue = await response.json();
+    if (response.ok) catalogue = await response.json();
   } catch {
-    return new Response("Catalogue is temporarily unavailable", { status: 502 });
+    // Metadata is best-effort; the client app handles catalogue/API errors.
   }
 
-  // Serve the SPA at /c/:slug. Redirecting back to the same URL re-invokes
-  // the /c/* rewrite and creates a redirect loop instead of loading the app.
   let html;
   try {
     const appResponse = await fetch(new URL("/index.html", incoming.origin));
@@ -49,34 +44,34 @@ export default async (request) => {
     return new Response("Catalogue page is temporarily unavailable", { status: 502 });
   }
 
-  const canonical = `${incoming.origin}/c/${encodeURIComponent(slug)}`;
-  const businessName = catalogue.business?.name || catalogue.title || "Product catalogue";
-  const title = `${businessName} | Sellora`;
-  const description = (
-    catalogue.description ||
-    `Explore products from ${businessName} on Sellora. View product details and contact the supplier directly.`
-  ).replace(/\s+/g, " ").slice(0, 250);
-  const image = absoluteUrl(
-    catalogue.products?.find((product) => product.imageUrl)?.imageUrl ||
-      catalogue.business?.logoUrl,
-    incoming.origin,
-  );
-
-  const metadata = [
-    `<meta name="description" content="${escapeHtml(description)}">`,
-    `<link rel="canonical" href="${escapeHtml(canonical)}">`,
-    '<meta property="og:type" content="website">',
-    '<meta property="og:site_name" content="Sellora">',
-    `<meta property="og:title" content="${escapeHtml(title)}">`,
-    `<meta property="og:description" content="${escapeHtml(description)}">`,
-    `<meta property="og:url" content="${escapeHtml(canonical)}">`,
-    image
-      ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${escapeHtml(image)}">`
-      : '<meta name="twitter:card" content="summary">',
-  ].join("");
-
-  html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
-  html = html.replace(/<head([^>]*)>/i, `<head$1>${metadata}`);
+  if (catalogue) {
+    const canonical = `${incoming.origin}/c/${encodeURIComponent(slug)}`;
+    const businessName = catalogue.business?.name || catalogue.title || "Product catalogue";
+    const title = `${businessName} | Sellora`;
+    const description = (
+      catalogue.description ||
+      `Explore products from ${businessName} on Sellora. View product details and contact the supplier directly.`
+    ).replace(/\s+/g, " ").slice(0, 250);
+    const image = absoluteUrl(
+      catalogue.products?.find((product) => product.imageUrl)?.imageUrl ||
+        catalogue.business?.logoUrl,
+      incoming.origin,
+    );
+    const metadata = [
+      `<meta name="description" content="${escapeHtml(description)}">`,
+      `<link rel="canonical" href="${escapeHtml(canonical)}">`,
+      '<meta property="og:type" content="website">',
+      '<meta property="og:site_name" content="Sellora">',
+      `<meta property="og:title" content="${escapeHtml(title)}">`,
+      `<meta property="og:description" content="${escapeHtml(description)}">`,
+      `<meta property="og:url" content="${escapeHtml(canonical)}">`,
+      image
+        ? `<meta property="og:image" content="${escapeHtml(image)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${escapeHtml(image)}">`
+        : '<meta name="twitter:card" content="summary">',
+    ].join("");
+    html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+    html = html.replace(/<head([^>]*)>/i, `<head$1>${metadata}`);
+  }
 
   return new Response(html, {
     status: 200,
