@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   build:
-    name: Verify production build
+    if: github.ref == 'refs/heads/main'
+    name: Verify and deploy production
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,6 +28,16 @@ jobs:
         with:
           node-version: 24
           cache: npm
+
+      - name: Check deployment secrets
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$NETLIFY_AUTH_TOKEN" || { echo "::error::Missing NETLIFY_AUTH_TOKEN"; exit 1; }
+          test -n "$NETLIFY_SITE_ID" || { echo "::error::Missing NETLIFY_SITE_ID"; exit 1; }
+          test -n "$RENDER_DEPLOY_HOOK_URL" || { echo "::error::Missing RENDER_DEPLOY_HOOK_URL"; exit 1; }
 
       - name: Install dependencies
         run: npm ci
@@ -49,9 +60,4 @@ jobs:
       - name: Trigger Render API deployment
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "::error::Missing GitHub Actions secret RENDER_DEPLOY_HOOK_URL"
-            exit 1
-          fi
-          curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
+        run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
