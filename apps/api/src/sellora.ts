@@ -647,7 +647,7 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
   }
   const {productIds,...fields}=data;
   const updated=await prisma.selloraCatalogue.update({where:{id:existing.id},data:{
-    ...fields,...(fields.isPublished && !existing.isPublished ? {publishedAt:new Date()} : {}),
+    ...fields,...(fields.shareImageUrl !== undefined ? {shareImageUrl:fields.shareImageUrl || null} : {}),...(fields.isPublished && !existing.isPublished ? {publishedAt:new Date()} : {}),
     ...(fields.isPublished===false ? {publishedAt:null} : {})
   },include:{items:{include:{product:true}}}});
   res.json(updated);
