@@ -1,0 +1,63 @@
+name: Deploy Sellora to Netlify and Render
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sellora-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    name: Verify and deploy production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Check deployment secrets
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$NETLIFY_AUTH_TOKEN" || { echo "::error::Missing NETLIFY_AUTH_TOKEN"; exit 1; }
+          test -n "$NETLIFY_SITE_ID" || { echo "::error::Missing NETLIFY_SITE_ID"; exit 1; }
+          test -n "$RENDER_DEPLOY_HOOK_URL" || { echo "::error::Missing RENDER_DEPLOY_HOOK_URL"; exit 1; }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Build API and frontend
+        run: npm run build
+        env:
+          VITE_API_URL: https://sellora-api.onrender.com/api
+
+      - name: Deploy frontend to Netlify
+        run: npx --yes netlify-cli deploy --prod --dir=apps/web/dist --functions=apps/web/netlify/functions
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          VITE_API_URL: https://sellora-api.onrender.com/api
+
+      - name: Trigger Render API deployment
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK_URL"
