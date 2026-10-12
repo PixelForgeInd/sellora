@@ -51,7 +51,7 @@ jobs:
           VITE_API_URL: https://sellora-api.onrender.com/api
 
       - name: Deploy frontend to Netlify
-        run: npx --yes netlify-cli deploy --prod --site "$NETLIFY_SITE_ID" --dir=apps/web/dist --functions=apps/web/netlify/functions
+        run: npx --yes netlify-cli deploy --prod --filter @ganeshaa/web --site "$NETLIFY_SITE_ID" --dir=apps/web/dist --functions=apps/web/netlify/functions
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
