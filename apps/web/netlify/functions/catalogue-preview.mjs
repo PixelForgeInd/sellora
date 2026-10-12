@@ -53,7 +53,8 @@ export default async (request) => {
       `Explore products from ${businessName} on Sellora. View product details and contact the supplier directly.`
     ).replace(/\s+/g, " ").slice(0, 250);
     const image = absoluteUrl(
-      catalogue.products?.find((product) => product.imageUrl)?.imageUrl ||
+      catalogue.shareImageUrl ||
+        catalogue.products?.find((product) => product.imageUrl)?.imageUrl ||
         catalogue.business?.logoUrl,
       incoming.origin,
     );
