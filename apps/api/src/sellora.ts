@@ -672,7 +672,7 @@ router.post("/workspace/catalogues/:id/image", requireAuth, productImageUpload.s
     await fs.promises.unlink(file.path).catch(()=>{});
     return res.status(400).json({error:"The uploaded file is not a valid image of the selected type."});
   }
-  const publicApiOrigin=(process.env.PUBLIC_API_URL||req.protocol+"://"+req.get("host")).replace(/\\/$/,"");
+  const publicApiOrigin=(process.env.PUBLIC_API_URL||req.protocol+"://"+req.get("host")).replace(/\/$/,"");
   const shareImageUrl=publicApiOrigin+"/uploads/"+file.filename;
   await prisma.selloraCatalogue.update({where:{id:catalogue.id},data:{shareImageUrl}});
   const oldImageFilename=uploadedImageFilename(catalogue.shareImageUrl);
