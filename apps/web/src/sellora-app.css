@@ -951,3 +951,13 @@
  .sl-app .sl-catalogue-cover>b{font-size:24px!important}
  .sl-app .sl-section-card>h3,.sl-app .sl-section-head h3{font-size:22px!important}
 }
+
+/* Workspace polish: remove page-edge gaps and keep sign-out visible. */
+html,body,#root{margin:0;min-height:100%;}
+body{border-top:0;}
+.sl-app{margin:0;padding-top:0;}
+.sl-sidebar{height:100dvh;min-height:100dvh;overflow-y:auto;overscroll-behavior:contain;}
+.sl-sidebar-bottom{position:sticky;bottom:0;background:#fff;padding:14px 5px max(12px,env(safe-area-inset-bottom));z-index:5;}
+.sl-signout{width:100%;min-height:42px;padding:10px 12px;border:1px solid #dfe5db;border-radius:8px;background:#f8faf6;color:#354332;font-size:13px;font-weight:700;}
+.sl-signout:hover{background:#edf4e9;border-color:#cbdac5;}
+@media(max-width:650px){.sl-sidebar{position:sticky;top:0;height:auto;min-height:0;max-height:none;overflow:visible;z-index:30;}.sl-sidebar-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;border-top:1px solid #edf0e9;padding:9px 0 0;position:sticky;bottom:0;}.sl-user-email{min-width:0;max-width:65%;font-size:11px;}.sl-signout{width:auto;flex-shrink:0;min-height:36px;padding:8px 11px;font-size:12px;}}

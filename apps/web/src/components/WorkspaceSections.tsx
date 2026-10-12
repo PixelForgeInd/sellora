@@ -33,9 +33,11 @@ type BusinessForm = {
   brandColor: string;
   sellingMode: "CATALOG_ONLY" | "ONLINE_PAYMENTS";
 };
-type CatalogueForm = {
+export type CatalogueForm = {
   title: string;
   description: string;
+  shareImageUrl: string;
+  shareImageFile: File | null;
   productIds: string[];
 };
 
@@ -324,8 +326,12 @@ export function OnboardingScreen({
           </div>
           <div className="sl-form-row">
             <label>
-              Phone (optional)
+              Phone number *
               <input
+                type="tel"
+                required
+                minLength={7}
+                maxLength={30}
                 value={bform.phone}
                 onChange={(e) => setBform({ ...bform, phone: e.target.value })}
                 placeholder="+91…"
@@ -571,6 +577,8 @@ export function CatalogueSection({
             setCform({
               title: business.name + " Product Catalogue",
               description: "",
+              shareImageUrl: "",
+              shareImageFile: null,
               productIds: products.map((p) => p.id),
             });
             setError("");
@@ -591,6 +599,8 @@ export function CatalogueSection({
               setCform({
                 title: business.name + " Product Catalogue",
                 description: "",
+                shareImageUrl: "",
+                shareImageFile: null,
                 productIds: products.map((p) => p.id),
               });
               setModal("catalogue");

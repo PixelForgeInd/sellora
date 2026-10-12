@@ -46,7 +46,7 @@ export const businessSchema = z.object({
   productCategory: z.enum(["yarn-textiles", "clothing", "furniture", "electronics", "other"]),
   businessModel: z.enum(["B2B", "B2C", "B2B2C"]),
   email: z.union([z.string().trim().email().max(160), z.literal("")]).optional(),
-  phone: z.string().trim().max(30).optional(),
+  phone: z.string().trim().min(7, "Enter a valid phone number.").max(30),
   website: z.union([z.string().trim().url().max(200), z.literal("")]).optional(),
   brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#599c56")
 });

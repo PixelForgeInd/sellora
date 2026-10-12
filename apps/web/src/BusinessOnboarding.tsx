@@ -60,7 +60,7 @@ export default function BusinessOnboarding({ onClose, onCreated }: Props) {
       </form>}
       {step === 2 && <form className="onboarding-form" onSubmit={submit}>
         <label>Catalogue URL name *<input required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" maxLength={80} value={form.slug} onChange={e => update("slug", e.target.value)} placeholder="your-business-name"/><small>Unique link identifier. You can use this for a public catalogue later.</small></label>
-        <div className="form-grid"><label>Business email<input type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="sales@example.com"/></label><label>Phone<input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+91…"/></label></div>
+        <div className="form-grid"><label>Business email<input type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="sales@example.com"/></label><label>Phone number *<input type="tel" required minLength={7} maxLength={30} value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+91…"/></label></div>
         <label>Website (optional)<input type="url" value={form.website} onChange={e => update("website", e.target.value)} placeholder="https://example.com"/></label>
         <label>Brand colour<div className="brand-color-input"><input type="color" value={form.brandColor} onChange={e => update("brandColor", e.target.value)}/><span>{form.brandColor}</span></div></label>
         {error && <div className="notice notice-error">{error}</div>}
