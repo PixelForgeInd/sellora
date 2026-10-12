@@ -33,7 +33,7 @@ type BusinessForm = {
   brandColor: string;
   sellingMode: "CATALOG_ONLY" | "ONLINE_PAYMENTS";
 };
-type CatalogueForm = {
+export type CatalogueForm = {
   title: string;
   description: string;
   shareImageUrl: string;
