@@ -157,6 +157,7 @@ test("account, workspace, product, catalogue and tenant-isolation flow", async (
         industry: "Textiles",
         productCategory: "yarn-textiles",
         businessModel: "B2B",
+        phone: "9876543210",
         brandColor: "#599c56",
         sellingMode: "CATALOG_ONLY",
       },
