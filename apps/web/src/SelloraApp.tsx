@@ -86,7 +86,9 @@ export default function SelloraApp() {
   const [mode, setMode] = useState(() =>
     new URLSearchParams(window.location.search).has("resetToken")
       ? "reset"
-      : window.location.pathname === "/login" ? "login" : "signup",
+      : window.location.pathname === "/login"
+        ? "login"
+        : "signup",
   );
 
   // Workspace navigation and feedback
@@ -738,7 +740,10 @@ export default function SelloraApp() {
   }
   if (slug || isDemo)
     return <PublicCatalogue data={pub} error={pubError} demo={isDemo} />;
-  if (window.location.pathname === "/" && !new URLSearchParams(window.location.search).has("resetToken"))
+  if (
+    window.location.pathname === "/" &&
+    !new URLSearchParams(window.location.search).has("resetToken")
+  )
     return <HomePage />;
   if (!access || !user)
     return (
