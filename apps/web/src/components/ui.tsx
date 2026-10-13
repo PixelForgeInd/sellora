@@ -4,6 +4,7 @@ export function Brand() {
   return (
     <a className="sl-brand" href="/" aria-label="Sellora home">
       <img className="sl-mark" src="/sellora-mark.svg" alt="" aria-hidden="true" />
+      <span className="sl-wordmark">SELLORA</span>
     </a>
   );
 }
