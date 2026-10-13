@@ -726,7 +726,7 @@ router.put("/workspace/business/payment-gateway",requireAuth,authenticated(async
  try{paymentEncryptionKey();}catch(error){return res.status(503).json({error:error instanceof Error?error.message:"Payment encryption is not configured on the Sellora API server."});}
  if(d.testMode&&!d.keyId.startsWith("rzp_test_"))return res.status(400).json({error:"Test mode requires a Razorpay test Key ID (rzp_test_…)."});
  if(!d.testMode&&!d.keyId.startsWith("rzp_live_"))return res.status(400).json({error:"Live mode requires a Razorpay live Key ID (rzp_live_…)."});
- const secretValue=d.keySecret||(b.razorpayKeySecretEncrypted?decryptPaymentSecret(b.razorpayKeySecretEncrypted):"");
+ const secretValue=d.keySecret||(b.razorpayKeySecretEncrypted?decryptStoredGatewaySecret(b.razorpayKeySecretEncrypted):"");
  if(!secretValue)return res.status(400).json({error:"Enter your Razorpay Key Secret."});
  try{await razorpayRequest(d.keyId,secretValue,"/orders?count=1");}
  catch(error){return res.status(400).json({error:error instanceof Error?"Could not authenticate with Razorpay: "+error.message:"Razorpay credentials could not be verified."});}
