@@ -1144,3 +1144,72 @@ body{border-top:0;}
     flex: 1;
   }
 }
+
+
+/* Public marketing homepage */
+.sl-home{min-height:100vh;background:#fff;color:#26352b;font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif;overflow:hidden}
+.sl-home a{text-decoration:none}
+.sl-home-nav{max-width:1220px;margin:auto;padding:22px 28px;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.sl-home-nav nav{display:flex;align-items:center;gap:30px;font-size:13px;font-weight:600;color:#596457}
+.sl-home-nav nav>a:not(.sl-home-cta):hover,.sl-home-footer>a:hover{color:#599c56}
+.sl-home-nav .sl-brand .sl-mark,.sl-home-footer .sl-brand .sl-mark{width:38px;height:38px}
+.sl-home-nav .sl-brand .sl-wordmark,.sl-home-footer .sl-brand .sl-wordmark{font-family:"Sora","DM Sans",sans-serif;font-size:17px;letter-spacing:-.7px}
+.sl-home-login{margin-left:8px}
+.sl-home-cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#599c56;color:white!important;padding:13px 18px;border-radius:8px;font-size:13px;font-weight:700;box-shadow:0 6px 16px #599c5625;transition:transform .18s,background .18s}
+.sl-home-cta:hover{background:#477f44;transform:translateY(-1px)}
+.sl-home-hero{max-width:1220px;margin:0 auto;padding:76px 28px 92px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:64px}
+.sl-home-copy{max-width:560px}
+.sl-home-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.8px;color:#56834f}
+.sl-home-copy h1{font:600 clamp(42px,5.1vw,68px)/1.08 "Sora","DM Sans",sans-serif;letter-spacing:-3.1px;margin:22px 0 20px;color:#28372c}
+.sl-home-copy h1 em,.sl-home-section-heading h2 em,.sl-home-steps h2 em,.sl-home-bottom h2 em{font-style:normal;color:#599c56}
+.sl-home-copy>p,.sl-home-section-heading>p,.sl-home-bottom>p{font-size:16px;line-height:1.8;color:#737d70;max-width:485px}
+.sl-home-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:28px}
+.sl-home-secondary{font-size:13px;font-weight:700;color:#344b37}
+.sl-home-points{display:flex;gap:18px;flex-wrap:wrap;margin-top:28px;color:#687565;font-size:11px;font-weight:650}
+.sl-home-preview{position:relative;padding:15px 12px 30px 28px}
+.sl-preview-window{background:#fff;border:1px solid #e5ebe2;border-radius:16px;padding:20px;box-shadow:0 25px 80px #233b2017;transform:rotate(1deg)}
+.sl-preview-top{height:23px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #edf0ea;padding-bottom:15px}
+.sl-preview-top>span{width:7px;height:7px;background:#cbd7c6;border-radius:50%}
+.sl-preview-top small{margin-left:auto;font-size:8px;letter-spacing:1.4px;color:#8b9587}
+.sl-preview-heading{display:flex;justify-content:space-between;align-items:center;padding:25px 5px 22px}
+.sl-preview-heading small{font-size:8px;letter-spacing:1.3px;color:#6e9667;font-weight:800}
+.sl-preview-heading h2{font:600 24px/1.2 "Sora","DM Sans",sans-serif;letter-spacing:-.9px;margin:8px 0;color:#2c3c30}
+.sl-preview-heading p{font-size:10px;color:#7c8578;margin:0}
+.sl-preview-badge{width:47px;height:47px;display:grid;place-items:center;background:#edf5e9;border-radius:12px;color:#599c56}
+.sl-preview-products{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sl-preview-product{border:1px solid #edf0ea;border-radius:10px;padding:10px;font-size:11px;display:flex;flex-direction:column;gap:6px;color:#354433}
+.sl-preview-product>small{font-size:9px;color:#8b9386}
+.sl-yarn-art,.sl-fabric-art{height:130px;border-radius:7px;overflow:hidden;position:relative;margin-bottom:5px;background:#e9eee3}
+.sl-yarn-art:before,.sl-yarn-art:after{content:"";position:absolute;width:80px;height:80px;border:13px solid #c2d4b8;border-radius:50%;left:23%;top:18%;box-shadow:inset 0 0 0 4px #edf3e8}
+.sl-yarn-art:after{width:55px;height:55px;border-color:#6c9d61;left:38%;top:27%;border-width:9px}
+.sl-yarn-art i{position:absolute;z-index:2;width:2px;height:120px;background:#f8faf5;left:48%;top:0;transform:rotate(25deg)}
+.sl-fabric-art{background:#eee8db}
+.sl-fabric-art:before{content:"";position:absolute;inset:20px 28px;background:repeating-linear-gradient(90deg,#c8bda7 0 8px,#e0d7c8 8px 16px);transform:rotate(-9deg);box-shadow:0 8px 15px #584c351c}
+.sl-fabric-art i{position:absolute;z-index:2;left:10px;right:10px;top:45px;height:2px;background:#fff8}
+.sl-preview-share{display:flex;align-items:center;gap:11px;background:#f3f7f0;padding:12px;border-radius:9px;margin-top:14px;color:#599c56}
+.sl-preview-share>span:nth-of-type(1){display:flex;flex-direction:column;gap:3px;color:#3a4938}
+.sl-preview-share b{font-size:10px}.sl-preview-share small{font-size:9px;color:#7b8576}
+.sl-preview-share-pill{margin-left:auto;background:#fff;border:1px solid #dfe8da;padding:7px 9px;border-radius:6px;color:#527a4b;font-size:9px;font-weight:700}
+.sl-home-floating{position:absolute;right:-3px;bottom:3px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e8eee5;border-radius:11px;padding:12px 16px;box-shadow:0 12px 35px #233b2015}
+.sl-home-floating>span{width:34px;height:34px;display:grid;place-items:center;background:#edf5e9;color:#599c56;border-radius:9px}
+.sl-home-floating div{display:flex;flex-direction:column;gap:4px}.sl-home-floating b{font-size:10px;color:#344333}.sl-home-floating small{font-size:9px;color:#838c7f}
+.sl-home-features{background:#f7f9f5;padding:82px 28px 92px}
+.sl-home-section-heading{text-align:center;max-width:650px;margin:0 auto 38px}
+.sl-home-section-heading h2,.sl-home-steps h2,.sl-home-bottom h2{font:600 clamp(30px,3.5vw,44px)/1.2 "Sora","DM Sans",sans-serif;letter-spacing:-1.7px;margin:15px 0;color:#29382d}
+.sl-home-section-heading>p{margin:0 auto;font-size:14px}
+.sl-home-feature-grid{max-width:1120px;margin:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.sl-home-feature{background:#fff;border:1px solid #e8ede5;border-radius:12px;padding:24px 20px;min-height:190px}
+.sl-home-feature-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:11px;background:#edf5e9;color:#599c56}
+.sl-home-feature h3{font-size:14px;margin:18px 0 8px;color:#304031}
+.sl-home-feature p{font-size:12px;line-height:1.7;color:#7b8577;margin:0}
+.sl-home-steps{max-width:1120px;margin:auto;padding:88px 28px;display:grid;grid-template-columns:.85fr 1fr;gap:90px;align-items:start}
+.sl-home-steps ol{padding:0;margin:0;list-style:none;display:grid;gap:22px}
+.sl-home-steps li{display:flex;gap:18px;align-items:flex-start;border-bottom:1px solid #edf0ea;padding-bottom:22px}
+.sl-home-steps li>span{font-family:"Sora",sans-serif;font-size:13px;font-weight:700;color:#599c56;background:#edf5e9;border-radius:8px;padding:10px}
+.sl-home-steps li b{font-size:14px;color:#334033}.sl-home-steps li p{font-size:12px;color:#7b8577;margin:6px 0 0}
+.sl-home-bottom{text-align:center;background:#f0f5ec;padding:72px 24px 78px}
+.sl-home-bottom>p{font-size:14px;margin:0 auto 24px}
+.sl-home-footer{max-width:1220px;margin:auto;padding:24px 28px;display:flex;align-items:center;gap:20px;color:#8a9386;font-size:11px}
+.sl-home-footer>span{margin-left:auto}.sl-home-footer>a{color:#53644f;font-weight:700}
+@media(max-width:850px){.sl-home-hero{grid-template-columns:1fr;gap:32px;padding-top:55px}.sl-home-copy{max-width:680px}.sl-home-preview{max-width:620px;width:100%;margin:auto}.sl-home-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-home-steps{grid-template-columns:1fr;gap:25px}.sl-home-nav nav{gap:16px}}
+@media(max-width:560px){.sl-home-nav{padding:17px 18px}.sl-home-nav nav{gap:12px;font-size:11px}.sl-home-nav nav>a[href="#features"],.sl-home-nav nav>a[href="#how-it-works"]{display:none}.sl-home-nav .sl-home-cta{padding:10px 12px}.sl-home-hero{padding:48px 20px 65px}.sl-home-copy h1{font-size:43px;letter-spacing:-2px}.sl-home-copy>p{font-size:14px}.sl-home-points{gap:10px}.sl-home-preview{padding:5px 4px 28px}.sl-preview-window{padding:12px}.sl-preview-heading h2{font-size:19px}.sl-yarn-art,.sl-fabric-art{height:95px}.sl-home-floating{right:-3px;bottom:0;padding:9px}.sl-home-features{padding:62px 20px}.sl-home-feature-grid{grid-template-columns:1fr}.sl-home-feature{min-height:auto}.sl-home-steps{padding:62px 20px}.sl-home-footer{padding:20px;flex-wrap:wrap}.sl-home-footer>span{margin-left:0;order:3;width:100%}}
