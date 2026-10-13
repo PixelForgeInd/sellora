@@ -50,6 +50,7 @@ import {
 } from "./components/OperationsSections";
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
+import { HomePage } from "./components/HomePage";
 import type {
   Business,
   Catalogue,
@@ -85,7 +86,7 @@ export default function SelloraApp() {
   const [mode, setMode] = useState(() =>
     new URLSearchParams(window.location.search).has("resetToken")
       ? "reset"
-      : "signup",
+      : window.location.pathname === "/login" ? "login" : "signup",
   );
 
   // Workspace navigation and feedback
@@ -737,6 +738,8 @@ export default function SelloraApp() {
   }
   if (slug || isDemo)
     return <PublicCatalogue data={pub} error={pubError} demo={isDemo} />;
+  if (window.location.pathname === "/" && !new URLSearchParams(window.location.search).has("resetToken"))
+    return <HomePage />;
   if (!access || !user)
     return (
       <AuthScreen
