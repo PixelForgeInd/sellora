@@ -50,6 +50,7 @@ import {
 } from "./components/OperationsSections";
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
+import { HomePage } from "./components/HomePage";
 import type {
   Business,
   Catalogue,
@@ -85,7 +86,9 @@ export default function SelloraApp() {
   const [mode, setMode] = useState(() =>
     new URLSearchParams(window.location.search).has("resetToken")
       ? "reset"
-      : "signup",
+      : window.location.pathname === "/login"
+        ? "login"
+        : "signup",
   );
 
   // Workspace navigation and feedback
@@ -638,15 +641,29 @@ export default function SelloraApp() {
     setBusy(true);
     setError("");
     try {
-      const c = await api(
+      const { shareImageFile, ...cataloguePayload } = cform;
+      let c = await api(
         editingCatalogue
           ? "/workspace/catalogues/" + editingCatalogue
           : "/workspace/catalogues",
         {
           method: editingCatalogue ? "PATCH" : "POST",
-          body: JSON.stringify(cform),
+          body: JSON.stringify(cataloguePayload),
         },
       );
+      if (!editingCatalogue) setEditingCatalogue(c.id);
+      if (shareImageFile) {
+        const upload = new FormData();
+        upload.append("image", shareImageFile);
+        const imageResult = await api(
+          "/workspace/catalogues/" + c.id + "/image",
+          {
+            method: "POST",
+            body: upload,
+          },
+        );
+        c = { ...c, shareImageUrl: imageResult.shareImageUrl };
+      }
       setCatalogues((old) =>
         editingCatalogue
           ? old.map((x) => (x.id === c.id ? c : x))
@@ -723,6 +740,11 @@ export default function SelloraApp() {
   }
   if (slug || isDemo)
     return <PublicCatalogue data={pub} error={pubError} demo={isDemo} />;
+  if (
+    window.location.pathname === "/" &&
+    !new URLSearchParams(window.location.search).has("resetToken")
+  )
+    return <HomePage />;
   if (!access || !user)
     return (
       <AuthScreen

@@ -53,6 +53,7 @@ export type Catalogue = {
 export type PublicData = {
   title: string;
   description?: string | null;
+  shareImageUrl?: string | null;
   slug: string;
   business: {
     name: string;
