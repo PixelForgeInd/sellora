@@ -105,7 +105,7 @@ export function AuthScreen({
           <Brand />
           <span className="sl-kicker">
             {mode === "signup"
-              ? "START YOUR WORKSPACE"
+              ? "DIGITAL CATALOGUES. SMARTER SALES."
               : mode === "forgot"
                 ? "PASSWORD RECOVERY"
                 : mode === "reset"

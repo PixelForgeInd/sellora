@@ -233,6 +233,7 @@ model SelloraCatalogue {
   title       String
   slug        String             @unique
   description String?
+  shareImageUrl String?
   isPublished Boolean            @default(false)
   publishedAt DateTime?
   items       CatalogueProduct[]

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" role="img" aria-label="Sellora">
+  <defs>
+    <linearGradient id="sellora-green" x1="0" y1="0" x2="0.82" y2="1">
+      <stop offset="0" stop-color="#599c56"/>
+      <stop offset="1" stop-color="#08743a"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#sellora-green)">
+    <path d="M23 37c0-7 6-10 12-6l13 7v53L34 83C27 79 23 73 23 66z"/>
+    <path d="M51 19c0-7 6-9 13-5l37 21c5 3 8 8 8 14v38c0 7-4 12-10 16l-32 18c-6 3-11-1-11-8V54c0-6 5-8 10-5l22 13V50L64 36c-8-4-13-9-13-17z"/>
+  </g>
+  <path d="M69 63 96 79 69 96z" fill="#fff"/>
+</svg>

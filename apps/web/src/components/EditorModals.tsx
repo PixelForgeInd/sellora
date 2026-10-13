@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import {
   ArrowRight,
@@ -339,6 +339,20 @@ export function CatalogueModal({
   saveCatalogue,
 }: CatalogueModalProps) {
   const [productSearch, setProductSearch] = useState("");
+  const shareImagePreview = useMemo(
+    () =>
+      cform.shareImageFile
+        ? URL.createObjectURL(cform.shareImageFile)
+        : cform.shareImageUrl,
+    [cform.shareImageFile, cform.shareImageUrl],
+  );
+  useEffect(
+    () => () => {
+      if (shareImagePreview.startsWith("blob:"))
+        URL.revokeObjectURL(shareImagePreview);
+    },
+    [shareImagePreview],
+  );
   const filteredProducts = useMemo(() => {
     const query = productSearch.trim().toLocaleLowerCase();
     if (!query) return products;
@@ -397,6 +411,70 @@ export function CatalogueModal({
               }
             />
           </label>
+          <section className="sl-share-image-section">
+            <div className="sl-picker-heading">
+              <b>WhatsApp link preview image</b>
+            </div>
+            <p>
+              Upload the image customers should see when you share this
+              catalogue link on WhatsApp.
+            </p>
+            <p>
+              Recommended: a landscape image at 1200 × 630 px. A catalogue cover
+              or product photo works well.
+            </p>
+            {shareImagePreview && (
+              <img
+                src={shareImagePreview}
+                alt="Catalogue WhatsApp preview"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  maxWidth: 420,
+                  aspectRatio: "1200 / 630",
+                  objectFit: "cover",
+                  borderRadius: 10,
+                  marginBottom: 10,
+                }}
+              />
+            )}
+            <label>
+              Choose preview image
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={(event) =>
+                  setCform({
+                    ...cform,
+                    shareImageFile: event.target.files?.[0] || null,
+                  })
+                }
+              />
+            </label>
+            {cform.shareImageFile && (
+              <p>Selected: {cform.shareImageFile.name}</p>
+            )}
+            {(cform.shareImageUrl || cform.shareImageFile) && (
+              <button
+                type="button"
+                onClick={() =>
+                  setCform({
+                    ...cform,
+                    shareImageUrl: "",
+                    shareImageFile: null,
+                  })
+                }
+              >
+                Remove preview image
+              </button>
+            )}
+            <p>
+              <small>
+                WhatsApp may cache link previews, so image changes may take time
+                to appear in existing chats.
+              </small>
+            </p>
+          </section>
           <div className="sl-picker-heading">
             <b>Choose products</b>
             <span>{cform.productIds.length} selected</span>

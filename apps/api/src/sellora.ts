@@ -617,7 +617,7 @@ router.get("/workspace/catalogues", requireAuth, authenticated(async (req,res) =
   res.json(await prisma.selloraCatalogue.findMany({where:{businessId:business.id},include:{items:{include:{product:true}}},orderBy:{createdAt:"desc"}}));
 }));
 router.post("/workspace/catalogues", requireAuth, authenticated(async (req,res) => {
-  const data=z.object({title:z.string().trim().min(2).max(160),description:z.string().trim().max(1000).optional(),productIds:z.array(z.string()).max(500).default([])}).parse(req.body);
+  const data=z.object({title:z.string().trim().min(2).max(160),description:z.string().trim().max(1000).optional(),shareImageUrl:z.union([z.string().url().max(2000),z.literal(""),z.null()]).optional(),productIds:z.array(z.string()).max(500).default([])}).parse(req.body);
   const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true,name:true,slug:true}});
   if (!business) return res.status(409).json({error:"Complete business setup first."});
   const ids=[...new Set(data.productIds)];
@@ -627,13 +627,13 @@ router.post("/workspace/catalogues", requireAuth, authenticated(async (req,res) 
   let slug=`${business.slug}-${base}`.slice(0,95), suffix=2;
   while(await prisma.selloraCatalogue.findUnique({where:{slug}})) slug=`${business.slug}-${base}-${suffix++}`.slice(0,95);
   const catalogue=await prisma.selloraCatalogue.create({data:{
-    businessId:business.id,title:data.title,slug,description:data.description || null,
+    businessId:business.id,title:data.title,slug,description:data.description || null,shareImageUrl:data.shareImageUrl || null,
     items:{create:ids.map((productId,index)=>({productId,sortOrder:index}))}
   },include:{items:{include:{product:true}}}});
   res.status(201).json(catalogue);
 }));
 router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,res) => {
-  const data=z.object({title:z.string().trim().min(2).max(160).optional(),description:z.string().trim().max(1000).nullable().optional(),isPublished:z.boolean().optional(),productIds:z.array(z.string()).max(500).optional()}).parse(req.body);
+  const data=z.object({title:z.string().trim().min(2).max(160).optional(),description:z.string().trim().max(1000).nullable().optional(),shareImageUrl:z.union([z.string().url().max(2000),z.literal(""),z.null()]).optional(),isPublished:z.boolean().optional(),productIds:z.array(z.string()).max(500).optional()}).parse(req.body);
   const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
   if(!business) return res.status(404).json({error:"Business not found."});
   const existing=await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id}});
@@ -647,12 +647,38 @@ router.patch("/workspace/catalogues/:id", requireAuth, authenticated(async (req,
   }
   const {productIds,...fields}=data;
   const updated=await prisma.selloraCatalogue.update({where:{id:existing.id},data:{
-    ...fields,...(fields.isPublished && !existing.isPublished ? {publishedAt:new Date()} : {}),
+    ...fields,...(fields.shareImageUrl !== undefined ? {shareImageUrl:fields.shareImageUrl || null} : {}),...(fields.isPublished && !existing.isPublished ? {publishedAt:new Date()} : {}),
     ...(fields.isPublished===false ? {publishedAt:null} : {})
   },include:{items:{include:{product:true}}}});
   res.json(updated);
 }));
 
+
+router.post("/workspace/catalogues/:id/image", requireAuth, productImageUpload.single("image"), authenticated(async (req,res) => {
+  const file = (req as AuthedRequest & {file?: Express.Multer.File}).file;
+  const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
+  if (!business) {
+    if (file) await fs.promises.unlink(file.path).catch(()=>{});
+    return res.status(409).json({error:"Complete business setup first."});
+  }
+  const catalogue = await prisma.selloraCatalogue.findFirst({where:{id:String(req.params.id),businessId:business.id},select:{id:true,shareImageUrl:true}});
+  if (!catalogue) {
+    if (file) await fs.promises.unlink(file.path).catch(()=>{});
+    return res.status(404).json({error:"Catalogue not found."});
+  }
+  if (!file) return res.status(400).json({error:"Choose a PNG, JPEG, WebP or GIF image up to 5 MB."});
+  const imageBytes = await fs.promises.readFile(file.path);
+  if (!hasValidImageSignature(imageBytes,file.mimetype)) {
+    await fs.promises.unlink(file.path).catch(()=>{});
+    return res.status(400).json({error:"The uploaded file is not a valid image of the selected type."});
+  }
+  const publicApiOrigin=(process.env.PUBLIC_API_URL||req.protocol+"://"+req.get("host")).replace(/\/$/,"");
+  const shareImageUrl=publicApiOrigin+"/uploads/"+file.filename;
+  await prisma.selloraCatalogue.update({where:{id:catalogue.id},data:{shareImageUrl}});
+  const oldImageFilename=uploadedImageFilename(catalogue.shareImageUrl);
+  if (oldImageFilename) await fs.promises.unlink(path.join(getImageUploadDir(),oldImageFilename)).catch(()=>{});
+  res.status(201).json({shareImageUrl});
+}));
 
 router.get("/workspace/payment-orders",requireAuth,authenticated(async(req,res)=>{
  const business=await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
@@ -780,7 +806,7 @@ router.get("/public/catalogues/:slug", async (req,res) => {
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   res.json({
-    title:catalogue.title,description:catalogue.description,slug:catalogue.slug,
+    title:catalogue.title,description:catalogue.description,slug:catalogue.slug,shareImageUrl:catalogue.shareImageUrl,
     business:{name:catalogue.business.name,industry:catalogue.business.industry,email:catalogue.business.email,phone:catalogue.business.phone,address:catalogue.business.address,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
     checkoutReady: catalogue.business.sellingMode === "ONLINE_PAYMENTS" && catalogue.business.paymentGatewayStatus === "ACTIVE" && catalogue.business.paymentGatewayProvider === "RAZORPAY",
     products:catalogue.items.map(({product})=>({...product,price:product.price?.toString() ?? null}))

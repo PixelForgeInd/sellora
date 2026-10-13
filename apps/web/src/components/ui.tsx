@@ -2,12 +2,9 @@ import type { ReactNode } from "react";
 
 export function Brand() {
   return (
-    <a className="sl-brand" href="/" aria-label="Sellora by PixelForge">
-      <span className="sl-mark">S</span>
-      <span>
-        <b>SELLORA</b>
-        <small>A product by PixelForge</small>
-      </span>
+    <a className="sl-brand" href="/" aria-label="Sellora home">
+      <img className="sl-mark" src="/sellora-mark.svg" alt="" aria-hidden="true" />
+      <span className="sl-wordmark">SELLORA</span>
     </a>
   );
 }
