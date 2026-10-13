@@ -1247,3 +1247,19 @@ body{border-top:0;}
 @media(max-width:560px){
   .sl-home-nav{padding:12px 18px}
 }
+
+
+/* Prevent the sticky marketing header padding from widening the viewport. */
+.sl-home-nav{
+  box-sizing:border-box;
+  width:100%;
+  padding-left:max(28px,calc((100vw - 1220px)/2));
+  padding-right:max(28px,calc((100vw - 1220px)/2));
+}
+.sl-home-nav > .sl-brand{flex:0 0 auto}
+.sl-home-nav > nav{flex:0 1 auto;min-width:0;white-space:nowrap}
+.sl-home-nav nav .sl-home-cta{flex:0 0 auto}
+@media(max-width:560px){
+  .sl-home-nav{padding-left:18px;padding-right:18px}
+  .sl-home-nav nav{gap:12px}
+}
