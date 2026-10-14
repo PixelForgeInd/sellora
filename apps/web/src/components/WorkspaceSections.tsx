@@ -469,8 +469,8 @@ export function ProductSection({
       if (quoted && char === '"' && text[i + 1] === '"') { cell += '"'; i += 1; }
       else if (char === '"') quoted = !quoted;
       else if (char === "," && !quoted) { row.push(cell); cell = ""; }
-      else if ((char === "\\n" || char === "\\r") && !quoted) {
-        if (char === "\\r" && text[i + 1] === "\\n") i += 1;
+      else if ((char === "\n" || char === "\r") && !quoted) {
+        if (char === "\r" && text[i + 1] === "\n") i += 1;
         row.push(cell); if (row.some(value => value.trim())) matrix.push(row);
         row = []; cell = "";
       } else cell += char;
@@ -492,7 +492,7 @@ export function ProductSection({
     if (!importRows.length) { setImportError("Choose a CSV file first."); return; }
     setImportBusy(true); setImportError(""); setImportNotice(""); setImportPreview(null);
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\\/$/, "") + "/workspace/products/bulk-import", {
+      const response = await fetch((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") + "/workspace/products/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + access },
         body: JSON.stringify({ mode: importMode, commit: false, rows: importRows }),
@@ -511,7 +511,7 @@ export function ProductSection({
     if (!window.confirm("Import " + importRows.length + " products into this business?")) return;
     setImportBusy(true); setImportError(""); setImportNotice("");
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\\/$/, "") + "/workspace/products/bulk-import", {
+      const response = await fetch((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") + "/workspace/products/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + access },
         body: JSON.stringify({ mode: importMode, commit: true, rows: importRows }),
