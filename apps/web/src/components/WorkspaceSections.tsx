@@ -453,7 +453,9 @@ export function ProductSection({
 }: ProductSectionProps) {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importRows, setImportRows] = useState<Record<string, unknown>[]>([]);
-  const [importMode, setImportMode] = useState<"CREATE_ONLY" | "UPSERT">("CREATE_ONLY");
+  const [importMode, setImportMode] = useState<"CREATE_ONLY" | "UPSERT">(
+    "CREATE_ONLY",
+  );
   const [importPreview, setImportPreview] = useState<any>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [importError, setImportError] = useState("");
@@ -466,64 +468,138 @@ export function ProductSection({
     let quoted = false;
     for (let i = 0; i < text.length; i += 1) {
       const char = text[i];
-      if (quoted && char === '"' && text[i + 1] === '"') { cell += '"'; i += 1; }
-      else if (char === '"') quoted = !quoted;
-      else if (char === "," && !quoted) { row.push(cell); cell = ""; }
-      else if ((char === "\n" || char === "\r") && !quoted) {
+      if (quoted && char === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i += 1;
+      } else if (char === '"') quoted = !quoted;
+      else if (char === "," && !quoted) {
+        row.push(cell);
+        cell = "";
+      } else if ((char === "\n" || char === "\r") && !quoted) {
         if (char === "\r" && text[i + 1] === "\n") i += 1;
-        row.push(cell); if (row.some(value => value.trim())) matrix.push(row);
-        row = []; cell = "";
+        row.push(cell);
+        if (row.some((value) => value.trim())) matrix.push(row);
+        row = [];
+        cell = "";
       } else cell += char;
     }
     row.push(cell);
-    if (row.some(value => value.trim())) matrix.push(row);
-    if (matrix.length < 2) throw new Error("CSV must contain a header and at least one product row.");
+    if (row.some((value) => value.trim())) matrix.push(row);
+    if (matrix.length < 2)
+      throw new Error(
+        "CSV must contain a header and at least one product row.",
+      );
     const headers = matrix[0].map((value, index) => {
       const key = value.trim();
       if (!key) throw new Error("Every CSV column needs a header.");
-      if (matrix[0].indexOf(value) !== index) throw new Error("CSV column headers must be unique.");
+      if (matrix[0].indexOf(value) !== index)
+        throw new Error("CSV column headers must be unique.");
       return key;
     });
-    if (!headers.some(header => header.toLowerCase() === "name")) throw new Error('CSV needs a "name" column.');
-    return matrix.slice(1).map(values => Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""])));
+    if (!headers.some((header) => header.toLowerCase() === "name"))
+      throw new Error('CSV needs a "name" column.');
+    return matrix
+      .slice(1)
+      .map((values) =>
+        Object.fromEntries(
+          headers.map((header, index) => [header, values[index] ?? ""]),
+        ),
+      );
   }
 
   async function previewImport() {
-    if (!importRows.length) { setImportError("Choose a CSV file first."); return; }
-    setImportBusy(true); setImportError(""); setImportNotice(""); setImportPreview(null);
+    if (!importRows.length) {
+      setImportError("Choose a CSV file first.");
+      return;
+    }
+    setImportBusy(true);
+    setImportError("");
+    setImportNotice("");
+    setImportPreview(null);
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") + "/workspace/products/bulk-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + access },
-        body: JSON.stringify({ mode: importMode, commit: false, rows: importRows }),
-      });
+      const response = await fetch(
+        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(
+          /\/$/,
+          "",
+        ) + "/workspace/products/bulk-import",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + access,
+          },
+          body: JSON.stringify({
+            mode: importMode,
+            commit: false,
+            rows: importRows,
+          }),
+        },
+      );
       const result = await response.json();
-      if (!response.ok && response.status !== 422) throw new Error(result.error || "Could not validate the import.");
+      if (!response.ok && response.status !== 422)
+        throw new Error(result.error || "Could not validate the import.");
       setImportPreview(result);
-      if (result.invalidRows === 0) setImportNotice("Preview passed. Review the row count, then confirm import.");
+      if (result.invalidRows === 0)
+        setImportNotice(
+          "Preview passed. Review the row count, then confirm import.",
+        );
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : "Could not preview import.");
-    } finally { setImportBusy(false); }
+      setImportError(
+        error instanceof Error ? error.message : "Could not preview import.",
+      );
+    } finally {
+      setImportBusy(false);
+    }
   }
 
   async function commitImport() {
     if (!importPreview || importPreview.invalidRows !== 0) return;
-    if (!window.confirm("Import " + importRows.length + " products into this business?")) return;
-    setImportBusy(true); setImportError(""); setImportNotice("");
+    if (
+      !window.confirm(
+        "Import " + importRows.length + " products into this business?",
+      )
+    )
+      return;
+    setImportBusy(true);
+    setImportError("");
+    setImportNotice("");
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") + "/workspace/products/bulk-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + access },
-        body: JSON.stringify({ mode: importMode, commit: true, rows: importRows }),
-      });
+      const response = await fetch(
+        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(
+          /\/$/,
+          "",
+        ) + "/workspace/products/bulk-import",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + access,
+          },
+          body: JSON.stringify({
+            mode: importMode,
+            commit: true,
+            rows: importRows,
+          }),
+        },
+      );
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Import failed.");
-      setImportNotice("Imported " + result.created + " new products" + (result.updated ? " and updated " + result.updated : "") + ".");
-      setImportFile(null); setImportRows([]); setImportPreview(null);
+      setImportNotice(
+        "Imported " +
+          result.created +
+          " new products" +
+          (result.updated ? " and updated " + result.updated : "") +
+          ".",
+      );
+      setImportFile(null);
+      setImportRows([]);
+      setImportPreview(null);
       await onImported();
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Import failed.");
-    } finally { setImportBusy(false); }
+    } finally {
+      setImportBusy(false);
+    }
   }
 
   return (
@@ -534,7 +610,15 @@ export function ProductSection({
           <p>Suggested fields are tailored to {category.toLowerCase()}.</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Btn kind="outline" onClick={() => { setImportError(""); setImportNotice(""); setImportPreview(null); document.getElementById("sl-product-csv")?.click(); }}>
+          <Btn
+            kind="outline"
+            onClick={() => {
+              setImportError("");
+              setImportNotice("");
+              setImportPreview(null);
+              document.getElementById("sl-product-csv")?.click();
+            }}
+          >
             Import CSV
           </Btn>
           <Btn onClick={() => startProduct()}>
@@ -545,36 +629,96 @@ export function ProductSection({
       <div className="sl-import-panel">
         <div>
           <b>Bulk import products</b>
-          <p>CSV headers: name, sku, description, price, currency, unit, imageUrl, stockEnabled, stockQuantity. Add your configured custom field keys as extra columns.</p>
+          <p>
+            CSV headers: name, sku, description, price, currency, unit,
+            imageUrl, stockEnabled, stockQuantity. Add your configured custom
+            field keys as extra columns.
+          </p>
         </div>
-        <input id="sl-product-csv" type="file" accept=".csv,text/csv" style={{ maxWidth: 280 }} onChange={(event) => {
-          const file = event.currentTarget.files?.[0] || null;
-          event.currentTarget.value = "";
-          setImportFile(file); setImportRows([]); setImportPreview(null); setImportError(""); setImportNotice("");
-          if (!file) return;
-          if (file.size > 2 * 1024 * 1024) { setImportError("CSV must be 2 MB or smaller."); setImportFile(null); return; }
-          void file.text().then(text => {
-            try { setImportRows(parseCsv(text)); }
-            catch (error) { setImportError(error instanceof Error ? error.message : "Invalid CSV file."); }
-          });
-        }} />
-        <label>Import mode
-          <select value={importMode} onChange={(event) => { setImportMode(event.target.value as "CREATE_ONLY" | "UPSERT"); setImportPreview(null); }}>
+        <input
+          id="sl-product-csv"
+          type="file"
+          accept=".csv,text/csv"
+          style={{ maxWidth: 280 }}
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0] || null;
+            event.currentTarget.value = "";
+            setImportFile(file);
+            setImportRows([]);
+            setImportPreview(null);
+            setImportError("");
+            setImportNotice("");
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+              setImportError("CSV must be 2 MB or smaller.");
+              setImportFile(null);
+              return;
+            }
+            void file.text().then((text) => {
+              try {
+                setImportRows(parseCsv(text));
+              } catch (error) {
+                setImportError(
+                  error instanceof Error ? error.message : "Invalid CSV file.",
+                );
+              }
+            });
+          }}
+        />
+        <label>
+          Import mode
+          <select
+            value={importMode}
+            onChange={(event) => {
+              setImportMode(event.target.value as "CREATE_ONLY" | "UPSERT");
+              setImportPreview(null);
+            }}
+          >
             <option value="CREATE_ONLY">Create only (safe default)</option>
             <option value="UPSERT">Update matching SKU</option>
           </select>
         </label>
-        {importFile && <span>{importFile.name} · {importRows.length} rows ready</span>}
+        {importFile && (
+          <span>
+            {importFile.name} · {importRows.length} rows ready
+          </span>
+        )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Btn kind="outline" disabled={importBusy || !importRows.length} onClick={() => void previewImport()}>{importBusy ? "Checking…" : "Validate & preview"}</Btn>
-          {importPreview && importPreview.invalidRows === 0 && <Btn disabled={importBusy} onClick={() => void commitImport()}>{importBusy ? "Importing…" : "Confirm import"}</Btn>}
+          <Btn
+            kind="outline"
+            disabled={importBusy || !importRows.length}
+            onClick={() => void previewImport()}
+          >
+            {importBusy ? "Checking…" : "Validate & preview"}
+          </Btn>
+          {importPreview && importPreview.invalidRows === 0 && (
+            <Btn disabled={importBusy} onClick={() => void commitImport()}>
+              {importBusy ? "Importing…" : "Confirm import"}
+            </Btn>
+          )}
         </div>
-        {importError && <p role="alert" style={{ color: "#b42318" }}>{importError}</p>}
+        {importError && (
+          <p role="alert" style={{ color: "#b42318" }}>
+            {importError}
+          </p>
+        )}
         {importNotice && <p role="status">{importNotice}</p>}
-        {importPreview && <div role="status">
-          <b>{importPreview.validRows} valid · {importPreview.invalidRows} invalid</b>
-          {importPreview.rows?.filter((row: any) => !row.valid).slice(0, 20).map((row: any) => <p key={row.rowNumber}>Row {row.rowNumber}: {row.errors.join(" ")}</p>)}
-        </div>}
+        {importPreview && (
+          <div role="status">
+            <b>
+              {importPreview.validRows} valid · {importPreview.invalidRows}{" "}
+              invalid
+            </b>
+            {importPreview.rows
+              ?.filter((row: any) => !row.valid)
+              .slice(0, 20)
+              .map((row: any) => (
+                <p key={row.rowNumber}>
+                  Row {row.rowNumber}: {row.errors.join(" ")}
+                </p>
+              ))}
+          </div>
+        )}
       </div>
       {!products.length ? (
         <div className="sl-empty">
