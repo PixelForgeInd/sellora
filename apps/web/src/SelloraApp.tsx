@@ -1416,6 +1416,8 @@ export default function SelloraApp() {
           <ProductSection
             category={category}
             products={products}
+            access={access}
+            onImported={load}
             startProduct={startProduct}
             deleteProduct={deleteProduct}
             uploadProductImage={uploadProductImage}
