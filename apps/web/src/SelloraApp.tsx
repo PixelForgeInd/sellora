@@ -187,8 +187,24 @@ export default function SelloraApp() {
     setBusy(true);
     setError("");
     try {
+      const normalizedLabel = fieldForm.label
+        .trim()
+        .replace(/[^a-zA-Z0-9]+(.)?/g, (_match, next: string | undefined) =>
+          next ? next.toUpperCase() : "",
+        );
+      const baseKey = (
+        normalizedLabel.charAt(0).toLowerCase() + normalizedLabel.slice(1)
+      ).replace(/[^a-zA-Z0-9]/g, "");
+      const safeBaseKey = /^[a-z]/.test(baseKey) ? baseKey : `field${baseKey}`;
+      let generatedKey = safeBaseKey.slice(0, 48) || "customField";
+      let suffix = 2;
+      while (fields.some((field) => field.key === generatedKey)) {
+        const suffixText = String(suffix++);
+        generatedKey = safeBaseKey.slice(0, 48 - suffixText.length) + suffixText;
+      }
       const payload = {
         ...fieldForm,
+        key: generatedKey,
         options: ["select", "multiselect"].includes(fieldForm.type)
           ? fieldForm.options
               .split("\n")
