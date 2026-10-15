@@ -42,6 +42,8 @@ import {
 import { SettingsSection } from "./components/SettingsSection";
 import { PaymentsSection } from "./components/PaymentsSection";
 import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
+import { PlatformOwnerDashboard } from "./components/PlatformOwnerDashboard";
+import { SubscriptionSection } from "./components/SubscriptionSection";
 import {
   EnquiriesSection,
   CustomersSection,
@@ -781,6 +783,7 @@ export default function SelloraApp() {
         auth={auth}
       />
     );
+  if (isPlatformOwner) return <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />;
   if (!business)
     return (
       <OnboardingScreen
@@ -1116,6 +1119,11 @@ export default function SelloraApp() {
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
+<<<<<<< HEAD
+=======
+            { id: "subscription", label: "Subscription", icon: CreditCard },
+            { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
+>>>>>>> f48fe3d (feat(v2): integrate platform owner and subscription pages)
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
             <button
@@ -1168,11 +1176,23 @@ export default function SelloraApp() {
                           ? "Customer directory"
                           : page === "reports"
                             ? "Sales reports"
+<<<<<<< HEAD
                             : page === "settings"
                               ? "Business settings"
                               : page === "payments"
                                 ? "Payments"
                                 : "Workspace"}
+=======
+                            : page === "launch"
+                              ? "Launch checklist"
+                              : page === "settings"
+                                ? "Business settings"
+                                : page === "payments"
+                                  ? "Payments"
+                                  : page === "subscription"
+                                    ? "Subscription & billing"
+                                    : "Workspace"}
+>>>>>>> f48fe3d (feat(v2): integrate platform owner and subscription pages)
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -1822,6 +1842,7 @@ export default function SelloraApp() {
         )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
+        {page === "subscription" && <SubscriptionSection token={access} />}
         {page === "settings" && (
           <SettingsSection
             business={business}
