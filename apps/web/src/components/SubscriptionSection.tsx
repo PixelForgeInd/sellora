@@ -21,7 +21,7 @@ function loadRazorpay() {
   });
   return razorpayScriptPromise;
 }
-export function SubscriptionSection({ token }: { token: string }) {
+export function SubscriptionSection({ token, onRenewed }: { token: string; onRenewed?: () => Promise<void> }) {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +53,7 @@ export function SubscriptionSection({ token }: { token: string }) {
               if (!verified.success) throw new Error("Payment verification was not confirmed.");
               setNotice("Payment verified. Your Sellora access is active.");
               await refresh();
+              if (onRenewed) await onRenewed();
               resolve();
             } catch (e) { reject(e); }
           },
