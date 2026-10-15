@@ -476,7 +476,7 @@ export function SettingsSection({
           ))}
         </div>
         <form className="sl-form sl-add-field-form" onSubmit={addIndustryField}>
-          <div className="sl-form-row">
+          <div className="sl-field-builder-row">
             <label>
               Field label
               <input
@@ -490,8 +490,6 @@ export function SettingsSection({
                 placeholder="e.g. Fabric composition"
               />
             </label>
-          </div>
-          <div className="sl-form-row">
             <label>
               Field type
               <select
@@ -513,14 +511,21 @@ export function SettingsSection({
                 type="checkbox"
                 checked={fieldForm.required}
                 onChange={(e) =>
-                  setFieldForm({
-                    ...fieldForm,
-                    required: e.target.checked,
-                  })
+                  setFieldForm({ ...fieldForm, required: e.target.checked })
                 }
               />{" "}
-              Required field
+              Required
             </label>
+            <Btn type="submit" disabled={busy}>
+              {busy ? "Adding…" : "Add product field"} <Plus size={15} />
+            </Btn>
+            <Btn
+              kind="outline"
+              onClick={() => void restoreIndustryFields()}
+              disabled={busy}
+            >
+              Restore recommended fields
+            </Btn>
           </div>
           {["select", "multiselect"].includes(fieldForm.type) && (
             <label>
@@ -536,18 +541,6 @@ export function SettingsSection({
               />
             </label>
           )}
-          <div className="sl-modal-actions">
-            <Btn type="submit" disabled={busy}>
-              {busy ? "Adding…" : "Add product field"} <Plus size={15} />
-            </Btn>
-            <Btn
-              kind="outline"
-              onClick={() => void restoreIndustryFields()}
-              disabled={busy}
-            >
-              Restore recommended fields
-            </Btn>
-          </div>
         </form>
       </section>
 
