@@ -73,8 +73,8 @@ export function PlatformOwnerDashboard({ token, user, onSignOut }: { token: stri
             <label>Access override<select defaultValue={b.subscription?.status || "ACTIVE"} onChange={e=>void updateSubscription(b,{status:e.target.value})}><option value="ACTIVE">Active</option><option value="LOCKED">Locked</option></select></label>
           </div>
           <p style={{fontSize:13,color:"var(--sl-muted,#6b7280)"}}>Due {dateLabel(b.subscription?.dueAt)} · Last payment {dateLabel(b.subscription?.lastPaidAt)}</p>
-          <div style={{marginTop:18,padding:14,border:"1px solid var(--sl-border,#e5e7eb)",borderRadius:12}}><b style={{display:"flex",gap:7,alignItems:"center"}}><CreditCard size={15}/> Razorpay subscription billing</b>
-            <p style={{fontSize:13,margin:"8px 0"}}>Billing method: Razorpay secure checkout · {b.subscription?.interval === "YEARLY" ? "₹2,490/year" : "₹249/month"}</p>
+          <div style={{marginTop:18,padding:14,border:"1px solid var(--sl-border,#e5e7eb)",borderRadius:12}}><b style={{display:"flex",gap:7,alignItems:"center"}}><CreditCard size={15}/> Razorpay billing & payment history</b>
+            <p style={{fontSize:13,margin:"8px 0"}}>Billing method: Razorpay checkout (manual renewal) · {b.subscription?.interval === "YEARLY" ? "₹2,490/year" : "₹249/month"}</p>
             <p style={{fontSize:13,margin:"8px 0"}}>Payment due: {dateLabel(b.subscription?.dueAt)} · One calendar day grace period, then access is locked until payment is verified.</p>
             <b style={{display:"block",marginTop:14,fontSize:13}}>Recent Razorpay payments</b>
             {b.recentPayments.length ? b.recentPayments.map(p=><p key={p.id} style={{fontSize:13,margin:"8px 0"}}>₹{p.amount} · {p.interval} · {p.status} · {dateLabel(p.paidAt || p.createdAt)}{p.razorpayPaymentId ? <><br/><span style={{color:"var(--sl-muted,#6b7280)"}}>Payment ID: {p.razorpayPaymentId}</span></> : null}</p>) : <p style={{fontSize:13}}>No payments recorded.</p>}
