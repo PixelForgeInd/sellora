@@ -65,17 +65,33 @@ async function razorpay<T>(path: string, keyId: string, keySecret: string, body?
 }
 async function ensureSubscription(businessId: string) {
   const existing = await prisma.subscription.findUnique({ where: { businessId } });
-  if (existing) return existing;
+  if (existing) {
+    // An ACTIVE row without a verified payment must not grant paid access.
+    // This also repairs rows created by the previous auto-activation bug.
+    if (existing.status === "ACTIVE" && !existing.lastPaidAt) {
+      const paidPayment = await prisma.platformSubscriptionPayment.findFirst({
+        where: { subscription: { businessId }, status: "PAID" },
+        select: { id: true }
+      });
+      if (!paidPayment) {
+        return prisma.subscription.update({
+          where: { id: existing.id },
+          data: { status: "PENDING" }
+        });
+      }
+    }
+    return existing;
+  }
   const now = new Date();
   return prisma.subscription.create({
     data: {
       businessId,
-      status: "ACTIVE",
+      status: "PENDING",
       interval: "MONTHLY",
       amount: MONTHLY_PRICE,
       currentPeriodStart: now,
-      currentPeriodEnd: indiaEndOfDay(now, 1),
-      dueAt: indiaEndOfDay(now, 1)
+      currentPeriodEnd: now,
+      dueAt: now
     }
   });
 }
