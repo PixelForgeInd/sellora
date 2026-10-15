@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, MessageCircle, PackageCheck, Share2, ShoppingBag } from "lucide-react";
+import { api } from "../sellora/api-client";
 import { Brand } from "./ui";
 
 const features = [
@@ -9,6 +11,9 @@ const features = [
 ];
 
 export function HomePage() {
+  const [prices, setPrices] = useState({ MONTHLY: 249, YEARLY: 2490 });
+  useEffect(() => { api("/public/pricing", {}, "").then(setPrices).catch(() => undefined); }, []);
+  const savings = Math.max(0, prices.MONTHLY * 12 - prices.YEARLY);
   return (
     <main className="sl-home">
       <style>{`
@@ -82,18 +87,18 @@ export function HomePage() {
           <article className="sl-home-price-card">
             <span className="sl-home-eyebrow">MONTHLY</span>
             <h3>Flexible</h3>
-            <p className="sl-home-price"><strong>₹249</strong><span>/ month</span></p>
+            <p className="sl-home-price"><strong>₹{prices.MONTHLY.toLocaleString("en-IN")}</strong><span>/ month</span></p>
             <p className="sl-home-price-desc">A simple monthly subscription with flexibility to renew each month.</p>
             <ul><li>Digital product catalogue</li><li>Shareable public catalogue link</li><li>Product and catalogue management</li><li>Customer enquiries and orders</li><li>Subscription management</li></ul>
             <a className="sl-home-price-cta" href="/signup">Get started monthly <ArrowRight size={16}/></a>
           </article>
           <article className="sl-home-price-card sl-home-price-featured">
-            <span className="sl-home-price-badge">BEST VALUE · SAVE ₹498</span>
+            <span className="sl-home-price-badge">BEST VALUE · SAVE ₹{savings.toLocaleString("en-IN")}</span>
             <span className="sl-home-eyebrow">YEARLY</span>
             <h3>Annual</h3>
-            <p className="sl-home-price"><strong>₹2,490</strong><span>/ year</span></p>
+            <p className="sl-home-price"><strong>₹{prices.YEARLY.toLocaleString("en-IN")}</strong><span>/ year</span></p>
             <p className="sl-home-price-desc">Pay for 10 months and get 12 months of subscription access.</p>
-            <ul><li>Everything in monthly billing</li><li>12 months of access</li><li>Fewer renewal reminders</li><li>Save ₹498 compared with monthly billing</li></ul>
+            <ul><li>Everything in monthly billing</li><li>12 months of access</li><li>Fewer renewal reminders</li><li>Save ₹{savings.toLocaleString("en-IN")} compared with monthly billing</li></ul>
             <a className="sl-home-price-cta" href="/signup">Get started yearly <ArrowRight size={16}/></a>
           </article>
         </div>
