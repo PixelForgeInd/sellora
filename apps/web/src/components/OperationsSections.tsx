@@ -425,7 +425,7 @@ export function ReportsSection({ setError = () => {} }: Props) {
           </p>
         </div>
       </div>
-      <div className="sl-orders-filters">
+      <div className="sl-orders-filters sl-report-date-filters">
         <label>
           From{" "}
           <input
