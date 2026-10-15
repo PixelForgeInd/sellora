@@ -466,18 +466,36 @@ export function ProductSection({
   const [importError, setImportError] = useState("");
   const [importNotice, setImportNotice] = useState("");
   const [productSearch, setProductSearch] = useState("");
-  const [productFilter, setProductFilter] = useState<"ALL" | "WITH_IMAGE" | "WITHOUT_IMAGE">("ALL");
+  const [productFilter, setProductFilter] = useState<
+    "ALL" | "WITH_IMAGE" | "WITHOUT_IMAGE"
+  >("ALL");
   const [pageSize, setPageSize] = useState<25 | 50>(25);
   const [currentPage, setCurrentPage] = useState(1);
   const filteredProducts = products.filter((product) => {
     const term = productSearch.trim().toLowerCase();
-    const searchable = [product.name, product.sku, ...Object.entries(product.fields || {}).flatMap(([key, value]) => [key, String(value ?? "")])].join(" ").toLowerCase();
+    const searchable = [
+      product.name,
+      product.sku,
+      ...Object.entries(product.fields || {}).flatMap(([key, value]) => [
+        key,
+        String(value ?? ""),
+      ]),
+    ]
+      .join(" ")
+      .toLowerCase();
     const matchesSearch = !term || searchable.includes(term);
-    const matchesFilter = productFilter === "ALL" || (productFilter === "WITH_IMAGE" ? Boolean(product.imageUrl) : !product.imageUrl);
+    const matchesFilter =
+      productFilter === "ALL" ||
+      (productFilter === "WITH_IMAGE"
+        ? Boolean(product.imageUrl)
+        : !product.imageUrl);
     return matchesSearch && matchesFilter;
   });
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-  const visibleProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const visibleProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   function parseCsv(text: string): Record<string, unknown>[] {
     text = text.replace(/^\uFEFF/, "");
@@ -937,22 +955,104 @@ export function ProductSection({
         )}
       </div>
       {products.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1fr) auto auto", gap: 12, alignItems: "center", marginTop: 22 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 44, padding: "0 12px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(220px, 1fr) auto auto",
+            gap: 12,
+            alignItems: "center",
+            marginTop: 22,
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              minHeight: 44,
+              padding: "0 12px",
+              border: "1px solid #dce5da",
+              borderRadius: 10,
+              background: "#fff",
+            }}
+          >
             <Search size={17} color="#778276" />
-            <input aria-label="Search products" value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setCurrentPage(1); }} placeholder="Search product name, SKU or details" style={{ width: "100%", border: 0, outline: 0, background: "transparent", minWidth: 0 }} />
+            <input
+              aria-label="Search products"
+              value={productSearch}
+              onChange={(event) => {
+                setProductSearch(event.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search product name, SKU or details"
+              style={{
+                width: "100%",
+                border: 0,
+                outline: 0,
+                background: "transparent",
+                minWidth: 0,
+              }}
+            />
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#405a47", fontSize: 13, fontWeight: 650 }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: "#405a47",
+              fontSize: 13,
+              fontWeight: 650,
+            }}
+          >
             <SlidersHorizontal size={16} /> Filter
-            <select aria-label="Filter products" value={productFilter} onChange={(event) => { setProductFilter(event.target.value as typeof productFilter); setCurrentPage(1); }} style={{ minHeight: 44, padding: "0 10px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#293a30" }}>
+            <select
+              aria-label="Filter products"
+              value={productFilter}
+              onChange={(event) => {
+                setProductFilter(event.target.value as typeof productFilter);
+                setCurrentPage(1);
+              }}
+              style={{
+                minHeight: 44,
+                padding: "0 10px",
+                border: "1px solid #dce5da",
+                borderRadius: 10,
+                background: "#fff",
+                color: "#293a30",
+              }}
+            >
               <option value="ALL">All products</option>
               <option value="WITH_IMAGE">With image</option>
               <option value="WITHOUT_IMAGE">Without image</option>
             </select>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#405a47", fontSize: 13, whiteSpace: "nowrap" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: "#405a47",
+              fontSize: 13,
+              whiteSpace: "nowrap",
+            }}
+          >
             Show
-            <select aria-label="Products per page" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value) as 25 | 50); setCurrentPage(1); }} style={{ minHeight: 44, padding: "0 10px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#293a30" }}>
+            <select
+              aria-label="Products per page"
+              value={pageSize}
+              onChange={(event) => {
+                setPageSize(Number(event.target.value) as 25 | 50);
+                setCurrentPage(1);
+              }}
+              style={{
+                minHeight: 44,
+                padding: "0 10px",
+                border: "1px solid #dce5da",
+                borderRadius: 10,
+                background: "#fff",
+                color: "#293a30",
+              }}
+            >
               <option value={25}>25</option>
               <option value={50}>50</option>
             </select>
@@ -976,72 +1076,120 @@ export function ProductSection({
           <Search size={26} />
           <h3>No products match your search</h3>
           <p>Try a different search term or change the filter.</p>
-          <Btn kind="outline" onClick={() => { setProductSearch(""); setProductFilter("ALL"); setCurrentPage(1); }}>Clear search and filters</Btn>
+          <Btn
+            kind="outline"
+            onClick={() => {
+              setProductSearch("");
+              setProductFilter("ALL");
+              setCurrentPage(1);
+            }}
+          >
+            Clear search and filters
+          </Btn>
         </div>
       ) : (
         <>
-        {visibleProducts.map((p) => (
-          <article className="sl-product-row" key={p.id}>
-            <div className="sl-product-thumb">
-              {p.imageUrl ? (
-                <img src={p.imageUrl} alt="" />
-              ) : (
-                <Package size={22} />
+          {visibleProducts.map((p) => (
+            <article className="sl-product-row" key={p.id}>
+              <div className="sl-product-thumb">
+                {p.imageUrl ? (
+                  <img src={p.imageUrl} alt="" />
+                ) : (
+                  <Package size={22} />
+                )}
+              </div>
+              <div className="sl-product-name">
+                <b>{p.name}</b>
+                <small>
+                  {p.sku || "No SKU"} ·{" "}
+                  {Object.entries(p.fields || {})
+                    .filter(([, v]) => v !== "")
+                    .slice(0, 3)
+                    .map(([k, v]) => k + ": " + v)
+                    .join(" · ")}
+                </small>
+              </div>
+              <strong>{money(p.price, p.currency, p.unit)}</strong>
+              <label
+                className="sl-button sl-button-outline"
+                style={{ cursor: "pointer" }}
+              >
+                Upload image
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void uploadProductImage(p, file);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {p.imageUrl && (
+                <Btn kind="danger" onClick={() => void removeProductImage(p)}>
+                  Remove image
+                </Btn>
               )}
-            </div>
-            <div className="sl-product-name">
-              <b>{p.name}</b>
-              <small>
-                {p.sku || "No SKU"} ·{" "}
-                {Object.entries(p.fields || {})
-                  .filter(([, v]) => v !== "")
-                  .slice(0, 3)
-                  .map(([k, v]) => k + ": " + v)
-                  .join(" · ")}
-              </small>
-            </div>
-            <strong>{money(p.price, p.currency, p.unit)}</strong>
-            <label
-              className="sl-button sl-button-outline"
-              style={{ cursor: "pointer" }}
-            >
-              Upload image
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void uploadProductImage(p, file);
-                  e.currentTarget.value = "";
-                }}
-              />
-            </label>
-            {p.imageUrl && (
-              <Btn kind="danger" onClick={() => void removeProductImage(p)}>
-                Remove image
+              <Btn kind="outline" onClick={() => startProduct(p)}>
+                Edit
               </Btn>
-            )}
-            <Btn kind="outline" onClick={() => startProduct(p)}>
-              Edit
-            </Btn>
-            <button
-              className="sl-icon-action"
-              onClick={() => void deleteProduct(p)}
-              title="Delete"
-            >
-              <Trash2 size={16} />
-            </button>
-          </article>
-        ))}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 18, paddingTop: 14, borderTop: "1px solid #e2e9e1" }}>
-          <span style={{ color: "#778276", fontSize: 13 }}>Showing {filteredProducts.length ? (currentPage - 1) * pageSize + 1 : 0}–{Math.min(currentPage * pageSize, filteredProducts.length)} of {filteredProducts.length} products</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Btn kind="outline" disabled={currentPage <= 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}><ChevronLeft size={15} /> Previous</Btn>
-            <span style={{ color: "#405a47", fontSize: 13, minWidth: 72, textAlign: "center" }}>Page {currentPage} of {totalPages}</span>
-            <Btn kind="outline" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}>Next <ChevronRight size={15} /></Btn>
+              <button
+                className="sl-icon-action"
+                onClick={() => void deleteProduct(p)}
+                title="Delete"
+              >
+                <Trash2 size={16} />
+              </button>
+            </article>
+          ))}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+              marginTop: 18,
+              paddingTop: 14,
+              borderTop: "1px solid #e2e9e1",
+            }}
+          >
+            <span style={{ color: "#778276", fontSize: 13 }}>
+              Showing{" "}
+              {filteredProducts.length ? (currentPage - 1) * pageSize + 1 : 0}–
+              {Math.min(currentPage * pageSize, filteredProducts.length)} of{" "}
+              {filteredProducts.length} products
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Btn
+                kind="outline"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              >
+                <ChevronLeft size={15} /> Previous
+              </Btn>
+              <span
+                style={{
+                  color: "#405a47",
+                  fontSize: 13,
+                  minWidth: 72,
+                  textAlign: "center",
+                }}
+              >
+                Page {currentPage} of {totalPages}
+              </span>
+              <Btn
+                kind="outline"
+                disabled={currentPage >= totalPages}
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+              >
+                Next <ChevronRight size={15} />
+              </Btn>
+            </div>
           </div>
-        </div>
         </>
       )}
     </section>
