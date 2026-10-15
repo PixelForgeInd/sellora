@@ -1252,4 +1252,95 @@ router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(asy
   });
 }));
 
+
+function platformRazorpayConfig() {
+  const keyId = process.env.PLATFORM_RAZORPAY_KEY_ID?.trim() || "";
+  const keySecret = process.env.PLATFORM_RAZORPAY_KEY_SECRET || "";
+  if (!keyId || !keySecret) throw new Error("Platform subscription payments are not configured. Set PLATFORM_RAZORPAY_KEY_ID and PLATFORM_RAZORPAY_KEY_SECRET on the API server.");
+  return { keyId, keySecret };
+}
+const subscriptionPrices = { MONTHLY: 249, YEARLY: 2490 } as const;
+function subscriptionPeriod(interval: "MONTHLY" | "YEARLY", from = new Date()) {
+  const end = new Date(from);
+  if (interval === "YEARLY") end.setFullYear(end.getFullYear() + 1);
+  else end.setMonth(end.getMonth() + 1);
+  return end;
+}
+
+// Platform subscriptions always use Sellora's merchant credentials, never a tenant's gateway keys.
+router.get("/workspace/subscription", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({ where: { ownerUserId: req.userId }, select: { id: true } });
+  if (!business) return res.status(409).json({ error: "Complete business setup before subscribing." });
+  const now = new Date();
+  let subscription = await prisma.subscription.findUnique({ where: { businessId: business.id }, include: { payments: { orderBy: { createdAt: "desc" }, take: 10 } } });
+  if (!subscription) {
+    subscription = await prisma.subscription.create({ data: { businessId: business.id, status: "PENDING", interval: "MONTHLY", amount: 249, currency: "INR", currentPeriodStart: now, currentPeriodEnd: now, dueAt: now }, include: { payments: { orderBy: { createdAt: "desc" }, take: 10 } } });
+  }
+  let configured = true;
+  try { platformRazorpayConfig(); } catch { configured = false; }
+  const locked = subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < now.getTime();
+  res.json({
+    id: subscription.id, status: subscription.status, interval: subscription.interval,
+    amount: subscription.amount.toString(), currency: subscription.currency,
+    currentPeriodStart: subscription.currentPeriodStart, currentPeriodEnd: subscription.currentPeriodEnd,
+    dueAt: subscription.dueAt, lastPaidAt: subscription.lastPaidAt, isLocked: locked,
+    paymentConfigured: configured, prices: subscriptionPrices,
+    recentPayments: subscription.payments.map(p => ({ id:p.id, interval:p.interval, amount:p.amount.toString(), status:p.status, createdAt:p.createdAt, paidAt:p.paidAt }))
+  });
+}));
+
+router.post("/workspace/subscription/order", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({ interval: z.enum(["MONTHLY", "YEARLY"]) }).parse(req.body);
+  const business = await prisma.business.findFirst({ where: { ownerUserId: req.userId }, select: { id:true, name:true, email:true } });
+  if (!business) return res.status(409).json({ error: "Complete business setup before subscribing." });
+  let gateway: {keyId:string;keySecret:string};
+  try { gateway = platformRazorpayConfig(); } catch (e) { return res.status(503).json({ error: e instanceof Error ? e.message : "Platform payments are not configured." }); }
+  const amount = subscriptionPrices[data.interval];
+  const now = new Date();
+  const subscription = await prisma.subscription.upsert({
+    where: { businessId: business.id },
+    create: { businessId: business.id, status:"PENDING", interval:data.interval, amount, currency:"INR", currentPeriodStart:now, currentPeriodEnd:now, dueAt:now },
+    update: {}
+  });
+  const receipt = ("sub_" + business.id + "_" + Date.now()).slice(0, 40);
+  try {
+    const order = await razorpayRequest<{id:string;amount:number;currency:string}>(gateway.keyId,gateway.keySecret,"/orders",{
+      method:"POST", body:JSON.stringify({ amount:amount*100, currency:"INR", receipt, notes:{ selloraSubscriptionId:subscription.id, businessId:business.id, interval:data.interval } })
+    });
+    await prisma.platformSubscriptionPayment.create({ data: { subscriptionId:subscription.id, interval:data.interval, amount, currency:"INR", razorpayOrderId:order.id, status:"CREATED" } });
+    res.status(201).json({ keyId:gateway.keyId, orderId:order.id, amount:order.amount, currency:order.currency, interval:data.interval });
+  } catch (e) {
+    res.status(502).json({ error: e instanceof Error ? "Could not create Razorpay order: " + e.message : "Could not create subscription payment." });
+  }
+}));
+
+router.post("/workspace/subscription/verify", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({ razorpay_order_id:z.string().min(1).max(100), razorpay_payment_id:z.string().min(1).max(100), razorpay_signature:z.string().min(1).max(200) }).parse(req.body);
+  const business = await prisma.business.findFirst({ where: { ownerUserId:req.userId }, select:{id:true} });
+  if (!business) return res.status(409).json({error:"Business workspace not found."});
+  const payment = await prisma.platformSubscriptionPayment.findUnique({ where:{razorpayOrderId:data.razorpay_order_id}, include:{subscription:true} });
+  if (!payment || payment.subscription.businessId !== business.id) return res.status(404).json({error:"Subscription payment order not found."});
+  if (payment.status === "PAID") return res.json({success:true});
+  let gateway:{keyId:string;keySecret:string};
+  try { gateway=platformRazorpayConfig(); } catch(e) { return res.status(503).json({error:e instanceof Error?e.message:"Platform payment configuration is unavailable."}); }
+  const expected=crypto.createHmac("sha256",gateway.keySecret).update(data.razorpay_order_id+"|"+data.razorpay_payment_id).digest();
+  const supplied=Buffer.from(data.razorpay_signature,"hex");
+  if(expected.length!==supplied.length || !crypto.timingSafeEqual(expected,supplied)) return res.status(400).json({error:"Razorpay payment signature verification failed."});
+  try {
+    const razorpayPayment=await razorpayRequest<{id:string;order_id:string;amount:number;currency:string;status:string}>(gateway.keyId,gateway.keySecret,"/payments/"+encodeURIComponent(data.razorpay_payment_id));
+    const expectedAmount=Number(payment.amount)*100;
+    if(razorpayPayment.order_id!==payment.razorpayOrderId || razorpayPayment.amount!==expectedAmount || razorpayPayment.currency!==payment.currency) return res.status(400).json({error:"Payment amount or currency does not match this subscription."});
+    if(razorpayPayment.status!=="captured") return res.status(202).json({success:false,paymentStatus:razorpayPayment.status,message:"Payment is not captured yet. Please wait for confirmation."});
+    const paidAt=new Date();
+    const periodEnd=subscriptionPeriod(payment.interval as "MONTHLY"|"YEARLY",paidAt);
+    await prisma.$transaction([
+      prisma.platformSubscriptionPayment.update({where:{id:payment.id},data:{razorpayPaymentId:razorpayPayment.id,status:"PAID",paidAt}}),
+      prisma.subscription.update({where:{id:payment.subscriptionId},data:{status:"ACTIVE",interval:payment.interval,amount:payment.amount,currency:payment.currency,currentPeriodStart:paidAt,currentPeriodEnd:periodEnd,dueAt:periodEnd,lastPaidAt:paidAt}})
+    ]);
+    res.json({success:true,message:"Payment verified and subscription activated."});
+  } catch(e) {
+    res.status(502).json({error:e instanceof Error?"Could not verify payment: "+e.message:"Could not verify subscription payment."});
+  }
+}));
+
 export default router;
