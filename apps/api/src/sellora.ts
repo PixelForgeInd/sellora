@@ -835,6 +835,10 @@ router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
     include:{business:{select:{id:true}},items:{select:{productId:true}}}
   });
   if (!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.business.id }, select: { status: true, dueAt: true } });
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now())) {
+    return res.status(402).json({ error: "This business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
+  }
   if (data.productId && !catalogue.items.some(item=>item.productId===data.productId)) {
     return res.status(400).json({error:"This product is not part of the published catalogue."});
   }
@@ -862,6 +866,10 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
+  const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.businessId }, select: { status: true, dueAt: true } });
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now())) {
+    return res.status(402).json({ error: "This business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
+  }
   if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
   if(catalogue.business.paymentGatewayProvider !== "RAZORPAY" || catalogue.business.paymentGatewayStatus !== "ACTIVE" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) {
     return res.status(409).json({error:"This business has not connected Razorpay payments yet. Please contact the business."});
