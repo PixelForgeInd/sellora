@@ -544,6 +544,62 @@ export function ProductSection({
       );
   }
 
+  function exportProductsCsv() {
+    if (!products.length) return;
+    const standardHeaders = [
+      "id",
+      "name",
+      "sku",
+      "description",
+      "price",
+      "currency",
+      "unit",
+      "imageUrl",
+      "stockEnabled",
+      "stockQuantity",
+    ];
+    const customHeaders = Array.from(
+      new Set(products.flatMap((product) => Object.keys(product.fields || {}))),
+    ).filter((key) => !standardHeaders.includes(key));
+    const headers = [...standardHeaders, ...customHeaders];
+    const quote = (value: unknown) => {
+      const text = value == null
+        ? ""
+        : Array.isArray(value)
+          ? value.join("; ")
+          : String(value);
+      return /[",\r\n]/.test(text)
+        ? '"' + text.replace(/"/g, '""') + '"'
+        : text;
+    };
+    const rows = products.map((product) => {
+      const values: Record<string, unknown> = {
+        id: product.id,
+        name: product.name,
+        sku: product.sku,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        unit: product.unit,
+        imageUrl: product.imageUrl,
+        stockEnabled: product.stockEnabled,
+        stockQuantity: product.stockQuantity,
+        ...(product.fields || {}),
+      };
+      return headers.map((header) => quote(values[header])).join(",");
+    });
+    const csv = "\\uFEFF" + [headers.map(quote).join(","), ...rows].join("\\r\\n") + "\\r\\n";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "sellora-products-export.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   async function downloadImportTemplate() {
     setImportBusy(true);
     setImportError("");
@@ -706,6 +762,13 @@ export function ProductSection({
           <p>Suggested fields are tailored to {category.toLowerCase()}.</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Btn
+            kind="outline"
+            disabled={!products.length}
+            onClick={exportProductsCsv}
+          >
+            <Download size={15} /> Export CSV
+          </Btn>
           <Btn
             kind="outline"
             disabled={importBusy}
