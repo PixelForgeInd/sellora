@@ -1229,13 +1229,6 @@ export default function SelloraApp() {
                           ? "Customer directory"
                           : page === "reports"
                             ? "Sales reports"
-<<<<<<< HEAD
-                            : page === "settings"
-                              ? "Business settings"
-                              : page === "payments"
-                                ? "Payments"
-                                : "Workspace"}
-=======
                             : page === "launch"
                               ? "Launch checklist"
                               : page === "settings"
@@ -1245,7 +1238,6 @@ export default function SelloraApp() {
                                   : page === "subscription"
                                     ? "Subscription & billing"
                                     : "Workspace"}
->>>>>>> f48fe3d (feat(v2): integrate platform owner and subscription pages)
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
