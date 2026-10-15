@@ -27,7 +27,6 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [paymentFailed, setPaymentFailed] = useState(false);
-  const [autoStarted, setAutoStarted] = useState(false);
   const [selectedInterval, setSelectedInterval] = useState<"MONTHLY" | "YEARLY">("MONTHLY");
   async function refresh() {
     setError("");
@@ -35,16 +34,6 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
     catch (e) { setError(e instanceof Error ? e.message : "Could not load subscription."); }
   }
   useEffect(() => { void refresh(); }, [token]);
-  useEffect(() => {
-    if (requirePayment && subscription && !autoStarted && !busy && !subscription.paymentConfigured) {
-      setError("Subscription payments are not configured. Please contact Sellora support.");
-      setPaymentFailed(true);
-      setAutoStarted(true);
-    } else if (requirePayment && subscription && subscription.paymentConfigured && !autoStarted && !busy) {
-      setAutoStarted(true);
-      void pay(selectedInterval);
-    }
-  }, [requirePayment, subscription, autoStarted, busy]);
   async function pay(interval: "MONTHLY" | "YEARLY") {
     setBusy(true); setError(""); setNotice(""); setPaymentFailed(false); setSelectedInterval(interval);
     try {
