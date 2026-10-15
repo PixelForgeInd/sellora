@@ -590,9 +590,9 @@ export function ProductSection({
       return headers.map((header) => quote(values[header])).join(",");
     });
     const csv =
-      "\\uFEFF" +
-      [headers.map(quote).join(","), ...rows].join("\\r\\n") +
-      "\\r\\n";
+      "\uFEFF" +
+      [headers.map(quote).join(","), ...rows].join("\r\n") +
+      "\r\n";
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
