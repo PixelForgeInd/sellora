@@ -1278,12 +1278,16 @@ router.get("/workspace/subscription", requireAuth, authenticated(async (req,res)
   }
   let configured = true;
   try { platformRazorpayConfig(); } catch { configured = false; }
-  const locked = subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < now.getTime();
+  const gracePeriodEndsAt = new Date(subscription.dueAt.getTime() + 24 * 60 * 60 * 1000);
+  const isPastDue = subscription.dueAt.getTime() < now.getTime();
+  const gracePeriodActive = subscription.status === "ACTIVE" && isPastDue && gracePeriodEndsAt.getTime() >= now.getTime();
+  const locked = subscription.status !== "ACTIVE" || gracePeriodEndsAt.getTime() < now.getTime();
   res.json({
     id: subscription.id, status: subscription.status, interval: subscription.interval,
     amount: subscription.amount.toString(), currency: subscription.currency,
     currentPeriodStart: subscription.currentPeriodStart, currentPeriodEnd: subscription.currentPeriodEnd,
     dueAt: subscription.dueAt, lastPaidAt: subscription.lastPaidAt, isLocked: locked,
+    isPastDue, gracePeriodActive, gracePeriodEndsAt,
     paymentConfigured: configured, prices: subscriptionPrices,
     recentPayments: subscription.payments.map(p => ({ id:p.id, interval:p.interval, amount:p.amount.toString(), status:p.status, createdAt:p.createdAt, paidAt:p.paidAt }))
   });
