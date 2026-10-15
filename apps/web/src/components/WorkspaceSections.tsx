@@ -340,7 +340,6 @@ export function OnboardingScreen({
               >
                 <option>B2B</option>
                 <option>B2C</option>
-                <option>B2B2C</option>
               </select>
             </label>
           </div>
