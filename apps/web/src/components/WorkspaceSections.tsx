@@ -561,9 +561,7 @@ export function ProductSection({
     try {
       const response = await fetch(
         (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") +
-          /\/$/,
-          "",
-        ) + "/workspace/products/bulk-import",
+          "/workspace/products/bulk-import",
         {
           method: "POST",
           headers: {
@@ -608,9 +606,7 @@ export function ProductSection({
     try {
       const response = await fetch(
         (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") +
-          /\/$/,
-          "",
-        ) + "/workspace/products/bulk-import",
+          "/workspace/products/bulk-import",
         {
           method: "POST",
           headers: {
