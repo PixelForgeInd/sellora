@@ -43,6 +43,8 @@ import {
 import { SettingsSection } from "./components/SettingsSection";
 import { PaymentsSection } from "./components/PaymentsSection";
 import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
+import { PlatformOwnerDashboard } from "./components/PlatformOwnerDashboard";
+import { SubscriptionSection } from "./components/SubscriptionSection";
 import {
   EnquiriesSection,
   CustomersSection,
@@ -762,6 +764,7 @@ export default function SelloraApp() {
         auth={auth}
       />
     );
+  if (isPlatformOwner) return <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />;
   if (!business)
     return (
       <OnboardingScreen
@@ -1181,6 +1184,7 @@ export default function SelloraApp() {
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
+            { id: "subscription", label: "Subscription", icon: CreditCard },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
@@ -1240,7 +1244,9 @@ export default function SelloraApp() {
                                 ? "Business settings"
                                 : page === "payments"
                                   ? "Payments"
-                                  : "Workspace"}
+                                  : page === "subscription"
+                                    ? "Subscription & billing"
+                                    : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -2045,6 +2051,7 @@ export default function SelloraApp() {
         )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
+        {page === "subscription" && <SubscriptionSection token={access} />}
         {page === "settings" && (
           <SettingsSection
             business={business}
