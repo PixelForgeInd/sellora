@@ -805,6 +805,13 @@ router.get("/public/catalogues/:slug", async (req,res) => {
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true},orderBy:{sortOrder:"asc"}}}
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
+  const subscription = await prisma.subscription.findUnique({
+    where: { businessId: catalogue.businessId },
+    select: { status: true, dueAt: true }
+  });
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now())) {
+    return res.status(402).json({ error: "This catalogue is temporarily unavailable because the business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
+  }
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,shareImageUrl:catalogue.shareImageUrl,
     business:{name:catalogue.business.name,industry:catalogue.business.industry,email:catalogue.business.email,phone:catalogue.business.phone,address:catalogue.business.address,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
