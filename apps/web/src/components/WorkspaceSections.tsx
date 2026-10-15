@@ -6,6 +6,7 @@ import {
   Check,
   CreditCard,
   Copy,
+  Download,
   ExternalLink,
   Eye,
   EyeOff,
@@ -507,6 +508,47 @@ export function ProductSection({
       );
   }
 
+  async function downloadImportTemplate() {
+    setImportBusy(true);
+    setImportError("");
+    setImportNotice("");
+    try {
+      const response = await fetch(
+        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\\/$/, "") +
+          "/workspace/products/bulk-import/template",
+        { headers: { Authorization: "Bearer " + access } },
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not build your import template.");
+      const quote = (value: unknown) => {
+        const text = value == null ? "" : String(value);
+        return /[",\\r\\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+      };
+      const csv = [
+        result.headers.map(quote).join(","),
+        result.headers.map((header: string) => quote(result.sampleRow[header] ?? "")).join(","),
+      ].join("\\r\\n") + "\\r\\n";
+      const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "sellora-product-import-template.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setImportNotice(
+        "Downloaded a template with " + result.headers.length +
+          " columns, including " + result.fields.length +
+          " fields configured for your business. Replace the sample row before importing.",
+      );
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "Could not download the template.");
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   async function previewImport() {
     if (!importRows.length) {
       setImportError("Choose a CSV file first.");
@@ -612,6 +654,13 @@ export function ProductSection({
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Btn
             kind="outline"
+            disabled={importBusy}
+            onClick={() => void downloadImportTemplate()}
+          >
+            <Download size={15} /> Sample CSV
+          </Btn>
+          <Btn
+            kind="outline"
             onClick={() => {
               setImportError("");
               setImportNotice("");
@@ -644,9 +693,7 @@ export function ProductSection({
             Bulk import products
           </b>
           <p style={{ color: "#778276", lineHeight: 1.6, margin: 0, fontSize: 14 }}>
-            CSV headers: name, sku, description, price, currency, unit,
-            imageUrl, stockEnabled, stockQuantity. Add your configured custom
-            field keys as extra columns.
+            Download a sample CSV generated from your business settings. It includes all standard product fields plus every custom field configured for your account. Edit the sample row, then validate it before importing.
           </p>
         </div>
         <div
