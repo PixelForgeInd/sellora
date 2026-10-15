@@ -90,7 +90,7 @@ function subscriptionPayload(subscription: any) {
     currentPeriodEnd: subscription.currentPeriodEnd,
     dueAt: subscription.dueAt,
     lastPaidAt: subscription.lastPaidAt,
-    isLocked: subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now()
+    isLocked: subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()
   };
 }
 
@@ -268,7 +268,7 @@ router.use("/workspace", requireAuth, asyncRoute(async (req, res, next) => {
   const subscription = await prisma.subscription.findUnique({ where: { businessId: business.id }, select: { status: true, dueAt: true } });
   // Legacy tenants without a subscription row get a short active grace period on first access.
   if (!subscription) return next();
-  if (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now()) {
+  if (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now()) {
     return res.status(402).json({ error: "Your Sellora subscription has expired. Renew your plan to unlock your workspace and public catalogue.", code: "SUBSCRIPTION_REQUIRED" });
   }
   next();
