@@ -65,6 +65,7 @@ export default function SelloraApp() {
   const [access, setAccess] = useState(getSessionToken());
   const [user, setUser] = useState("");
   const [isPlatformOwner, setIsPlatformOwner] = useState(false);
+  const [subscriptionLocked, setSubscriptionLocked] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
@@ -417,10 +418,20 @@ export default function SelloraApp() {
     }
     if (!access) return;
     api("/auth/me")
-      .then((u: { email: string; isPlatformOwner?: boolean }) => {
+      .then(async (u: { email: string; isPlatformOwner?: boolean }) => {
         setUser(u.email);
         setIsPlatformOwner(Boolean(u.isPlatformOwner));
-        return load(access);
+        if (u.isPlatformOwner) return;
+        try {
+          await load(access);
+          setSubscriptionLocked(false);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "Could not load workspace.";
+          if (message.toLowerCase().includes("subscription") || message.toLowerCase().includes("expired")) {
+            setSubscriptionLocked(true);
+            setPage("subscription");
+          } else setError(message);
+        }
       })
       .catch(() => {
         sessionStorage.removeItem("sellora_token");
@@ -473,8 +484,17 @@ export default function SelloraApp() {
       setUser(d.user.email);
       const currentUser = await api("/auth/me", {}, d.token);
       setIsPlatformOwner(Boolean(currentUser.isPlatformOwner));
-      const b = await api("/workspace/business", {}, d.token);
-      if (b) await load(d.token);
+      if (currentUser.isPlatformOwner) return;
+      try {
+        await load(d.token);
+        setSubscriptionLocked(false);
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : "Could not load workspace.";
+        if (message.toLowerCase().includes("subscription") || message.toLowerCase().includes("expired")) {
+          setSubscriptionLocked(true);
+          setPage("subscription");
+        } else throw loadError;
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not continue");
     } finally {
@@ -787,6 +807,9 @@ export default function SelloraApp() {
     return (
       <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />
     );
+  if (subscriptionLocked && !business) return (
+    <div className="sl-app"><main className="sl-main"><header className="sl-workspace-top"><div><span className="sl-kicker">SELLORA WORKSPACE</span><h1>Renew your subscription</h1></div><button className="sl-button sl-button-outline" onClick={signOut}><LogOut size={15}/> Sign out</button></header><SubscriptionSection token={access} onRenewed={async () => { await load(access); setSubscriptionLocked(false); }} /></main></div>
+  );
   if (!business)
     return (
       <OnboardingScreen
@@ -1845,7 +1868,7 @@ export default function SelloraApp() {
         )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
-        {page === "subscription" && <SubscriptionSection token={access} />}
+        {page === "subscription" && <SubscriptionSection token={access} onRenewed={async () => { await load(access); setSubscriptionLocked(false); }} />}
         {page === "settings" && (
           <SettingsSection
             business={business}
