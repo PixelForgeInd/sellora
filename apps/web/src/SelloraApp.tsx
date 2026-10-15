@@ -1175,11 +1175,8 @@ export default function SelloraApp() {
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
-<<<<<<< HEAD
-=======
             { id: "subscription", label: "Subscription", icon: CreditCard },
             { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
->>>>>>> f48fe3d (feat(v2): integrate platform owner and subscription pages)
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
             <button
