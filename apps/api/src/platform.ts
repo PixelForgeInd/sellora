@@ -28,7 +28,7 @@ async function requirePlatformOwner(req: AuthRequest, res: Response) {
 function priceFor(interval: "MONTHLY" | "YEARLY") {
   return interval === "YEARLY" ? YEARLY_PRICE : MONTHLY_PRICE;
 }
-function indiaEndOfDay(base: Date, monthsToAdd: number) {
+export function indiaEndOfDay(base: Date, monthsToAdd: number) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit"
   }).formatToParts(base);
