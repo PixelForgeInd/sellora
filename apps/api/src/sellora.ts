@@ -1387,7 +1387,7 @@ router.get("/workspace/subscription", requireAuth, authenticated(async (req,res)
     currentPeriodStart: subscription.currentPeriodStart, currentPeriodEnd: subscription.currentPeriodEnd,
     dueAt: subscription.dueAt, lastPaidAt: subscription.lastPaidAt, isLocked: locked,
     isPastDue, gracePeriodActive, gracePeriodEndsAt,
-    paymentConfigured: configured, prices: subscriptionPrices,
+    paymentConfigured: configured, prices: await getSubscriptionPrices(),
     recentPayments: subscription.payments.map(p => ({ id:p.id, interval:p.interval, amount:p.amount.toString(), status:p.status, createdAt:p.createdAt, paidAt:p.paidAt }))
   });
 }));
