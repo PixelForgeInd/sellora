@@ -514,21 +514,33 @@ export function ProductSection({
     setImportNotice("");
     try {
       const response = await fetch(
-        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") +
-          "/workspace/products/bulk-import/template",
+        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(
+          /\/$/,
+          "",
+        ) + "/workspace/products/bulk-import/template",
         { headers: { Authorization: "Bearer " + access } },
       );
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not build your import template.");
+      if (!response.ok)
+        throw new Error(
+          result.error || "Could not build your import template.",
+        );
       const quote = (value: unknown) => {
         const text = value == null ? "" : String(value);
-        return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+        return /[",\r\n]/.test(text)
+          ? '"' + text.replace(/"/g, '""') + '"'
+          : text;
       };
-      const csv = [
-        result.headers.map(quote).join(","),
-        result.headers.map((header: string) => quote(result.sampleRow[header] ?? "")).join(","),
-      ].join("\r\n") + "\r\n";
-      const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+      const csv =
+        [
+          result.headers.map(quote).join(","),
+          result.headers
+            .map((header: string) => quote(result.sampleRow[header] ?? ""))
+            .join(","),
+        ].join("\r\n") + "\r\n";
+      const blob = new Blob(["\uFEFF", csv], {
+        type: "text/csv;charset=utf-8;",
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -538,12 +550,18 @@ export function ProductSection({
       link.remove();
       URL.revokeObjectURL(url);
       setImportNotice(
-        "Downloaded a template with " + result.headers.length +
-          " columns, including " + result.fields.length +
+        "Downloaded a template with " +
+          result.headers.length +
+          " columns, including " +
+          result.fields.length +
           " fields configured for your business. Replace the sample row before importing.",
       );
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : "Could not download the template.");
+      setImportError(
+        error instanceof Error
+          ? error.message
+          : "Could not download the template.",
+      );
     } finally {
       setImportBusy(false);
     }
@@ -560,8 +578,10 @@ export function ProductSection({
     setImportPreview(null);
     try {
       const response = await fetch(
-        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") +
-          "/workspace/products/bulk-import",
+        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(
+          /\/$/,
+          "",
+        ) + "/workspace/products/bulk-import",
         {
           method: "POST",
           headers: {
@@ -605,8 +625,10 @@ export function ProductSection({
     setImportNotice("");
     try {
       const response = await fetch(
-        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(/\/$/, "") +
-          "/workspace/products/bulk-import",
+        (import.meta.env.VITE_API_URL || "http://localhost:4000/api").replace(
+          /\/$/,
+          "",
+        ) + "/workspace/products/bulk-import",
         {
           method: "POST",
           headers: {
@@ -685,11 +707,28 @@ export function ProductSection({
         }}
       >
         <div>
-          <b style={{ display: "block", fontSize: 18, fontWeight: 750, marginBottom: 8 }}>
+          <b
+            style={{
+              display: "block",
+              fontSize: 18,
+              fontWeight: 750,
+              marginBottom: 8,
+            }}
+          >
             Bulk import products
           </b>
-          <p style={{ color: "#778276", lineHeight: 1.6, margin: 0, fontSize: 14 }}>
-            Download a sample CSV generated from your business settings. It includes all standard product fields plus every custom field configured for your account. Edit the sample row, then validate it before importing.
+          <p
+            style={{
+              color: "#778276",
+              lineHeight: 1.6,
+              margin: 0,
+              fontSize: 14,
+            }}
+          >
+            Download a sample CSV generated from your business settings. It
+            includes all standard product fields plus every custom field
+            configured for your account. Edit the sample row, then validate it
+            before importing.
           </p>
         </div>
         <div
@@ -701,13 +740,28 @@ export function ProductSection({
           }}
         >
           <div style={{ display: "grid", gap: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 650, color: "#405a47" }}>CSV file</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 13, fontWeight: 650, color: "#405a47" }}>
+              CSV file
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                flexWrap: "wrap",
+              }}
+            >
               <input
                 id="sl-product-csv"
                 type="file"
                 accept=".csv,text/csv"
-                style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden" }}
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  opacity: 0,
+                  overflow: "hidden",
+                }}
                 onChange={(event) => {
                   const file = event.currentTarget.files?.[0] || null;
                   event.currentTarget.value = "";
@@ -727,7 +781,9 @@ export function ProductSection({
                       setImportRows(parseCsv(text));
                     } catch (error) {
                       setImportError(
-                        error instanceof Error ? error.message : "Invalid CSV file.",
+                        error instanceof Error
+                          ? error.message
+                          : "Invalid CSV file.",
                       );
                     }
                   });
@@ -736,7 +792,16 @@ export function ProductSection({
               <label
                 htmlFor="sl-product-csv"
                 className="sl-button sl-button-outline"
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", minHeight: 42, padding: "0 16px", borderRadius: 10, fontWeight: 650 }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  minHeight: 42,
+                  padding: "0 16px",
+                  borderRadius: 10,
+                  fontWeight: 650,
+                }}
               >
                 Choose CSV file
               </label>
@@ -745,7 +810,15 @@ export function ProductSection({
               </span>
             </div>
           </div>
-          <label style={{ display: "grid", gap: 8, fontSize: 13, fontWeight: 650, color: "#405a47" }}>
+          <label
+            style={{
+              display: "grid",
+              gap: 8,
+              fontSize: 13,
+              fontWeight: 650,
+              color: "#405a47",
+            }}
+          >
             Import mode
             <select
               value={importMode}
@@ -753,7 +826,17 @@ export function ProductSection({
                 setImportMode(event.target.value as "CREATE_ONLY" | "UPSERT");
                 setImportPreview(null);
               }}
-              style={{ width: "100%", minHeight: 44, padding: "0 12px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#293a30", fontSize: 14, outlineColor: "#599c56" }}
+              style={{
+                width: "100%",
+                minHeight: 44,
+                padding: "0 12px",
+                border: "1px solid #dce5da",
+                borderRadius: 10,
+                background: "#fff",
+                color: "#293a30",
+                fontSize: 14,
+                outlineColor: "#599c56",
+              }}
             >
               <option value="CREATE_ONLY">Create only (safe default)</option>
               <option value="UPSERT">Update matching SKU</option>
@@ -761,11 +844,27 @@ export function ProductSection({
           </label>
         </div>
         {importFile && (
-          <div style={{ padding: "11px 14px", borderRadius: 10, background: "#f0f6ef", border: "1px solid #dcebd9", color: "#405a47", fontSize: 13 }}>
+          <div
+            style={{
+              padding: "11px 14px",
+              borderRadius: 10,
+              background: "#f0f6ef",
+              border: "1px solid #dcebd9",
+              color: "#405a47",
+              fontSize: 13,
+            }}
+          >
             <b>{importRows.length}</b> product rows ready to validate
           </div>
         )}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
           <Btn
             kind="outline"
             disabled={importBusy || !importRows.length}
@@ -780,21 +879,50 @@ export function ProductSection({
           )}
         </div>
         {importError && (
-          <p role="alert" style={{ color: "#b42318", margin: 0, padding: "10px 12px", background: "#fff5f4", borderRadius: 8 }}>
+          <p
+            role="alert"
+            style={{
+              color: "#b42318",
+              margin: 0,
+              padding: "10px 12px",
+              background: "#fff5f4",
+              borderRadius: 8,
+            }}
+          >
             {importError}
           </p>
         )}
-        {importNotice && <p role="status" className="sl-notice">{importNotice}</p>}
+        {importNotice && (
+          <p role="status" className="sl-notice">
+            {importNotice}
+          </p>
+        )}
         {importPreview && (
-          <div role="status" style={{ padding: 16, borderRadius: 12, border: "1px solid #e2e9e1", background: "#fff" }}>
-            <b style={{ color: importPreview.invalidRows ? "#b42318" : "#357744" }}>
-              {importPreview.validRows} valid · {importPreview.invalidRows} invalid
+          <div
+            role="status"
+            style={{
+              padding: 16,
+              borderRadius: 12,
+              border: "1px solid #e2e9e1",
+              background: "#fff",
+            }}
+          >
+            <b
+              style={{
+                color: importPreview.invalidRows ? "#b42318" : "#357744",
+              }}
+            >
+              {importPreview.validRows} valid · {importPreview.invalidRows}{" "}
+              invalid
             </b>
             {importPreview.rows
               ?.filter((row: any) => !row.valid)
               .slice(0, 20)
               .map((row: any) => (
-                <p key={row.rowNumber} style={{ margin: "8px 0 0", color: "#b42318", fontSize: 13 }}>
+                <p
+                  key={row.rowNumber}
+                  style={{ margin: "8px 0 0", color: "#b42318", fontSize: 13 }}
+                >
                   Row {row.rowNumber}: {row.errors.join(" ")}
                 </p>
               ))}
