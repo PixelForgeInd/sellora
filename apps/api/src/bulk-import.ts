@@ -62,7 +62,7 @@ function rowToProduct(row: Record<string, unknown>, rowNumber: number) {
     }
   }
 
-  const known = new Set(["name", "sku", "description", "price", "currency", "unit", "imageUrl", "stockEnabled", "stockQuantity"]);
+  const known = new Set(["name", "sku", "description", "price", "currency", "unit", "imageUrl", "stockEnabled", "stockQuantity", "isActive"]);
   const fields = Object.fromEntries(Object.entries(row)
     .filter(([key, value]) => !known.has(key) && value !== undefined && value !== null && String(value).trim() !== "")
     .map(([key, value]) => [key, typeof value === "string" ? value.trim() : value]));
@@ -80,10 +80,68 @@ function rowToProduct(row: Record<string, unknown>, rowNumber: number) {
       price,
       stockEnabled: ["true", "yes", "1"].includes(stringValue(row.stockEnabled).toLowerCase()),
       stockQuantity,
+      isActive: !["false", "no", "0", "inactive"].includes(stringValue(row.isActive).toLowerCase()),
       fields,
     },
   };
 }
+
+function sampleValueForField(field: { key: string; label: string; type: string; required: boolean; options: unknown }) {
+  if (!field.required) return "";
+  const type = field.type.toLowerCase();
+  if (type.includes("number") || type.includes("quantity") || type.includes("price")) return "1";
+  if (type.includes("boolean") || type.includes("checkbox") || type.includes("toggle")) return "false";
+  if (type.includes("url") || type.includes("image")) return "https://example.com";
+  if (type.includes("email")) return "sample@example.com";
+  if (type.includes("date")) return "2026-01-01";
+  if (Array.isArray(field.options) && field.options.length) {
+    const first = field.options[0];
+    if (typeof first === "string") return first;
+    if (first && typeof first === "object") {
+      const option = first as Record<string, unknown>;
+      return String(option.value ?? option.label ?? "");
+    }
+  }
+  return "Sample " + field.label;
+}
+
+// Generate a template from this business's actual configured fields, never another tenant's fields.
+router.get("/workspace/products/bulk-import/template", requireAuth, async (req, res, next) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    const business = await prisma.business.findFirst({
+      where: { ownerUserId: userId },
+      select: { id: true, catalogueFields: { orderBy: { sortOrder: "asc" }, select: { key: true, label: true, type: true, required: true, options: true } } },
+    });
+    if (!business) return res.status(409).json({ error: "Complete business setup first." });
+
+    const headers = ["name", "sku", "description", "price", "currency", "unit", "imageUrl", "stockEnabled", "stockQuantity", "isActive", ...business.catalogueFields.map(field => field.key)];
+    const sampleRow: Record<string, string> = {
+      name: "Sample product - replace this",
+      sku: "SAMPLE-001",
+      description: "Replace with your product description",
+      price: "100.00",
+      currency: "INR",
+      unit: "piece",
+      imageUrl: "",
+      stockEnabled: "false",
+      stockQuantity: "",
+      isActive: "true",
+    };
+    for (const field of business.catalogueFields) {
+      sampleRow[field.key] = sampleValueForField(field);
+    }
+    return res.json({
+      businessId: business.id,
+      headers,
+      sampleRow,
+      fields: business.catalogueFields.map(({ key, label, type, required, options }) => ({ key, label, type, required, options })),
+      note: "Edit the sample row before importing. Only fields configured for your business are included.",
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post("/workspace/products/bulk-import", requireAuth, async (req, res, next) => {
   try {
@@ -159,6 +217,7 @@ router.post("/workspace/products/bulk-import", requireAuth, async (req, res, nex
           price: row.data.price === null ? null : new Prisma.Decimal(row.data.price),
           stockEnabled: row.data.stockEnabled,
           stockQuantity: row.data.stockQuantity === null ? null : new Prisma.Decimal(row.data.stockQuantity),
+          isActive: row.data.isActive,
           fields: row.data.fields as Prisma.InputJsonValue,
         };
         const match = body.mode === "UPSERT" && row.data.sku
