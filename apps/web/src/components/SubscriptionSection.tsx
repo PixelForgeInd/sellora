@@ -101,7 +101,7 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
     {error && <div className="sl-fail-error" role="alert">{error}</div>}
     <div className="sl-fail-actions">
       <button className="sl-fail-retry" disabled={busy} onClick={() => {setPaymentFailed(false); void pay(selectedInterval);}}><RotateCcw size={16}/>{busy ? "Opening checkout…" : "Try payment again"}</button>
-      <button className="sl-fail-home" onClick={() => { window.location.href = "/"; }}><Home size={16}/> Back to home</button>
+      <button className="sl-fail-home" onClick={() => { sessionStorage.removeItem("sellora_token"); window.location.href = "/"; }}><Home size={16}/> Back to home</button>
     </div>
   </section>;
   if (!subscription && !error) return <section className="sl-section-card">Loading subscription…</section>;
