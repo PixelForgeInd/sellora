@@ -140,7 +140,7 @@ router.patch("/platform/owner/businesses/:businessId/subscription", requireAuth,
     interval: z.enum(["MONTHLY", "YEARLY"]).optional(),
     dueAt: z.string().datetime().optional(),
   }).strict().refine(value => Object.keys(value).length > 0, "Provide at least one subscription field.").parse(req.body);
-  const business = await prisma.business.findUnique({ where: { id: req.params.businessId }, select: { id: true, name: true } });
+  const business = await prisma.business.findUnique({ where: { id: String(req.params.businessId) }, select: { id: true, name: true } });
   if (!business) return res.status(404).json({ error: "Business not found." });
   const subscription = await ensureSubscription(business.id);
   const nextInterval = input.interval || subscription.interval as "MONTHLY" | "YEARLY";
