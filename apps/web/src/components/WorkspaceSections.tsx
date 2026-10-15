@@ -563,11 +563,12 @@ export function ProductSection({
     ).filter((key) => !standardHeaders.includes(key));
     const headers = [...standardHeaders, ...customHeaders];
     const quote = (value: unknown) => {
-      const text = value == null
-        ? ""
-        : Array.isArray(value)
-          ? value.join("; ")
-          : String(value);
+      const text =
+        value == null
+          ? ""
+          : Array.isArray(value)
+            ? value.join("; ")
+            : String(value);
       return /[",\r\n]/.test(text)
         ? '"' + text.replace(/"/g, '""') + '"'
         : text;
@@ -588,7 +589,10 @@ export function ProductSection({
       };
       return headers.map((header) => quote(values[header])).join(",");
     });
-    const csv = "\\uFEFF" + [headers.map(quote).join(","), ...rows].join("\\r\\n") + "\\r\\n";
+    const csv =
+      "\\uFEFF" +
+      [headers.map(quote).join(","), ...rows].join("\\r\\n") +
+      "\\r\\n";
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
