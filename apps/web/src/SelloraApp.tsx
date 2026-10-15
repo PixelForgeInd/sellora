@@ -67,6 +67,8 @@ export default function SelloraApp() {
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [overviewEnquiries, setOverviewEnquiries] = useState<any[]>([]);
+  const [overviewCustomers, setOverviewCustomers] = useState<any[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
   const [orderSort, setOrderSort] = useState("newest");
@@ -178,6 +180,16 @@ export default function SelloraApp() {
       setOrders(await api("/workspace/orders", {}, t));
     } catch {
       /* Orders can refresh separately. */
+    }
+    try {
+      setOverviewEnquiries(await api("/workspace/enquiries", {}, t));
+    } catch {
+      setOverviewEnquiries([]);
+    }
+    try {
+      setOverviewCustomers(await api("/workspace/customers", {}, t));
+    } catch {
+      setOverviewCustomers([]);
     }
   }
   async function addIndustryField(e: FormEvent) {
@@ -1270,66 +1282,30 @@ export default function SelloraApp() {
                 </small>
               </div>
               <div>
-                <span>BUSINESS PROFILE</span>
-                <Check />
-                <strong>Ready</strong>
-                <small>
-                  {business.businessModel} · {category}
-                </small>
+                <span>ENQUIRIES TODAY</span>
+                <MessageSquare />
+                <strong>
+                  {overviewEnquiries.filter(
+                    (item: any) =>
+                      new Date(item.createdAt).toLocaleDateString("en-CA", {
+                        timeZone: "Asia/Kolkata",
+                      }) ===
+                      new Date().toLocaleDateString("en-CA", {
+                        timeZone: "Asia/Kolkata",
+                      }),
+                  ).length}
+                </strong>
+                <small>Customer enquiries received today</small>
+              </div>
+              <div>
+                <span>TOTAL CUSTOMERS</span>
+                <Users />
+                <strong>{overviewCustomers.length}</strong>
+                <small>In your customer directory</small>
               </div>
             </section>
             <OverviewPaymentActivity />
-            <section className="sl-section-card">
-              <h3>Your launch checklist</h3>
-              <p>Complete these steps to share your first catalogue.</p>
-              {[
-                {
-                  done: products.length > 0,
-                  title: "Add products",
-                  desc: "Create product records with prices and relevant details.",
-                  click: () => {
-                    setPage("products");
-                    startProduct();
-                  },
-                },
-                {
-                  done: catalogues.length > 0,
-                  title: "Build a catalogue",
-                  desc: "Choose products and create a customer-facing catalogue.",
-                  click: () => {
-                    setPage("catalogues");
-                    setEditingCatalogue("");
-                    setCform({
-                      title: business.name + " Product Catalogue",
-                      description: "",
-                      shareImageUrl: "",
-                      shareImageFile: null,
-                      productIds: products.map((p) => p.id),
-                    });
-                    setModal("catalogue");
-                  },
-                },
-                {
-                  done: catalogues.some((c) => c.isPublished),
-                  title: "Publish and share",
-                  desc: "Publish the catalogue and copy its public link.",
-                  click: () => setPage("catalogues"),
-                },
-              ].map((s, i) => (
-                <div className="sl-check-row" key={s.title}>
-                  <span className={s.done ? "sl-done" : "sl-number"}>
-                    {s.done ? <Check size={15} /> : i + 1}
-                  </span>
-                  <div>
-                    <b>{s.title}</b>
-                    <small>{s.desc}</small>
-                  </div>
-                  <button onClick={s.click}>
-                    {s.done ? "Manage" : "Start"} <ArrowRight size={14} />
-                  </button>
-                </div>
-              ))}
-            </section>
+            
           </>
         )}
         {page === "products" && (
