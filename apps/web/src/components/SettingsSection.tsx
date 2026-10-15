@@ -485,31 +485,9 @@ export function SettingsSection({
                 maxLength={80}
                 value={fieldForm.label}
                 onChange={(e) =>
-                  setFieldForm({
-                    ...fieldForm,
-                    label: e.target.value,
-                    key:
-                      fieldForm.key ||
-                      e.target.value
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, "_")
-                        .replace(/^_+|_+$/g, ""),
-                  })
+                  setFieldForm({ ...fieldForm, label: e.target.value })
                 }
                 placeholder="e.g. Fabric composition"
-              />
-            </label>
-            <label>
-              Field key
-              <input
-                required
-                pattern="[a-z][a-zA-Z0-9_]*"
-                maxLength={48}
-                value={fieldForm.key}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, key: e.target.value })
-                }
-                placeholder="fabricComposition"
               />
             </label>
           </div>
