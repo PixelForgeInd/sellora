@@ -407,8 +407,12 @@ export default function SelloraApp() {
           await load(access);
           setSubscriptionLocked(false);
         } catch (e) {
-          const message = e instanceof Error ? e.message : "Could not load workspace.";
-          if (message.toLowerCase().includes("subscription") || message.toLowerCase().includes("expired")) {
+          const message =
+            e instanceof Error ? e.message : "Could not load workspace.";
+          if (
+            message.toLowerCase().includes("subscription") ||
+            message.toLowerCase().includes("expired")
+          ) {
             setSubscriptionLocked(true);
             setPage("subscription");
           } else setError(message);
@@ -470,8 +474,14 @@ export default function SelloraApp() {
         await load(d.token);
         setSubscriptionLocked(false);
       } catch (loadError) {
-        const message = loadError instanceof Error ? loadError.message : "Could not load workspace.";
-        if (message.toLowerCase().includes("subscription") || message.toLowerCase().includes("expired")) {
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Could not load workspace.";
+        if (
+          message.toLowerCase().includes("subscription") ||
+          message.toLowerCase().includes("expired")
+        ) {
           setSubscriptionLocked(true);
           setPage("subscription");
         } else throw loadError;
@@ -788,9 +798,29 @@ export default function SelloraApp() {
     return (
       <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />
     );
-  if (subscriptionLocked && !business) return (
-    <div className="sl-app"><main className="sl-main"><header className="sl-workspace-top"><div><span className="sl-kicker">SELLORA WORKSPACE</span><h1>Renew your subscription</h1></div><button className="sl-button sl-button-outline" onClick={signOut}><LogOut size={15}/> Sign out</button></header><SubscriptionSection token={access} onRenewed={async () => { await load(access); setSubscriptionLocked(false); }} /></main></div>
-  );
+  if (subscriptionLocked && !business)
+    return (
+      <div className="sl-app">
+        <main className="sl-main">
+          <header className="sl-workspace-top">
+            <div>
+              <span className="sl-kicker">SELLORA WORKSPACE</span>
+              <h1>Renew your subscription</h1>
+            </div>
+            <button className="sl-button sl-button-outline" onClick={signOut}>
+              <LogOut size={15} /> Sign out
+            </button>
+          </header>
+          <SubscriptionSection
+            token={access}
+            onRenewed={async () => {
+              await load(access);
+              setSubscriptionLocked(false);
+            }}
+          />
+        </main>
+      </div>
+    );
   if (!business)
     return (
       <OnboardingScreen
@@ -2077,7 +2107,15 @@ export default function SelloraApp() {
         )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
-        {page === "subscription" && <SubscriptionSection token={access} onRenewed={async () => { await load(access); setSubscriptionLocked(false); }} />}
+        {page === "subscription" && (
+          <SubscriptionSection
+            token={access}
+            onRenewed={async () => {
+              await load(access);
+              setSubscriptionLocked(false);
+            }}
+          />
+        )}
         {page === "settings" && (
           <SettingsSection
             business={business}
