@@ -6,6 +6,7 @@ import {
   BarChart3,
   ClipboardList,
   Check,
+  CheckCircle2,
   Copy,
   CreditCard,
   Download,
