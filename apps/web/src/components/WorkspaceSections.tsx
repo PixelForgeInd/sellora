@@ -463,6 +463,7 @@ export function ProductSection({
   const [importNotice, setImportNotice] = useState("");
 
   function parseCsv(text: string): Record<string, unknown>[] {
+    text = text.replace(/^\uFEFF/, "");
     const matrix: string[][] = [];
     let row: string[] = [];
     let cell = "";
