@@ -1265,7 +1265,7 @@ async function getSubscriptionPrices() {
   const settings = await prisma.platformPricing.findUnique({ where: { id: "default" } });
   return settings ? { MONTHLY: Number(settings.monthlyPrice), YEARLY: Number(settings.yearlyPrice) } : { ...defaultSubscriptionPrices };
 }
-async function platformOwnerAllowed(req: Request, res: Response) {
+async function platformOwnerAllowed(req: AuthedRequest, res: Response) {
   const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { id: true, email: true, role: true } });
   const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
   if (!user || user.role !== "PLATFORM_OWNER" || !ownerEmail || user.email.toLowerCase() !== ownerEmail) {
