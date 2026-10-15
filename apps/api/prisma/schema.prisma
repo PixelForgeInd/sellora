@@ -470,3 +470,12 @@ model PlatformAuditEvent {
   @@index([subscriptionId, createdAt])
   @@index([actorUserId, createdAt])
 }
+
+
+model PlatformPricing {
+  id           String   @id @default("default")
+  monthlyPrice Decimal  @default(249) @db.Decimal(12, 2)
+  yearlyPrice  Decimal  @default(2490) @db.Decimal(12, 2)
+  updatedBy    String?
+  updatedAt    DateTime @updatedAt
+}
