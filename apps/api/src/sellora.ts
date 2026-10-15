@@ -229,13 +229,19 @@ router.post("/auth/signup", async (req, res) => {
   const email = data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where:{email} });
   if (existing) return res.status(409).json({error:"An account with this email already exists. Please log in."});
-  const user = await prisma.user.create({data:{email,passwordHash:await hashPassword(data.password),role:"BUSINESS"}});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  const role = ownerEmail && email === ownerEmail ? "PLATFORM_OWNER" : "BUSINESS";
+  const user = await prisma.user.create({data:{email,passwordHash:await hashPassword(data.password),role}});
   res.status(201).json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
 router.post("/auth/login", async (req, res) => {
   const data = z.object({email:z.string().trim().email().max(160),password:z.string().min(1).max(128)}).parse(req.body);
-  const user = await prisma.user.findUnique({where:{email:data.email.toLowerCase()}});
+  let user = await prisma.user.findUnique({where:{email:data.email.toLowerCase()}});
   if (!user || !(await verifyPassword(data.password,user.passwordHash))) return res.status(401).json({error:"Email or password is incorrect."});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  if (ownerEmail && user.email.toLowerCase() === ownerEmail && user.role !== "PLATFORM_OWNER") {
+    user = await prisma.user.update({where:{id:user.id},data:{role:"PLATFORM_OWNER"}});
+  }
   res.json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
 router.patch("/auth/password", requireAuth, authenticated(async (req,res) => {
@@ -294,8 +300,12 @@ router.post("/auth/password/reset", async (req,res) => {
 });
 
 router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
-  const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
+  let user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
   if (!user) return res.status(401).json({error:"Account not found."});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  if (ownerEmail && user.email.toLowerCase() === ownerEmail && user.role !== "PLATFORM_OWNER") {
+    user = await prisma.user.update({where:{id:user.id},data:{role:"PLATFORM_OWNER"},select:{id:true,email:true,role:true,createdAt:true}});
+  }
   res.json({id:user.id,email:user.email,createdAt:user.createdAt,isPlatformOwner:user.role==="PLATFORM_OWNER"});
 }));
 
