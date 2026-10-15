@@ -200,7 +200,8 @@ export default function SelloraApp() {
       let suffix = 2;
       while (fields.some((field) => field.key === generatedKey)) {
         const suffixText = String(suffix++);
-        generatedKey = safeBaseKey.slice(0, 48 - suffixText.length) + suffixText;
+        generatedKey =
+          safeBaseKey.slice(0, 48 - suffixText.length) + suffixText;
       }
       const payload = {
         ...fieldForm,
