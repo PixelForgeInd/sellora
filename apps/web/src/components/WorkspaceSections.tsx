@@ -14,6 +14,10 @@ import {
   MessageCircle,
   Package,
   Plus,
+  Search,
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight,
   Trash2,
 } from "lucide-react";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./ui";
@@ -461,6 +465,19 @@ export function ProductSection({
   const [importBusy, setImportBusy] = useState(false);
   const [importError, setImportError] = useState("");
   const [importNotice, setImportNotice] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [productFilter, setProductFilter] = useState<"ALL" | "WITH_IMAGE" | "WITHOUT_IMAGE">("ALL");
+  const [pageSize, setPageSize] = useState<25 | 50>(25);
+  const [currentPage, setCurrentPage] = useState(1);
+  const filteredProducts = products.filter((product) => {
+    const term = productSearch.trim().toLowerCase();
+    const searchable = [product.name, product.sku, ...Object.entries(product.fields || {}).flatMap(([key, value]) => [key, String(value ?? "")])].join(" ").toLowerCase();
+    const matchesSearch = !term || searchable.includes(term);
+    const matchesFilter = productFilter === "ALL" || (productFilter === "WITH_IMAGE" ? Boolean(product.imageUrl) : !product.imageUrl);
+    return matchesSearch && matchesFilter;
+  });
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const visibleProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   function parseCsv(text: string): Record<string, unknown>[] {
     text = text.replace(/^\uFEFF/, "");
@@ -677,17 +694,6 @@ export function ProductSection({
             onClick={() => void downloadImportTemplate()}
           >
             <Download size={15} /> Sample CSV
-          </Btn>
-          <Btn
-            kind="outline"
-            onClick={() => {
-              setImportError("");
-              setImportNotice("");
-              setImportPreview(null);
-              document.getElementById("sl-product-csv")?.click();
-            }}
-          >
-            Import CSV
           </Btn>
           <Btn onClick={() => startProduct()}>
             <Plus size={16} /> Add product
@@ -930,6 +936,30 @@ export function ProductSection({
           </div>
         )}
       </div>
+      {products.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1fr) auto auto", gap: 12, alignItems: "center", marginTop: 22 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 44, padding: "0 12px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff" }}>
+            <Search size={17} color="#778276" />
+            <input aria-label="Search products" value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setCurrentPage(1); }} placeholder="Search product name, SKU or details" style={{ width: "100%", border: 0, outline: 0, background: "transparent", minWidth: 0 }} />
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#405a47", fontSize: 13, fontWeight: 650 }}>
+            <SlidersHorizontal size={16} /> Filter
+            <select aria-label="Filter products" value={productFilter} onChange={(event) => { setProductFilter(event.target.value as typeof productFilter); setCurrentPage(1); }} style={{ minHeight: 44, padding: "0 10px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#293a30" }}>
+              <option value="ALL">All products</option>
+              <option value="WITH_IMAGE">With image</option>
+              <option value="WITHOUT_IMAGE">Without image</option>
+            </select>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#405a47", fontSize: 13, whiteSpace: "nowrap" }}>
+            Show
+            <select aria-label="Products per page" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value) as 25 | 50); setCurrentPage(1); }} style={{ minHeight: 44, padding: "0 10px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#293a30" }}>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+            per page
+          </label>
+        </div>
+      )}
       {!products.length ? (
         <div className="sl-empty">
           <Package size={30} />
@@ -941,8 +971,16 @@ export function ProductSection({
             <Plus size={15} /> Add your first product
           </Btn>
         </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="sl-empty" style={{ padding: 28 }}>
+          <Search size={26} />
+          <h3>No products match your search</h3>
+          <p>Try a different search term or change the filter.</p>
+          <Btn kind="outline" onClick={() => { setProductSearch(""); setProductFilter("ALL"); setCurrentPage(1); }}>Clear search and filters</Btn>
+        </div>
       ) : (
-        products.map((p) => (
+        <>
+        {visibleProducts.map((p) => (
           <article className="sl-product-row" key={p.id}>
             <div className="sl-product-thumb">
               {p.imageUrl ? (
@@ -995,7 +1033,16 @@ export function ProductSection({
               <Trash2 size={16} />
             </button>
           </article>
-        ))
+        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 18, paddingTop: 14, borderTop: "1px solid #e2e9e1" }}>
+          <span style={{ color: "#778276", fontSize: 13 }}>Showing {filteredProducts.length ? (currentPage - 1) * pageSize + 1 : 0}–{Math.min(currentPage * pageSize, filteredProducts.length)} of {filteredProducts.length} products</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Btn kind="outline" disabled={currentPage <= 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}><ChevronLeft size={15} /> Previous</Btn>
+            <span style={{ color: "#405a47", fontSize: 13, minWidth: 72, textAlign: "center" }}>Page {currentPage} of {totalPages}</span>
+            <Btn kind="outline" disabled={currentPage >= totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}>Next <ChevronRight size={15} /></Btn>
+          </div>
+        </div>
+        </>
       )}
     </section>
   );
