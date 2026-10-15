@@ -809,7 +809,7 @@ router.get("/public/catalogues/:slug", async (req,res) => {
     where: { businessId: catalogue.businessId },
     select: { status: true, dueAt: true }
   });
-  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now())) {
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now())) {
     return res.status(402).json({ error: "This catalogue is temporarily unavailable because the business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
   }
   res.json({
@@ -836,7 +836,7 @@ router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
   });
   if (!catalogue) return res.status(404).json({error:"Catalogue not found."});
   const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.business.id }, select: { status: true, dueAt: true } });
-  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now())) {
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now())) {
     return res.status(402).json({ error: "This business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
   }
   if (data.productId && !catalogue.items.some(item=>item.productId===data.productId)) {
@@ -867,7 +867,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
   const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.businessId }, select: { status: true, dueAt: true } });
-  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() < Date.now())) {
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now())) {
     return res.status(402).json({ error: "This business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
   }
   if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
