@@ -1285,15 +1285,17 @@ export default function SelloraApp() {
                 <span>ENQUIRIES TODAY</span>
                 <MessageSquare />
                 <strong>
-                  {overviewEnquiries.filter(
-                    (item: any) =>
-                      new Date(item.createdAt).toLocaleDateString("en-CA", {
-                        timeZone: "Asia/Kolkata",
-                      }) ===
-                      new Date().toLocaleDateString("en-CA", {
-                        timeZone: "Asia/Kolkata",
-                      }),
-                  ).length}
+                  {
+                    overviewEnquiries.filter(
+                      (item: any) =>
+                        new Date(item.createdAt).toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }) ===
+                        new Date().toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }),
+                    ).length
+                  }
                 </strong>
                 <small>Customer enquiries received today</small>
               </div>
@@ -1305,7 +1307,6 @@ export default function SelloraApp() {
               </div>
             </section>
             <OverviewPaymentActivity />
-            
           </>
         )}
         {page === "products" && (
