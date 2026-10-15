@@ -159,7 +159,6 @@ export default function SelloraApp() {
   const [preview, setPreview] = useState<Catalogue | null>(null);
   const [pub, setPub] = useState<PublicData | null>(null);
   const [pubError, setPubError] = useState("");
-  const [launchChecks, setLaunchChecks] = useState<Record<string, boolean>>({});
   const slug = window.location.pathname.match(/^\/c\/([^/]+)/)?.[1];
   const isDemo = window.location.pathname === "/demo/ganeshaa-sutra";
   const fields = business?.catalogueFields?.length
@@ -390,14 +389,6 @@ export default function SelloraApp() {
         logoUrl: business.logoUrl || "",
         brandColor: business.brandColor || "#599c56",
       });
-      try {
-        const saved = localStorage.getItem(
-          "sellora_launch_checks_" + business.id,
-        );
-        setLaunchChecks(saved ? JSON.parse(saved) : {});
-      } catch {
-        setLaunchChecks({});
-      }
     }
   }, [business?.id]);
   useEffect(() => {
@@ -792,90 +783,6 @@ export default function SelloraApp() {
     );
   const category =
     cats.find((c) => c[0] === business.productCategory)?.[1] || "Products";
-  const launchKey = "sellora_launch_checks_" + business.id;
-  const manualLaunchTasks = [
-    {
-      id: "auth",
-      title: "Test signup and login",
-      desc: "Create a test account, sign out and sign back in successfully.",
-    },
-    {
-      id: "public-link",
-      title: "Test public catalogue access",
-      desc: "Open a published catalogue in a private/incognito window without signing in.",
-    },
-    {
-      id: "mobile",
-      title: "Test on a phone",
-      desc: "Check product cards, details and buttons on a real mobile device.",
-    },
-    {
-      id: "share",
-      title: "Test WhatsApp sharing and enquiries",
-      desc: "Share the link and test an enquiry for a specific product.",
-    },
-    {
-      id: "onboarding",
-      title: "Prepare a repeatable onboarding process",
-      desc: "Write down the steps for collecting business information and setting up a customer's first catalogue.",
-    },
-    {
-      id: "support",
-      title: "Set a support contact",
-      desc: "Choose and publish a support email or phone number customers can use.",
-    },
-    {
-      id: "demo",
-      title: "Verify the demo catalogue",
-      desc: "Open the sample catalogue and confirm it contains useful, clearly labelled sample data.",
-    },
-    {
-      id: "pricing",
-      title: "Decide the pilot pricing offer",
-      desc: "Write down the pilot duration, included setup help and what happens after the pilot.",
-    },
-    {
-      id: "presentation",
-      title: "Prepare a short product demo",
-      desc: "Create a 2–3 minute walkthrough showing adding products, publishing and sharing.",
-    },
-    {
-      id: "feedback",
-      title: "Prepare a customer feedback form",
-      desc: "Capture usability issues, missing features and willingness to pay after each pilot.",
-    },
-  ];
-  const autoLaunchTasks = [
-    {
-      id: "profile-products",
-      title: "Business profile and products",
-      desc: "Your workspace exists and contains product records with useful details.",
-      done: !!business.name && products.length > 0,
-    },
-    {
-      id: "photos",
-      title: "Product photos added",
-      desc: "At least one product has a photo that can be displayed to buyers.",
-      done: products.some((p) => !!p.imageUrl),
-    },
-    {
-      id: "published",
-      title: "Catalogue published",
-      desc: "At least one catalogue is published and ready for a public link.",
-      done: catalogues.some((c) => c.isPublished),
-    },
-    {
-      id: "forms",
-      title: "Registration and product forms available",
-      desc: "Sellora provides signup, business onboarding and a product form.",
-      done: true,
-    },
-  ];
-  const launchDone =
-    autoLaunchTasks.filter((t) => t.done).length +
-    manualLaunchTasks.filter((t) => launchChecks[t.id]).length;
-  const launchTotal = autoLaunchTasks.length + manualLaunchTasks.length;
-
   const filteredOrders = orders
     .filter((order: any) => {
       const q = orderSearch.trim().toLowerCase();
@@ -1198,7 +1105,6 @@ export default function SelloraApp() {
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
-            { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
             <button
@@ -1251,13 +1157,11 @@ export default function SelloraApp() {
                           ? "Customer directory"
                           : page === "reports"
                             ? "Sales reports"
-                            : page === "launch"
-                              ? "Launch checklist"
-                              : page === "settings"
-                                ? "Business settings"
-                                : page === "payments"
-                                  ? "Payments"
-                                  : "Workspace"}
+                            : page === "settings"
+                              ? "Business settings"
+                              : page === "payments"
+                                ? "Payments"
+                                : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -1932,128 +1836,6 @@ export default function SelloraApp() {
               stays at zero until a payment provider verifies successful
               transactions.
             </p>
-          </section>
-        )}
-        {page === "launch" && (
-          <section className="sl-launch-page">
-            <section className="sl-section-card sl-launch-summary">
-              <span className="sl-kicker">CUSTOMER READINESS</span>
-              <h3>Get ready for your first customers</h3>
-              <p>
-                Complete the practical steps below before sharing Sellora with
-                pilot businesses. Product and catalogue steps update
-                automatically; testing steps are checked off by you.
-              </p>
-              <div className="sl-launch-progress">
-                <div>
-                  <strong>
-                    {launchDone} of {launchTotal}
-                  </strong>
-                  <span>steps complete</span>
-                </div>
-                <div className="sl-launch-progress-track">
-                  <span
-                    style={{ width: (launchDone / launchTotal) * 100 + "%" }}
-                  />
-                </div>
-                <b>{Math.round((launchDone / launchTotal) * 100)}%</b>
-              </div>
-            </section>
-            <section className="sl-section-card">
-              <div className="sl-section-head">
-                <div>
-                  <h3>Product setup</h3>
-                  <p>Automatically checked against your current workspace.</p>
-                </div>
-                <Package size={20} />
-              </div>
-              {autoLaunchTasks.map((t, i) => (
-                <div className="sl-check-row" key={t.id}>
-                  <span className={t.done ? "sl-done" : "sl-number"}>
-                    {t.done ? <Check size={15} /> : i + 1}
-                  </span>
-                  <div>
-                    <b>{t.title}</b>
-                    <small>{t.desc}</small>
-                  </div>
-                  {t.done ? (
-                    <span className="sl-launch-status done">Complete</span>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (t.id === "profile-products") {
-                          setPage(products.length ? "settings" : "products");
-                          if (!products.length) startProduct();
-                        }
-                        if (t.id === "photos") {
-                          setPage("products");
-                          startProduct(products[0]);
-                        }
-                        if (t.id === "published") setPage("catalogues");
-                      }}
-                    >
-                      Do this <ArrowRight size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </section>
-            <section className="sl-section-card">
-              <div className="sl-section-head">
-                <div>
-                  <h3>Before approaching customers</h3>
-                  <p>Mark each item complete after testing it yourself.</p>
-                </div>
-                <CheckCircle2 size={20} />
-              </div>
-              {manualLaunchTasks.map((t, i) => (
-                <label className="sl-launch-manual" key={t.id}>
-                  <input
-                    type="checkbox"
-                    checked={!!launchChecks[t.id]}
-                    onChange={(e) => {
-                      const next = {
-                        ...launchChecks,
-                        [t.id]: e.target.checked,
-                      };
-                      setLaunchChecks(next);
-                      try {
-                        localStorage.setItem(launchKey, JSON.stringify(next));
-                      } catch {}
-                    }}
-                  />
-                  <span
-                    className={launchChecks[t.id] ? "sl-done" : "sl-number"}
-                  >
-                    {launchChecks[t.id] ? <Check size={15} /> : i + 1}
-                  </span>
-                  <span>
-                    <b>{t.title}</b>
-                    <small>{t.desc}</small>
-                  </span>
-                </label>
-              ))}
-            </section>
-            <section className="sl-section-card sl-launch-next">
-              <h3>Suggested first-customer target</h3>
-              <p>
-                Start with five pilot businesses. Help each one publish a real
-                catalogue, share it with buyers and give you feedback before
-                investing in advanced checkout features.
-              </p>
-              <Btn
-                onClick={() => {
-                  const plan =
-                    "Sellora pilot outreach\nTarget: 5 businesses\n1. Demonstrate the catalogue\n2. Help add products and photos\n3. Publish and share the catalogue link\n4. Test mobile display and WhatsApp enquiry\n5. Collect feedback and ask whether they would pay";
-                  navigator.clipboard
-                    .writeText(plan)
-                    .then(() => setNotice("Pilot plan copied."))
-                    .catch(() => window.prompt("Copy pilot plan", plan));
-                }}
-              >
-                <Copy size={15} /> Copy pilot plan
-              </Btn>
-            </section>
           </section>
         )}
         {page === "payments" && (
