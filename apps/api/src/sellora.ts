@@ -1283,7 +1283,7 @@ router.get("/platform/owner/businesses", requireAuth, authenticated(async (req, 
   const businesses = await prisma.business.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      ownerUser: { select: { email: true } },
+      owner: { select: { email: true } },
       subscription: { include: { payments: { orderBy: { createdAt: "desc" }, take: 10 } } },
       _count: { select: { products: true, catalogues: true, orders: true } }
     }
@@ -1294,7 +1294,7 @@ router.get("/platform/owner/businesses", requireAuth, authenticated(async (req, 
     const graceEnd = s ? new Date(s.dueAt.getTime() + 86400000) : null;
     return {
       id: b.id, name: b.name, slug: b.slug, email: b.email, phone: b.phone, createdAt: b.createdAt,
-      owner: b.ownerUser, counts: { products: b._count.products, catalogues: b._count.catalogues, orders: b._count.orders },
+      owner: b.owner, counts: { products: b._count.products, catalogues: b._count.catalogues, orders: b._count.orders },
       subscription: s ? { id: s.id, status: s.status, interval: s.interval, amount: s.amount.toString(), dueAt: s.dueAt, lastPaidAt: s.lastPaidAt, isLocked: s.status !== "ACTIVE" || !graceEnd || graceEnd < now } : null,
       recentPayments: s?.payments.map(p => ({ id:p.id, amount:p.amount.toString(), interval:p.interval, status:p.status, paidAt:p.paidAt, createdAt:p.createdAt, razorpayPaymentId:p.razorpayPaymentId, razorpayOrderId:p.razorpayOrderId })) || []
     };
@@ -1303,14 +1303,43 @@ router.get("/platform/owner/businesses", requireAuth, authenticated(async (req, 
 router.get("/platform/owner/payments", requireAuth, authenticated(async (req, res) => {
   if (!await platformOwnerAllowed(req, res)) return;
   const [payments, aggregate] = await Promise.all([
-    prisma.platformSubscriptionPayment.findMany({ include: { subscription: { include: { business: { select: { id:true, name:true, slug:true, ownerUser: { select: { email:true } } } } } }, orderBy: { createdAt: "desc" } }),
+    prisma.platformSubscriptionPayment.findMany({ include: { subscription: { include: { business: { select: { id:true, name:true, slug:true, owner: { select: { email:true } } } } } }, orderBy: { createdAt: "desc" } }),
     prisma.platformSubscriptionPayment.aggregate({ where: { status: "PAID" }, _sum: { amount: true }, _count: { _all: true } })
   ]);
   res.json({
     totalCollected: (aggregate._sum.amount || new Prisma.Decimal(0)).toString(),
     successfulPayments: aggregate._count._all,
-    payments: payments.map(p => ({ id:p.id, businessId:p.subscription.business.id, businessName:p.subscription.business.name, businessSlug:p.subscription.business.slug, customerEmail:p.subscription.business.ownerUser?.email || "", interval:p.interval, amount:p.amount.toString(), currency:p.currency, status:p.status, razorpayOrderId:p.razorpayOrderId, razorpayPaymentId:p.razorpayPaymentId, paidAt:p.paidAt, createdAt:p.createdAt }))
+    payments: payments.map(p => ({ id:p.id, businessId:p.subscription.business.id, businessName:p.subscription.business.name, businessSlug:p.subscription.business.slug, customerEmail:p.subscription.business.owner?.email || "", interval:p.interval, amount:p.amount.toString(), currency:p.currency, status:p.status, razorpayOrderId:p.razorpayOrderId, razorpayPaymentId:p.razorpayPaymentId, paidAt:p.paidAt, createdAt:p.createdAt }))
   });
+}));
+
+router.get("/platform/owner/audit", requireAuth, authenticated(async (req, res) => {
+  if (!await platformOwnerAllowed(req, res)) return;
+  const events = await prisma.platformAuditEvent.findMany({
+    orderBy: { createdAt: "desc" }, take: 200,
+    include: { subscription: { include: { business: { select: { name:true, slug:true } } } } }
+  });
+  res.json(events);
+}));
+router.patch("/platform/owner/businesses/:id/subscription", requireAuth, authenticated(async (req, res) => {
+  const owner = await platformOwnerAllowed(req, res);
+  if (!owner) return;
+  const data = z.object({
+    interval: z.enum(["MONTHLY", "YEARLY"]).optional(),
+    status: z.enum(["ACTIVE", "LOCKED", "PENDING"]).optional(),
+    dueAt: z.string().datetime().optional()
+  }).refine(v => Object.keys(v).length > 0).parse(req.body);
+  const business = await prisma.business.findUnique({ where: { id: String(req.params.id) }, select: { id:true } });
+  if (!business) return res.status(404).json({ error:"Business not found." });
+  const prices = await getSubscriptionPrices();
+  const interval = data.interval || "MONTHLY";
+  const subscription = await prisma.subscription.upsert({
+    where: { businessId: business.id },
+    create: { businessId:business.id, status:data.status || "ACTIVE", interval, amount:prices[interval], currency:"INR", currentPeriodStart:new Date(), currentPeriodEnd:data.dueAt ? new Date(data.dueAt) : new Date(Date.now()+30*86400000), dueAt:data.dueAt ? new Date(data.dueAt) : new Date(Date.now()+30*86400000) },
+    update: { ...(data.interval ? { interval, amount:prices[interval] } : {}), ...(data.status ? { status:data.status === "LOCKED" ? "PAST_DUE" : data.status } : {}), ...(data.dueAt ? { dueAt:new Date(data.dueAt) } : {}) }
+  });
+  await prisma.platformAuditEvent.create({ data: { subscriptionId:subscription.id, actorUserId:owner.id, action:"SUBSCRIPTION_UPDATED", details:data } });
+  res.json({ success:true });
 }));
 router.get("/platform/owner/pricing", requireAuth, authenticated(async (req, res) => {
   if (!await platformOwnerAllowed(req, res)) return;
