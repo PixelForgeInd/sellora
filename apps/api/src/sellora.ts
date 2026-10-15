@@ -1303,7 +1303,23 @@ router.get("/platform/owner/businesses", requireAuth, authenticated(async (req, 
 router.get("/platform/owner/payments", requireAuth, authenticated(async (req, res) => {
   if (!await platformOwnerAllowed(req, res)) return;
   const [payments, aggregate] = await Promise.all([
-    prisma.platformSubscriptionPayment.findMany({ include: { subscription: { include: { business: { select: { id:true, name:true, slug:true, owner: { select: { email:true } } } } } }, orderBy: { createdAt: "desc" } }),
+    prisma.platformSubscriptionPayment.findMany({
+      include: {
+        subscription: {
+          include: {
+            business: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                owner: { select: { email: true } }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    }),
     prisma.platformSubscriptionPayment.aggregate({ where: { status: "PAID" }, _sum: { amount: true }, _count: { _all: true } })
   ]);
   res.json({
