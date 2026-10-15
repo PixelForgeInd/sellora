@@ -831,13 +831,14 @@ export default function SelloraApp() {
     );
   if (subscriptionRequired && business)
     return (
-      <div className="sl-app">
-        <main className="sl-main">
+      <div className="sl-app sl-activation-app">
+        <style>{`.sl-activation-app{width:100%;min-height:100vh}.sl-activation-main{width:min(100% - 48px,1120px)!important;max-width:1120px!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}`}</style>
+        <main className="sl-main sl-activation-main">
           <header className="sl-workspace-top">
             <div><span className="sl-kicker">WELCOME TO SELLORA</span><h1>Activate your workspace</h1></div>
             <button className="sl-button sl-button-outline" onClick={signOut}><LogOut size={15}/> Sign out</button>
           </header>
-          <p style={{color:"var(--sl-muted,#6b7280)",marginBottom:20}}>Choose a plan and complete payment to unlock your dashboard. If payment fails or is cancelled, you can safely retry.</p>
+          <p className="sl-activation-copy" style={{color:"var(--sl-muted,#6b7280)",marginBottom:20}}>Choose a plan and complete payment to unlock your dashboard. If payment fails or is cancelled, you can safely retry.</p>
           <SubscriptionSection token={access} requirePayment onRenewed={async () => {
             await load(access);
             setSubscriptionRequired(false);
