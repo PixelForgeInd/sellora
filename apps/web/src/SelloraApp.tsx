@@ -783,7 +783,10 @@ export default function SelloraApp() {
         auth={auth}
       />
     );
-  if (isPlatformOwner) return <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />;
+  if (isPlatformOwner)
+    return (
+      <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />
+    );
   if (!business)
     return (
       <OnboardingScreen
