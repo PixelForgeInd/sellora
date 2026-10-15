@@ -67,6 +67,7 @@ export default function SelloraApp() {
   const [user, setUser] = useState("");
   const [isPlatformOwner, setIsPlatformOwner] = useState(false);
   const [subscriptionLocked, setSubscriptionLocked] = useState(false);
+  const [subscriptionRequired, setSubscriptionRequired] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
@@ -425,7 +426,11 @@ export default function SelloraApp() {
         if (u.isPlatformOwner) return;
         try {
           await load(access);
-          setSubscriptionLocked(false);
+          const subscription = await api("/workspace/subscription", {}, access);
+          const requiresPayment = Boolean(subscription.isLocked);
+          setSubscriptionRequired(requiresPayment);
+          setSubscriptionLocked(requiresPayment);
+          if (requiresPayment) setPage("subscription");
         } catch (e) {
           const message =
             e instanceof Error ? e.message : "Could not load workspace.";
@@ -492,7 +497,11 @@ export default function SelloraApp() {
       if (currentUser.isPlatformOwner) return;
       try {
         await load(d.token);
-        setSubscriptionLocked(false);
+        const subscription = await api("/workspace/subscription", {}, d.token);
+        const requiresPayment = Boolean(subscription.isLocked);
+        setSubscriptionRequired(requiresPayment);
+        setSubscriptionLocked(requiresPayment);
+        if (requiresPayment) setPage("subscription");
       } catch (loadError) {
         const message =
           loadError instanceof Error
@@ -523,8 +532,10 @@ export default function SelloraApp() {
       });
       localStorage.setItem("sellora_active_business_id", created.id);
       await load();
-      setPage("overview");
-      setNotice("Business workspace created. Add products to get started.");
+      setSubscriptionRequired(true);
+      setSubscriptionLocked(true);
+      setPage("subscription");
+      setNotice("Business workspace created. Complete your subscription payment to unlock Sellora.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Setup failed");
     } finally {
@@ -817,6 +828,25 @@ export default function SelloraApp() {
   if (isPlatformOwner)
     return (
       <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />
+    );
+  if (subscriptionRequired && business)
+    return (
+      <div className="sl-app">
+        <main className="sl-main">
+          <header className="sl-workspace-top">
+            <div><span className="sl-kicker">WELCOME TO SELLORA</span><h1>Activate your workspace</h1></div>
+            <button className="sl-button sl-button-outline" onClick={signOut}><LogOut size={15}/> Sign out</button>
+          </header>
+          <p style={{color:"var(--sl-muted,#6b7280)",marginBottom:20}}>Choose a plan and complete payment to unlock your dashboard. If payment fails or is cancelled, you can safely retry.</p>
+          <SubscriptionSection token={access} requirePayment onRenewed={async () => {
+            await load(access);
+            setSubscriptionRequired(false);
+            setSubscriptionLocked(false);
+            setPage("overview");
+            setNotice("Payment verified. Your Sellora dashboard is now unlocked.");
+          }} />
+        </main>
+      </div>
     );
   if (subscriptionLocked && !business)
     return (
