@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock3, Download, RefreshCw, Search, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Download, RefreshCw, Search } from "lucide-react";
 import { api } from "../sellora/api-client";
 
 type Payment = {
@@ -47,7 +47,6 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
 
   const paid = payments.filter(p => p.status === "PAID");
   const pending = payments.filter(p => ["CREATED","PENDING","AUTHORIZED"].includes(p.status));
-  const failed = payments.filter(p => ["FAILED","REFUNDED","PARTIALLY_REFUNDED"].includes(p.status));
   const collected = paid.reduce((sum,p) => sum + Number(p.amount), 0);
   function exportCsv() {
     const columns = ["Order reference","Record type","Customer","Phone","Email","Products and quantities","Subtotal","Tax","Total","Currency","Status","Delivery address","Notes","Razorpay order ID","Razorpay payment ID","Created at","Paid at"];
@@ -86,7 +85,6 @@ export function PaymentsSection({ onSettings }: { onSettings: () => void }) {
       <div><span>TOTAL COLLECTED</span><CheckCircle2/><strong>{money(collected)}</strong><small>Successful payments only</small></div>
       <div><span>SUCCESSFUL</span><CheckCircle2/><strong>{paid.length}</strong><small>Captured and verified</small></div>
       <div><span>PENDING</span><Clock3/><strong>{pending.length}</strong><small>Awaiting confirmation</small></div>
-      <div><span>FAILED / REFUNDED</span><XCircle/><strong>{failed.length}</strong><small>Needs review if applicable</small></div>
     </section>
     <section className="sl-section-card">
       <div className="sl-section-head">
