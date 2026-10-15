@@ -244,9 +244,21 @@ router.post("/workspace/subscription/verify", requireAuth, asyncRoute(async (req
   const providerPayment = await razorpay<{ id: string; order_id: string; status: string; amount: number; currency: string }>(
     "/payments/" + encodeURIComponent(input.razorpay_payment_id), credentials.keyId, credentials.keySecret
   );
-  if (providerPayment.order_id !== payment.razorpayOrderId || providerPayment.status !== "captured" ||
+  if (providerPayment.order_id !== payment.razorpayOrderId ||
       providerPayment.amount !== Number(payment.amount) * 100 || providerPayment.currency !== payment.currency) {
-    return res.status(409).json({ error: "The provider has not confirmed a matching captured payment. If money was deducted, contact support before retrying." });
+    return res.status(409).json({ error: "The payment details do not match this subscription order." });
+  }
+  // Razorpay can report an authorized/created payment briefly before capture completes.
+  // Keep the subscription pending; the client will retry verification for up to two minutes.
+  if (providerPayment.status !== "captured") {
+    return res.status(202).json({
+      success: false,
+      pending: ["created", "authorized"].includes(providerPayment.status),
+      providerStatus: providerPayment.status,
+      message: ["created", "authorized"].includes(providerPayment.status)
+        ? "Payment is still being confirmed by Razorpay."
+        : "Razorpay has not confirmed a successful payment."
+    });
   }
   const now = new Date();
   const paid = await prisma.$transaction(async tx => {
