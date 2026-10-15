@@ -7,6 +7,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { businessSchema, catalogueFieldTemplates } from "./business-schema.js";
 import selloraRouter, { requireAuth } from "./sellora.js";
+import platformRouter, { indiaEndOfDay } from "./platform.js";
 
 // npm workspace scripts run with apps/api as cwd; load the repository-root .env explicitly.
 dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
@@ -37,6 +38,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "6mb", verify: (req, _res, buffer) => { (req as express.Request & {rawBody?:Buffer}).rawBody = Buffer.from(buffer); } }));
 app.use("/uploads", express.static(uploadDir));
+app.use("/api", platformRouter);
 app.use("/api", selloraRouter);
 
 // Legacy V1 endpoints are explicitly retired; all workspace mutations must use the authenticated API.
@@ -64,7 +66,13 @@ app.post("/api/businesses", requireAuth, async (req, res, next) => {
         catalogueFields: { create: templates.map((field, index) => ({
           key: field.key, label: field.label, type: field.type, required: field.required || false,
           options: field.options ? field.options : undefined, sortOrder: index
-        })) }
+        })) },
+        subscription: { create: {
+          status: "ACTIVE", interval: "MONTHLY", amount: 249, currency: "INR",
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: indiaEndOfDay(new Date(), 1),
+          dueAt: indiaEndOfDay(new Date(), 1)
+        } }
       },
       include: { catalogueFields: { orderBy: { sortOrder: "asc" } } }
     });
