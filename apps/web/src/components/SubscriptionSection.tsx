@@ -51,9 +51,27 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
           theme: { color: "#599c56" },
           handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
             try {
-              const verified = await api("/workspace/subscription/verify", { method:"POST", body:JSON.stringify(response) }, token);
-              if (!verified.success) throw new Error("Payment verification was not confirmed.");
-              setNotice("Payment verified. Your Sellora access is active.");
+              setNotice("Payment received. Waiting for Razorpay to confirm the final payment status…");
+              let verified: any = null;
+              let lastStatus = "pending";
+              // Poll the server-side Razorpay payment lookup for up to two minutes.
+              // The server activates the subscription only after Razorpay reports "captured".
+              for (let attempt = 0; attempt < 24; attempt += 1) {
+                verified = await api("/workspace/subscription/verify", { method:"POST", body:JSON.stringify(response) }, token);
+                if (verified.success) break;
+                lastStatus = verified.providerStatus || "pending";
+                if (!verified.pending) {
+                  throw new Error(verified.message || "Razorpay did not confirm a successful payment. Your workspace remains inactive.");
+                }
+                if (attempt < 23) {
+                  setNotice(`Razorpay is confirming your payment (check ${attempt + 1} of 24)…`);
+                  await new Promise(resolveWait => window.setTimeout(resolveWait, 5000));
+                }
+              }
+              if (!verified?.success) {
+                throw new Error(`Razorpay has not confirmed this payment after two minutes (last status: ${lastStatus}). Your subscription has not been activated. Please check payment history before retrying.`);
+              }
+              setNotice("Welcome to Sellora! Your payment is verified and your subscription is now active.");
               await refresh();
               if (onRenewed) await onRenewed();
               resolve();
