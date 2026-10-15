@@ -626,64 +626,103 @@ export function ProductSection({
           </Btn>
         </div>
       </div>
-      <div className="sl-import-panel">
+      <div
+        className="sl-import-panel"
+        style={{
+          marginTop: 20,
+          padding: 22,
+          border: "1px solid #e2e9e1",
+          borderRadius: 16,
+          background: "#fbfcfa",
+          color: "#293a30",
+          display: "grid",
+          gap: 18,
+        }}
+      >
         <div>
-          <b>Bulk import products</b>
-          <p>
+          <b style={{ display: "block", fontSize: 18, fontWeight: 750, marginBottom: 8 }}>
+            Bulk import products
+          </b>
+          <p style={{ color: "#778276", lineHeight: 1.6, margin: 0, fontSize: 14 }}>
             CSV headers: name, sku, description, price, currency, unit,
             imageUrl, stockEnabled, stockQuantity. Add your configured custom
             field keys as extra columns.
           </p>
         </div>
-        <input
-          id="sl-product-csv"
-          type="file"
-          accept=".csv,text/csv"
-          style={{ maxWidth: 280 }}
-          onChange={(event) => {
-            const file = event.currentTarget.files?.[0] || null;
-            event.currentTarget.value = "";
-            setImportFile(file);
-            setImportRows([]);
-            setImportPreview(null);
-            setImportError("");
-            setImportNotice("");
-            if (!file) return;
-            if (file.size > 2 * 1024 * 1024) {
-              setImportError("CSV must be 2 MB or smaller.");
-              setImportFile(null);
-              return;
-            }
-            void file.text().then((text) => {
-              try {
-                setImportRows(parseCsv(text));
-              } catch (error) {
-                setImportError(
-                  error instanceof Error ? error.message : "Invalid CSV file.",
-                );
-              }
-            });
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+            gap: 14,
+            alignItems: "end",
           }}
-        />
-        <label>
-          Import mode
-          <select
-            value={importMode}
-            onChange={(event) => {
-              setImportMode(event.target.value as "CREATE_ONLY" | "UPSERT");
-              setImportPreview(null);
-            }}
-          >
-            <option value="CREATE_ONLY">Create only (safe default)</option>
-            <option value="UPSERT">Update matching SKU</option>
-          </select>
-        </label>
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 650, color: "#405a47" }}>CSV file</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <input
+                id="sl-product-csv"
+                type="file"
+                accept=".csv,text/csv"
+                style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden" }}
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0] || null;
+                  event.currentTarget.value = "";
+                  setImportFile(file);
+                  setImportRows([]);
+                  setImportPreview(null);
+                  setImportError("");
+                  setImportNotice("");
+                  if (!file) return;
+                  if (file.size > 2 * 1024 * 1024) {
+                    setImportError("CSV must be 2 MB or smaller.");
+                    setImportFile(null);
+                    return;
+                  }
+                  void file.text().then((text) => {
+                    try {
+                      setImportRows(parseCsv(text));
+                    } catch (error) {
+                      setImportError(
+                        error instanceof Error ? error.message : "Invalid CSV file.",
+                      );
+                    }
+                  });
+                }}
+              />
+              <label
+                htmlFor="sl-product-csv"
+                className="sl-button sl-button-outline"
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", minHeight: 42, padding: "0 16px", borderRadius: 10, fontWeight: 650 }}
+              >
+                Choose CSV file
+              </label>
+              <span style={{ color: "#778276", fontSize: 13 }}>
+                {importFile ? importFile.name : "CSV only · Up to 2 MB"}
+              </span>
+            </div>
+          </div>
+          <label style={{ display: "grid", gap: 8, fontSize: 13, fontWeight: 650, color: "#405a47" }}>
+            Import mode
+            <select
+              value={importMode}
+              onChange={(event) => {
+                setImportMode(event.target.value as "CREATE_ONLY" | "UPSERT");
+                setImportPreview(null);
+              }}
+              style={{ width: "100%", minHeight: 44, padding: "0 12px", border: "1px solid #dce5da", borderRadius: 10, background: "#fff", color: "#293a30", fontSize: 14, outlineColor: "#599c56" }}
+            >
+              <option value="CREATE_ONLY">Create only (safe default)</option>
+              <option value="UPSERT">Update matching SKU</option>
+            </select>
+          </label>
+        </div>
         {importFile && (
-          <span>
-            {importFile.name} · {importRows.length} rows ready
-          </span>
+          <div style={{ padding: "11px 14px", borderRadius: 10, background: "#f0f6ef", border: "1px solid #dcebd9", color: "#405a47", fontSize: 13 }}>
+            <b>{importRows.length}</b> product rows ready to validate
+          </div>
         )}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <Btn
             kind="outline"
             disabled={importBusy || !importRows.length}
@@ -698,22 +737,21 @@ export function ProductSection({
           )}
         </div>
         {importError && (
-          <p role="alert" style={{ color: "#b42318" }}>
+          <p role="alert" style={{ color: "#b42318", margin: 0, padding: "10px 12px", background: "#fff5f4", borderRadius: 8 }}>
             {importError}
           </p>
         )}
-        {importNotice && <p role="status">{importNotice}</p>}
+        {importNotice && <p role="status" className="sl-notice">{importNotice}</p>}
         {importPreview && (
-          <div role="status">
-            <b>
-              {importPreview.validRows} valid · {importPreview.invalidRows}{" "}
-              invalid
+          <div role="status" style={{ padding: 16, borderRadius: 12, border: "1px solid #e2e9e1", background: "#fff" }}>
+            <b style={{ color: importPreview.invalidRows ? "#b42318" : "#357744" }}>
+              {importPreview.validRows} valid · {importPreview.invalidRows} invalid
             </b>
             {importPreview.rows
               ?.filter((row: any) => !row.valid)
               .slice(0, 20)
               .map((row: any) => (
-                <p key={row.rowNumber}>
+                <p key={row.rowNumber} style={{ margin: "8px 0 0", color: "#b42318", fontSize: 13 }}>
                   Row {row.rowNumber}: {row.errors.join(" ")}
                 </p>
               ))}
