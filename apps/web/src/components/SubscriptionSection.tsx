@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { CalendarClock, CheckCircle2, CreditCard, RefreshCw, ShieldAlert } from "lucide-react";
+import { CalendarClock, CheckCircle2, CreditCard, RefreshCw, ShieldAlert, RotateCcw, Home, XCircle } from "lucide-react";
 import { api } from "../sellora/api-client";
 
 type SubscriptionData = {
   id: string; status: string; interval: string; amount: string; currency: string;
   currentPeriodStart: string; currentPeriodEnd: string; dueAt: string; lastPaidAt?: string | null;
-  isLocked: boolean; prices: { MONTHLY: number; YEARLY: number };
+  isLocked: boolean; paymentConfigured?: boolean; prices: { MONTHLY: number; YEARLY: number };
   recentPayments: Array<{ id: string; interval: string; amount: string; status: string; createdAt: string; paidAt?: string | null }>;
 };
 const fmtDate = (v?: string | null) => v ? new Date(v).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
@@ -21,19 +21,32 @@ function loadRazorpay() {
   });
   return razorpayScriptPromise;
 }
-export function SubscriptionSection({ token, onRenewed }: { token: string; onRenewed?: () => Promise<void> }) {
+export function SubscriptionSection({ token, onRenewed, requirePayment = false }: { token: string; onRenewed?: () => Promise<void>; requirePayment?: boolean }) {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [paymentFailed, setPaymentFailed] = useState(false);
+  const [autoStarted, setAutoStarted] = useState(false);
+  const [selectedInterval, setSelectedInterval] = useState<"MONTHLY" | "YEARLY">("MONTHLY");
   async function refresh() {
     setError("");
     try { setSubscription(await api("/workspace/subscription", {}, token)); }
     catch (e) { setError(e instanceof Error ? e.message : "Could not load subscription."); }
   }
   useEffect(() => { void refresh(); }, [token]);
+  useEffect(() => {
+    if (requirePayment && subscription && !autoStarted && !busy && !subscription.paymentConfigured) {
+      setError("Subscription payments are not configured. Please contact Sellora support.");
+      setPaymentFailed(true);
+      setAutoStarted(true);
+    } else if (requirePayment && subscription && subscription.paymentConfigured && !autoStarted && !busy) {
+      setAutoStarted(true);
+      void pay(selectedInterval);
+    }
+  }, [requirePayment, subscription, autoStarted, busy]);
   async function pay(interval: "MONTHLY" | "YEARLY") {
-    setBusy(true); setError(""); setNotice("");
+    setBusy(true); setError(""); setNotice(""); setPaymentFailed(false); setSelectedInterval(interval);
     try {
       await loadRazorpay();
       const order = await api("/workspace/subscription/order", { method:"POST", body:JSON.stringify({ interval }) }, token);
@@ -57,14 +70,40 @@ export function SubscriptionSection({ token, onRenewed }: { token: string; onRen
               resolve();
             } catch (e) { reject(e); }
           },
-          modal: { ondismiss: () => resolve() }
+          modal: { ondismiss: () => reject(new Error("Payment was cancelled before completion. You can try again when ready.")) }
         });
         checkout.on("payment.failed", (event: any) => reject(new Error(event?.error?.description || "Payment failed. If money was deducted, contact support before retrying.")));
         checkout.open();
       });
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not start subscription payment."); }
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not start subscription payment."); setPaymentFailed(true); }
     finally { setBusy(false); }
   }
+  if (paymentFailed) return <section className="sl-section-card sl-payment-failed">
+    <style>{`
+      .sl-payment-failed{max-width:680px;margin:7vh auto;text-align:center;padding:clamp(28px,5vw,54px)!important;border-radius:22px!important}
+      .sl-payment-failed .sl-fail-orbit{width:94px;height:94px;border-radius:50%;margin:0 auto 22px;display:grid;place-items:center;background:#fff0ef;color:#c43d3d;position:relative;animation:sl-fail-pulse 1.8s ease-in-out infinite}
+      .sl-payment-failed .sl-fail-orbit:after{content:"";position:absolute;inset:-7px;border:1px dashed #efb6b2;border-radius:50%;animation:sl-fail-spin 9s linear infinite}
+      .sl-payment-failed h2{font-size:clamp(25px,4vw,34px);margin:0 0 10px;color:#28362b;letter-spacing:-.03em}
+      .sl-payment-failed p{color:#667164;line-height:1.7;margin:0 auto 12px;max-width:460px}
+      .sl-payment-failed .sl-fail-error{font-size:13px;color:#a83232;background:#fff6f5;border:1px solid #f5d9d7;border-radius:10px;padding:11px 13px;margin:20px auto;max-width:500px;overflow-wrap:anywhere}
+      .sl-payment-failed .sl-fail-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px}
+      .sl-payment-failed .sl-fail-actions button{min-height:46px;padding:0 18px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;cursor:pointer}
+      .sl-payment-failed .sl-fail-retry{background:#599c56;color:white;border:1px solid #599c56}
+      .sl-payment-failed .sl-fail-home{background:white;color:#354334;border:1px solid #dfe6dc}
+      @keyframes sl-fail-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(196,61,61,.12)}50%{transform:scale(1.04);box-shadow:0 0 0 12px rgba(196,61,61,0)}}
+      @keyframes sl-fail-spin{to{transform:rotate(360deg)}}
+      @media(prefers-reduced-motion:reduce){.sl-payment-failed .sl-fail-orbit,.sl-payment-failed .sl-fail-orbit:after{animation:none}}
+    `}</style>
+    <div className="sl-fail-orbit"><XCircle size={46}/></div>
+    <span className="sl-kicker">PAYMENT NOT COMPLETED</span>
+    <h2>We couldn’t confirm your payment</h2>
+    <p>Your Sellora workspace is not active yet. You have not been charged by Sellora again from this screen. If your bank shows a debit, check your payment status before retrying.</p>
+    {error && <div className="sl-fail-error" role="alert">{error}</div>}
+    <div className="sl-fail-actions">
+      <button className="sl-fail-retry" disabled={busy} onClick={() => {setPaymentFailed(false); void pay(selectedInterval);}}><RotateCcw size={16}/>{busy ? "Opening checkout…" : "Try payment again"}</button>
+      <button className="sl-fail-home" onClick={() => { window.location.href = "/"; }}><Home size={16}/> Back to home</button>
+    </div>
+  </section>;
   if (!subscription && !error) return <section className="sl-section-card">Loading subscription…</section>;
   return <section className="sl-section-card">
     <div className="sl-section-head"><div><h3>Sellora subscription</h3><p>One plan with monthly or annual billing. Secure payment is verified by the server.</p></div><button className="sl-button sl-button-outline" disabled={busy} onClick={() => void refresh()}><RefreshCw size={15}/> Refresh</button></div>
