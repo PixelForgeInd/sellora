@@ -160,20 +160,14 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
         </article>
         <article className="sl-section-card sl-renewal-plan sl-renewal-plan-yearly">
           <span className="sl-renewal-recommended">✦ RECOMMENDED</span>
-          <span className="sl-renewal-plan-label">YEARLY PLAN · BEST VALUE</span>
+          <span className="sl-renewal-plan-label">YEARLY PLAN</span>
           <h2>₹{subscription.prices.YEARLY.toLocaleString("en-IN")} <small>/ year</small></h2>
-          <p className="sl-renewal-plan-description">Keep your Sellora workspace running for a full year while paying the equivalent of just 10 months.</p>
+          <p className="sl-renewal-plan-description">Get 12 months of Sellora for the price of 10.</p>
           <div className="sl-renewal-plan-details"><span className="sl-renewal-discount">✦ 2 MONTHS FREE</span><span>Save ₹{Math.max(0, subscription.prices.MONTHLY * 12 - subscription.prices.YEARLY).toLocaleString("en-IN")} per year</span></div>
           <div className="sl-renewal-yearly-breakdown">
-            <div><span>Monthly plan for 12 months</span><s>₹{(subscription.prices.MONTHLY * 12).toLocaleString("en-IN")}</s></div>
-            <div><span>Yearly plan total</span><strong>₹{subscription.prices.YEARLY.toLocaleString("en-IN")}</strong></div>
-            <div className="sl-renewal-yearly-effective"><span>Effective monthly cost</span><strong>₹{Math.round(subscription.prices.YEARLY / 12).toLocaleString("en-IN")} / month</strong></div>
+            <div><span>Regular yearly price</span><s>₹{(subscription.prices.MONTHLY * 12).toLocaleString("en-IN")}</s></div>
+            <div className="sl-renewal-yearly-effective"><span>Just</span><strong>₹{Math.round(subscription.prices.YEARLY / 12).toLocaleString("en-IN")} / month</strong></div>
           </div>
-          <ul className="sl-renewal-yearly-benefits">
-            <li><span>✓</span><div><strong>12 months of access</strong><small>One yearly payment, with no monthly payment to manage.</small></div></li>
-            <li><span>✓</span><div><strong>Lower cost over the year</strong><small>Pay less than renewing month by month at the current listed price.</small></div></li>
-            <li><span>✓</span><div><strong>All standard plan features</strong><small>Use the same Sellora features included in your subscription.</small></div></li>
-          </ul>
           <button className="sl-button" disabled={busy} onClick={() => void pay("YEARLY")}><CreditCard size={17}/> {busy ? "Processing…" : "Get yearly plan"}</button>
         </article>
       </div>
