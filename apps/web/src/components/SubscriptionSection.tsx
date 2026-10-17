@@ -147,8 +147,8 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
 .sl-current-subscription-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
 .sl-current-kicker{display:block;font-size:12px;font-weight:850;letter-spacing:.12em;color:#43834b}
 .sl-current-subscription h3{margin:6px 0 0;font-size:26px;font-weight:800;color:#29382d}
-.sl-current-status{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#e4f5e6;color:#287a3b;font-size:13px;font-weight:800}
-.sl-current-status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.sl-current-status{display:inline-flex;align-items:center;gap:0;padding:0;border:0;border-radius:0;background:transparent;color:#21843a;font-size:24px;font-weight:850;line-height:1.2;letter-spacing:-.03em}
+.sl-current-status:before{display:none}
 .sl-current-status.locked{background:#fff0ed;color:#b42318}
 .sl-current-subscription-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .sl-current-subscription-grid>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;padding:22px;border:1px solid #dce8dc;border-radius:15px;background:linear-gradient(135deg,#f2faf1,#fff);min-width:0;min-height:126px;box-sizing:border-box}
