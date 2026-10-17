@@ -142,39 +142,41 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
   }
   if (!subscription && !error) return <section className="sl-section-card">Loading payment history…</section>;
   return <section className="sl-section-card sl-renewal-subscription-card">
-    <style>{`.sl-renewal-app .sl-renewal-subscription-card{padding:clamp(20px,3vw,32px)!important;background:#fff!important;border:1px solid #dfe7dd!important;border-radius:16px!important;box-shadow:0 3px 12px rgba(32,60,38,.035)!important;animation:none!important}
-.sl-renewal-app .sl-current-subscription{padding:0;margin:0 0 28px;border:0;border-radius:0;background:transparent}
+    <style>{`.sl-renewal-app .sl-renewal-subscription-card{padding:clamp(22px,3vw,34px)!important;background:#fff!important;border:1px solid #dfe7dd!important;border-radius:18px!important;box-shadow:0 8px 24px rgba(36,70,42,.07)!important}
+.sl-renewal-app .sl-current-subscription{padding:0;margin:0 0 30px;border:0;background:transparent}
 .sl-renewal-app .sl-current-subscription-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
-.sl-renewal-app .sl-current-kicker{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;color:#7a887b}
-.sl-renewal-app .sl-current-subscription h3{margin:5px 0 0;font-size:22px;font-weight:700;color:#29382d}
-.sl-renewal-app .sl-current-status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#edf7ed;color:#388449;font-size:12px;font-weight:700}
-.sl-renewal-app .sl-current-status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.sl-renewal-app .sl-current-kicker{display:block;font-size:12px;font-weight:850;letter-spacing:.12em;color:#39814a}
+.sl-renewal-app .sl-current-subscription h3{margin:6px 0 0;font-size:26px;font-weight:800;color:#29382d}
+.sl-renewal-app .sl-current-status{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:#e3f6e7;color:#287a3b;font-size:13px;font-weight:800}
+.sl-renewal-app .sl-current-status:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 .sl-renewal-app .sl-current-status.locked{background:#fff0ed;color:#b42318}
-.sl-renewal-app .sl-current-subscription-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.sl-renewal-app .sl-current-subscription-grid>div{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:18px;border:1px solid #e4e9e2;border-radius:12px;background:#f8faf7;min-width:0}
-.sl-renewal-app .sl-current-subscription-grid>div>span{font-size:13px;line-height:1.4;color:#788378}
-.sl-renewal-app .sl-current-subscription-grid>div>strong{font-size:16px;line-height:1.5;color:#2b382d;overflow-wrap:anywhere}
-.sl-renewal-app .sl-current-plan-price>strong{font-size:28px!important;font-weight:800;line-height:1.2!important;color:#29382d!important;letter-spacing:-.04em}
-.sl-renewal-app .sl-current-plan-price>strong small{font-size:14px;font-weight:500;letter-spacing:0;color:#758075}
-.sl-renewal-app .sl-current-plan-type{font-weight:600;color:#4b8c56!important}
-.sl-renewal-app .sl-current-alert{margin:14px 0 0;padding:12px 14px;border-radius:10px;background:#fff7e7;color:#805b12;font-size:13px;line-height:1.5}
-.sl-renewal-app .sl-payment-history-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px}
-.sl-renewal-app .sl-renewal-payment-history h3{margin:0 0 7px;font-size:24px;font-weight:700;color:#29382d}
-.sl-renewal-app .sl-renewal-payment-intro{margin:0;color:#7a8579;font-size:14px;line-height:1.6}
-.sl-renewal-app .sl-renewal-payment-list{border:1px solid #e3e9e1;border-radius:12px;overflow:hidden;background:#fff}
-.sl-renewal-app .sl-renewal-payment-row{display:grid;grid-template-columns:minmax(130px,1fr) minmax(90px,.6fr) minmax(160px,1fr) auto;align-items:center;gap:16px;padding:16px 18px;border-bottom:1px solid #e9eee7;font-size:14px;background:#fff}
+.sl-renewal-app .sl-current-subscription-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.sl-renewal-app .sl-current-subscription-grid>div{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:22px;border:1px solid #dce8dc;border-radius:15px;background:linear-gradient(135deg,#f2faf1 0%,#fbfefb 100%);min-width:0;min-height:116px;box-shadow:0 3px 10px rgba(39,91,49,.035)}
+.sl-renewal-app .sl-current-subscription-grid>div:nth-child(2){background:linear-gradient(135deg,#f0f5ff 0%,#fbfcff 100%);border-color:#dce3fb}
+.sl-renewal-app .sl-current-subscription-grid>div:nth-child(3){background:linear-gradient(135deg,#fff7e9 0%,#fffdfa 100%);border-color:#f0e2c8}
+.sl-renewal-app .sl-current-subscription-grid>div>span{font-size:14px;line-height:1.4;color:#6c7b6d}
+.sl-renewal-app .sl-current-subscription-grid>div>strong{font-size:19px;line-height:1.4;font-weight:800;color:#26392a;overflow-wrap:anywhere}
+.sl-renewal-app .sl-current-plan-price>strong{font-size:34px!important;font-weight:900;line-height:1.15!important;color:#256d36!important;letter-spacing:-.045em}
+.sl-renewal-app .sl-current-plan-price>strong small{font-size:16px;font-weight:650;letter-spacing:0;color:#6b786c}
+.sl-renewal-app .sl-current-plan-type{font-weight:750;color:#39814a!important}
+.sl-renewal-app .sl-current-alert{margin:14px 0 0;padding:13px 15px;border-radius:10px;background:#fff7e7;color:#805b12;font-size:14px;line-height:1.5}
+.sl-renewal-app .sl-payment-history-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:20px}
+.sl-renewal-app .sl-renewal-payment-history h3{margin:0 0 7px;font-size:28px;font-weight:850;color:#29382d}
+.sl-renewal-app .sl-renewal-payment-intro{margin:0;color:#778377;font-size:15px;line-height:1.6}
+.sl-renewal-app .sl-renewal-payment-list{border:1px solid #dfe8dd;border-radius:15px;overflow:hidden;background:#fff}
+.sl-renewal-app .sl-renewal-payment-row{display:grid;grid-template-columns:minmax(140px,1fr) minmax(100px,.65fr) minmax(170px,1fr) auto;align-items:center;gap:18px;padding:20px 22px;border-bottom:1px solid #e6ede4;font-size:15px;background:#f8fcf7}
 .sl-renewal-app .sl-renewal-payment-row:last-child{border-bottom:0}
-.sl-renewal-app .sl-renewal-payment-row:nth-child(even){background:#fafcf9}
-.sl-renewal-app .sl-payment-primary{display:grid;gap:5px}
-.sl-renewal-app .sl-renewal-payment-amount{font-size:18px;font-weight:750;color:#29382d}
-.sl-renewal-app .sl-renewal-payment-meta,.sl-renewal-app .sl-renewal-payment-row time{font-size:13px;line-height:1.5;color:#7a8579}
-.sl-renewal-app .sl-renewal-payment-status{display:inline-flex;align-items:center;gap:5px;justify-self:start;padding:6px 9px;border-radius:7px;background:#fff5df;font-size:12px;font-weight:700;text-transform:capitalize;color:#946313;white-space:nowrap}
-.sl-renewal-app .sl-renewal-payment-status.paid{background:#edf7ed;color:#388449}
-.sl-renewal-app .sl-renewal-download{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 12px;border:1px solid #dfe6dc;border-radius:8px;background:#fff;color:#354638;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
-.sl-renewal-app .sl-renewal-download:hover{background:#f3f8f2;border-color:#b8d5b8}
-.sl-renewal-app .sl-renewal-payment-empty{padding:22px;border:1px dashed #d7e1d4;border-radius:12px;background:#fafcf9;color:#788378;font-size:14px;line-height:1.6}
+.sl-renewal-app .sl-renewal-payment-row:nth-child(even){background:#f2f7ff}
+.sl-renewal-app .sl-payment-primary{display:grid;gap:6px}
+.sl-renewal-app .sl-renewal-payment-amount{font-size:24px;font-weight:900;color:#245f32}
+.sl-renewal-app .sl-renewal-payment-meta,.sl-renewal-app .sl-renewal-payment-row time{font-size:14px;line-height:1.5;color:#677568}
+.sl-renewal-app .sl-renewal-payment-status{display:inline-flex;align-items:center;gap:6px;justify-self:start;padding:8px 11px;border-radius:8px;background:#fff0d5;font-size:13px;font-weight:800;text-transform:capitalize;color:#8c5c0e;white-space:nowrap}
+.sl-renewal-app .sl-renewal-payment-status.paid{background:#dff5e4;color:#26743b}
+.sl-renewal-app .sl-renewal-download{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 15px;border:1px solid #b9d8bb;border-radius:10px;background:#fff;color:#286b39;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.sl-renewal-app .sl-renewal-download:hover{background:#e8f7e9;border-color:#8fc497}
+.sl-renewal-app .sl-renewal-payment-empty{padding:24px;border:1px dashed #d7e1d4;border-radius:12px;background:#fafcf9;color:#788378;font-size:15px;line-height:1.6}
 .sl-renewal-app .sl-renewal-subscription-card .sl-section-head .sl-button{animation:none!important}
-@media(max-width:760px){.sl-renewal-app .sl-current-subscription-grid{grid-template-columns:1fr}.sl-renewal-app .sl-current-subscription-grid>div{padding:15px}.sl-renewal-app .sl-payment-history-heading{align-items:flex-start}.sl-renewal-app .sl-renewal-payment-row{grid-template-columns:minmax(0,1fr) auto;gap:10px 12px}.sl-renewal-app .sl-renewal-payment-row time{grid-column:1/-1}.sl-renewal-app .sl-renewal-payment-row .sl-renewal-download{grid-column:1/-1;justify-self:start}}
+@media(max-width:760px){.sl-renewal-app .sl-current-subscription-grid{grid-template-columns:1fr}.sl-renewal-app .sl-current-subscription-grid>div{padding:18px;min-height:0}.sl-renewal-app .sl-current-plan-price>strong{font-size:30px!important}.sl-renewal-app .sl-payment-history-heading{align-items:flex-start}.sl-renewal-app .sl-renewal-payment-row{grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:17px}.sl-renewal-app .sl-renewal-payment-row time{grid-column:1/-1}.sl-renewal-app .sl-renewal-payment-row .sl-renewal-download{grid-column:1/-1;justify-self:start}}
 `}</style>
     <div className="sl-renewal-payment-history">
       {subscription && <section className="sl-current-subscription">
