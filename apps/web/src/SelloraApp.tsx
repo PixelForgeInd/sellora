@@ -875,6 +875,35 @@ export default function SelloraApp() {
 .sl-renewal-main .sl-section-card>div[role="alert"]{background:linear-gradient(110deg,#fff0ef,#fff7e9)!important;border-color:#ffc9b8!important;color:#a8322a!important;box-shadow:0 5px 16px rgba(196,61,61,.05)}
 .sl-renewal-main .sl-section-card>div[role="alert"] svg{flex-shrink:0}
 @media(max-width:640px){.sl-renewal-main>.sl-section-card{padding:18px!important}.sl-renewal-main .sl-analytics-metrics>span{padding:14px!important}}
+.sl-renewal-app{position:relative;isolation:isolate;overflow:hidden}
+.sl-renewal-app:before,.sl-renewal-app:after{content:"";position:fixed;z-index:-1;pointer-events:none;width:340px;height:340px;border-radius:50%;filter:blur(2px);opacity:.45;animation:sl-renewal-float 12s ease-in-out infinite alternate}
+.sl-renewal-app:before{top:10%;left:-180px;background:radial-gradient(circle,#a7e7bd 0%,rgba(167,231,189,0) 70%)}
+.sl-renewal-app:after{right:-170px;bottom:4%;background:radial-gradient(circle,#b8c7ff 0%,rgba(184,199,255,0) 70%);animation-delay:-5s}
+.sl-renewal-main>.sl-workspace-top{animation:sl-renewal-rise .55s cubic-bezier(.2,.7,.2,1) both}
+.sl-renewal-main .sl-workspace-top h1{background:linear-gradient(100deg,#214d36 0%,#599c56 42%,#5368c9 82%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sl-renewal-shimmer 7s ease-in-out infinite}
+.sl-renewal-main>.sl-section-card{animation:sl-renewal-rise .7s .08s cubic-bezier(.2,.7,.2,1) both}
+.sl-renewal-main .sl-analytics-metrics>span{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;animation:sl-renewal-rise .5s both}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(1){animation-delay:.08s}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(2){animation-delay:.14s}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(3){animation-delay:.2s}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(4){animation-delay:.26s}
+.sl-renewal-main .sl-analytics-metrics>span:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(45,83,55,.09);border-color:#b8d8bc}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card{animation:sl-renewal-rise .6s cubic-bezier(.2,.7,.2,1) both;transition:transform .25s ease,box-shadow .25s ease}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(1){animation-delay:.2s}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(2){animation-delay:.3s}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:hover{transform:translateY(-5px);box-shadow:0 18px 35px rgba(43,78,56,.12)!important}
+.sl-renewal-main article.sl-section-card .sl-button{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.sl-renewal-main article.sl-section-card .sl-button:hover:not(:disabled){transform:translateY(-2px);filter:saturate(1.12) brightness(1.03);box-shadow:0 8px 20px rgba(70,119,78,.25)}
+.sl-renewal-main article.sl-section-card .sl-button:active:not(:disabled){transform:translateY(0) scale(.98)}
+.sl-renewal-main .sl-section-head .sl-button{transition:transform .18s ease,background .18s ease}
+.sl-renewal-main .sl-section-head .sl-button:hover:not(:disabled){transform:translateY(-1px);background:#dcefe0}
+.sl-renewal-main .sl-section-card>div[role="alert"]{animation:sl-renewal-alert-in .45s ease-out both}
+@keyframes sl-renewal-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sl-renewal-float{from{transform:translate3d(0,-12px,0) scale(.96)}to{transform:translate3d(18px,18px,0) scale(1.06)}}
+@keyframes sl-renewal-shimmer{0%,100%{background-position:0% center}50%{background-position:100% center}}
+@keyframes sl-renewal-alert-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.sl-renewal-app:before,.sl-renewal-app:after,.sl-renewal-main>.sl-workspace-top,.sl-renewal-main .sl-workspace-top h1,.sl-renewal-main>.sl-section-card,.sl-renewal-main .sl-analytics-metrics>span,.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card,.sl-renewal-main .sl-section-card>div[role="alert"]{animation:none!important;transition:none!important}.sl-renewal-main .sl-analytics-metrics>span:hover,.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:hover,.sl-renewal-main article.sl-section-card .sl-button:hover{transform:none!important}}
+
 `}</style>
         <main className="sl-main sl-renewal-main">
           <header className="sl-workspace-top">
