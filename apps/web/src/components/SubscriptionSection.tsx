@@ -112,7 +112,31 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
     </div>
   </section>;
   if (!subscription && !error) return <section className="sl-section-card">Loading subscription…</section>;
-  return <section className="sl-section-card">
+  return <section className="sl-section-card sl-renewal-subscription-card">
+    <style>{`.sl-renewal-app .sl-renewal-subscription-card{position:relative;isolation:isolate;animation:sl-renewal-card-enter .8s cubic-bezier(.2,.75,.25,1) both!important}
+      .sl-renewal-app .sl-renewal-subscription-card:before{content:"";position:absolute;z-index:-1;inset:-2px;border-radius:inherit;background:linear-gradient(115deg,#599c56,#71d4ae,#7588f5,#d2a3ff,#599c56);background-size:300% 300%;animation:sl-renewal-border-flow 7s ease infinite;opacity:.65}
+      .sl-renewal-app .sl-renewal-subscription-card:after{content:"";position:absolute;z-index:-1;inset:2px;border-radius:inherit;background:#fff}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-section-head{animation:sl-renewal-card-enter .65s .08s both}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span{animation:sl-renewal-card-enter .55s both;transition:transform .25s ease,box-shadow .25s ease!important}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span:nth-child(1){animation-delay:.12s}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span:nth-child(2){animation-delay:.2s}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span:nth-child(3){animation-delay:.28s}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span:nth-child(4){animation-delay:.36s}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span:hover{transform:translateY(-5px) scale(1.015)!important;box-shadow:0 12px 26px rgba(53,101,67,.15)!important}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card{animation:sl-renewal-card-enter .65s both;transition:transform .25s ease,box-shadow .25s ease!important}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card:nth-child(1){animation-delay:.24s}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card:nth-child(2){animation-delay:.38s}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card:hover{transform:translateY(-7px)!important;box-shadow:0 20px 36px rgba(57,91,76,.16)!important}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card .sl-button{background:linear-gradient(105deg,#38864a,#65b86c)!important;background-size:180% auto!important;color:#fff!important;border:0!important;box-shadow:0 7px 18px rgba(61,145,77,.25)!important;transition:background-position .35s ease,transform .2s ease,box-shadow .2s ease!important}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card:nth-child(2) .sl-button{background-image:linear-gradient(105deg,#4c5fd0,#8275ed,#5368c9)!important;box-shadow:0 7px 18px rgba(83,104,201,.25)!important}
+      .sl-renewal-app .sl-renewal-subscription-card article.sl-section-card .sl-button:hover:not(:disabled){background-position:100% center!important;transform:translateY(-3px) scale(1.025)!important;box-shadow:0 12px 25px rgba(61,105,80,.28)!important}
+      .sl-renewal-app .sl-renewal-subscription-card .sl-section-head .sl-button{animation:sl-renewal-refresh-glow 3s ease-in-out infinite}
+      .sl-renewal-app .sl-renewal-subscription-card [role=alert]{animation:sl-renewal-alert-pop .55s cubic-bezier(.2,.8,.2,1) both}
+      @keyframes sl-renewal-card-enter{from{opacity:0;transform:translateY(24px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+      @keyframes sl-renewal-border-flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+      @keyframes sl-renewal-refresh-glow{0%,100%{box-shadow:0 0 0 0 rgba(89,156,86,0)}50%{box-shadow:0 0 0 5px rgba(89,156,86,.1)}}
+      @keyframes sl-renewal-alert-pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+      @media(prefers-reduced-motion:reduce){.sl-renewal-app .sl-renewal-subscription-card,.sl-renewal-app .sl-renewal-subscription-card:before,.sl-renewal-app .sl-renewal-subscription-card .sl-section-head,.sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span,.sl-renewal-app .sl-renewal-subscription-card article.sl-section-card,.sl-renewal-app .sl-renewal-subscription-card .sl-section-head .sl-button,.sl-renewal-app .sl-renewal-subscription-card [role=alert]{animation:none!important;transition:none!important}}`}</style>
     <div className="sl-section-head"><div><h3>Sellora subscription</h3><p>One plan with monthly or annual billing. Secure payment is verified by the server.</p></div><button className="sl-button sl-button-outline" disabled={busy} onClick={() => void refresh()}><RefreshCw size={15}/> Refresh</button></div>
     {error && <p role="alert" style={{color:"#b42318"}}>{error}</p>}
     {notice && <p role="status" className="sl-notice">{notice}</p>}
