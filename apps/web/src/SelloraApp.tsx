@@ -852,7 +852,30 @@ export default function SelloraApp() {
   if (subscriptionLocked && !business)
     return (
       <div className="sl-app sl-renewal-app">
-        <style>{`.sl-renewal-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important;box-sizing:border-box}.sl-renewal-app>.sl-renewal-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-renewal-main,.sl-renewal-main>*{min-width:0;box-sizing:border-box}.sl-renewal-main>.sl-section-card{width:100%;max-width:none}.sl-renewal-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-renewal-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-renewal-main .sl-analytics-metrics>span{min-width:0;overflow-wrap:anywhere}.sl-renewal-main .sl-analytics-metrics b{overflow-wrap:anywhere}@media(max-width:640px){.sl-renewal-app>.sl-renewal-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-renewal-main .sl-workspace-top{gap:12px}.sl-renewal-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-renewal-main .sl-workspace-top .sl-button{flex-shrink:0}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:1fr}}`}</style>
+        <style>{`.sl-renewal-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important;box-sizing:border-box}.sl-renewal-app>.sl-renewal-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-renewal-main,.sl-renewal-main>*{min-width:0;box-sizing:border-box}.sl-renewal-main>.sl-section-card{width:100%;max-width:none}.sl-renewal-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-renewal-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-renewal-main .sl-analytics-metrics>span{min-width:0;overflow-wrap:anywhere}.sl-renewal-main .sl-analytics-metrics b{overflow-wrap:anywhere}@media(max-width:640px){.sl-renewal-app>.sl-renewal-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-renewal-main .sl-workspace-top{gap:12px}.sl-renewal-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-renewal-main .sl-workspace-top .sl-button{flex-shrink:0}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:1fr}}
+.sl-renewal-app{background:radial-gradient(ellipse at 8% 0%,#e1f5e8 0,transparent 34%),radial-gradient(ellipse at 100% 20%,#e7edff 0,transparent 30%),#f7faf7!important}
+.sl-renewal-main>.sl-section-card{border:1px solid #d7e8da!important;border-top:4px solid #599c56!important;box-shadow:0 16px 45px rgba(42,84,48,.08)!important;background:rgba(255,255,255,.96)!important}
+.sl-renewal-main .sl-section-head h3{color:#174f35}
+.sl-renewal-main .sl-analytics-metrics>span{background:linear-gradient(135deg,#f0f8f1,#f8fbf8)!important;border:1px solid #e1eee2;border-radius:12px;padding:16px!important}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(2){background:linear-gradient(135deg,#eef4ff,#f8faff)!important;border-color:#dce7ff}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(3){background:linear-gradient(135deg,#fff6e7,#fffbf4)!important;border-color:#f6e5c4}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(4){background:linear-gradient(135deg,#f5f0ff,#fcfaff)!important;border-color:#e8ddff}
+.sl-renewal-main .sl-analytics-metrics b{color:#183f32}
+.sl-renewal-main .sl-renewal-main .sl-section-card{background:#fff}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card{position:relative;overflow:hidden;border:1px solid #dce9de!important;box-shadow:0 8px 24px rgba(40,80,48,.06)!important;background:linear-gradient(155deg,#ffffff 0%,#f6fbf6 100%)!important}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(2){background:linear-gradient(155deg,#ffffff 0%,#f2f5ff 100%)!important;border-color:#dce3fb!important}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#599c56}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(2):before{background:#6478d9}
+.sl-renewal-main article.sl-section-card .sl-kicker{color:#3555a5}
+.sl-renewal-main article.sl-section-card h2{color:#194a36}
+.sl-renewal-main article.sl-section-card .sl-button{background:#599c56!important;border-color:#599c56!important;color:#fff!important;box-shadow:0 4px 12px rgba(89,156,86,.2)}
+.sl-renewal-main article.sl-section-card:nth-child(2) .sl-button{background:#5368c9!important;border-color:#5368c9!important;box-shadow:0 4px 12px rgba(83,104,201,.2)}
+.sl-renewal-main .sl-section-head .sl-button{background:#edf5ee;border-color:#d9e8da;color:#245238}
+.sl-renewal-main h4{color:#214c37}
+.sl-renewal-main .sl-section-card>div[role="alert"]{background:linear-gradient(110deg,#fff0ef,#fff7e9)!important;border-color:#ffc9b8!important;color:#a8322a!important;box-shadow:0 5px 16px rgba(196,61,61,.05)}
+.sl-renewal-main .sl-section-card>div[role="alert"] svg{flex-shrink:0}
+@media(max-width:640px){.sl-renewal-main>.sl-section-card{padding:18px!important}.sl-renewal-main .sl-analytics-metrics>span{padding:14px!important}}
+`}</style>
         <main className="sl-main sl-renewal-main">
           <header className="sl-workspace-top">
             <div>
