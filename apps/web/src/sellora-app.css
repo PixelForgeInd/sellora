@@ -1272,7 +1272,7 @@ body{border-top:0;}
 
 /* Settings: force native square checkboxes instead of inherited pill/oval input styles. */
 .sl-settings-page .sl-settings-toggle input[type="checkbox"],
-.sl-settings-page label.sl-settings-toggle > input[type="checkbox]{
+.sl-settings-page label.sl-settings-toggle > input[type="checkbox"]{
   appearance:checkbox!important;
   -webkit-appearance:checkbox!important;
   display:inline-block!important;
