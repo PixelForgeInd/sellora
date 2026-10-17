@@ -851,8 +851,9 @@ export default function SelloraApp() {
     );
   if (subscriptionLocked && !business)
     return (
-      <div className="sl-app">
-        <main className="sl-main">
+      <div className="sl-app sl-renewal-app">
+        <style>{`.sl-renewal-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important;box-sizing:border-box}.sl-renewal-app>.sl-renewal-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-renewal-main,.sl-renewal-main>*{min-width:0;box-sizing:border-box}.sl-renewal-main>.sl-section-card{width:100%;max-width:none}.sl-renewal-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-renewal-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-renewal-main .sl-analytics-metrics>span{min-width:0;overflow-wrap:anywhere}.sl-renewal-main .sl-analytics-metrics b{overflow-wrap:anywhere}@media(max-width:640px){.sl-renewal-app>.sl-renewal-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-renewal-main .sl-workspace-top{gap:12px}.sl-renewal-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-renewal-main .sl-workspace-top .sl-button{flex-shrink:0}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:1fr}}`}</style>
+        <main className="sl-main sl-renewal-main">
           <header className="sl-workspace-top">
             <div>
               <span className="sl-kicker">SELLORA WORKSPACE</span>
