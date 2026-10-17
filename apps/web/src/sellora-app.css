@@ -1268,3 +1268,32 @@ body{border-top:0;}
 
 @media(max-width:1100px){.sl-field-builder-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end}.sl-field-builder-row .sl-field-required-toggle{padding-bottom:10px}.sl-field-builder-row>.sl-button{white-space:normal}}
 @media(max-width:650px){.sl-field-builder-row{grid-template-columns:minmax(0,1fr)}.sl-field-builder-row .sl-field-required-toggle{padding-bottom:0}.sl-field-builder-row>.sl-button{width:100%}}
+
+
+/* Settings: force native square checkboxes instead of inherited pill/oval input styles. */
+.sl-settings-page .sl-settings-toggle input[type="checkbox"],
+.sl-settings-page label.sl-settings-toggle > input[type="checkbox]{
+  appearance:checkbox!important;
+  -webkit-appearance:checkbox!important;
+  display:inline-block!important;
+  width:16px!important;
+  height:16px!important;
+  min-width:16px!important;
+  min-height:16px!important;
+  max-width:16px!important;
+  max-height:16px!important;
+  margin:0!important;
+  padding:0!important;
+  border:initial!important;
+  border-radius:3px!important;
+  background:initial!important;
+  box-shadow:none!important;
+  transform:none!important;
+  flex:0 0 16px!important;
+  accent-color:#599c56!important;
+}
+.sl-settings-page .sl-settings-toggle{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
