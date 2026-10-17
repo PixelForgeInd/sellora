@@ -113,9 +113,9 @@ export function SubscriptionSection({ token, onRenewed, requirePayment = false }
   </section>;
   if (!subscription && !error) return <section className="sl-section-card">Loading subscription…</section>;
   return <section className="sl-section-card sl-renewal-subscription-card">
-    <style>{`.sl-renewal-app .sl-renewal-subscription-card{position:relative;isolation:isolate;animation:sl-renewal-card-enter .8s cubic-bezier(.2,.75,.25,1) both!important}
-      .sl-renewal-app .sl-renewal-subscription-card:before{content:"";position:absolute;z-index:-1;inset:-2px;border-radius:inherit;background:linear-gradient(115deg,#599c56,#71d4ae,#7588f5,#d2a3ff,#599c56);background-size:300% 300%;animation:sl-renewal-border-flow 7s ease infinite;opacity:.65}
-      .sl-renewal-app .sl-renewal-subscription-card:after{content:"";position:absolute;z-index:-1;inset:2px;border-radius:inherit;background:#fff}
+    <style>{`.sl-renewal-app .sl-renewal-subscription-card{position:relative;isolation:isolate;border:3px solid transparent!important;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(115deg,#599c56,#71d4ae,#7588f5,#d2a3ff,#599c56) border-box!important;background-size:auto,300% 300%!important;animation:sl-renewal-card-enter .8s cubic-bezier(.2,.75,.25,1) both,sl-renewal-border-flow 7s ease infinite!important}
+      .sl-renewal-app .sl-renewal-subscription-card:before{content:none!important}
+      .sl-renewal-app .sl-renewal-subscription-card:after{content:none!important}
       .sl-renewal-app .sl-renewal-subscription-card .sl-section-head{animation:sl-renewal-card-enter .65s .08s both}
       .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span{animation:sl-renewal-card-enter .55s both;transition:transform .25s ease,box-shadow .25s ease!important}
       .sl-renewal-app .sl-renewal-subscription-card .sl-analytics-metrics>span:nth-child(1){animation-delay:.12s}
