@@ -90,6 +90,13 @@ export default function SelloraApp() {
   useEffect(() => {
     window.localStorage.setItem("sellora-launch-checklist", JSON.stringify(launchChecklist));
   }, [launchChecklist]);
+  const [launchChecklistDismissed, setLaunchChecklistDismissed] = useState(() => {
+    try {
+      return window.localStorage.getItem("sellora-launch-checklist-dismissed") === "true";
+    } catch {
+      return false;
+    }
+  });
 
   // Authentication screen state
   const [email, setEmail] = useState("");
@@ -1395,145 +1402,58 @@ export default function SelloraApp() {
         )}
         {page === "overview" && (
           <>
-            <section className="sl-welcome-banner">
-              <div>
-                <span className="sl-kicker">YOUR DIGITAL SHOWROOM</span>
-                <h2>
-                  Make your products
-                  <br />
-                  easy to <em>discover.</em>
-                </h2>
-                <p>
-                  Add your products, create a catalogue, and publish a link
-                  customers can open anywhere.
-                </p>
-                <h3 className="sl-welcome-launch-checklist-title">Launch Checklist</h3>
-                <div className="sl-welcome-launch-checklist" aria-label="Launch checklist">
-                  {[
-                    { id: "products", number: "1", title: "Add products", description: "Upload your products and details" },
-                    { id: "catalogue", number: "2", title: "Publish a catalogue", description: "Create a link customers can browse" },
-                    { id: "share", number: "3", title: "Share with customers", description: "Send your catalogue to customers" },
-                  ].map((step) => (
-                    <button
-                      type="button"
-                      key={step.id}
-                      className={`sl-launch-step ${launchChecklist[step.id] ? "is-complete" : ""}`}
-                      aria-pressed={Boolean(launchChecklist[step.id])}
-                      onClick={() => setLaunchChecklist((current) => ({ ...current, [step.id]: !current[step.id] }))}
-                    >
-                      <span className="sl-launch-step-check" aria-hidden="true">
-                        {launchChecklist[step.id] ? <Check size={16} strokeWidth={3} /> : <span className="sl-launch-step-number">{step.number}</span>}
-                      </span>
-                      <span className="sl-launch-step-copy"><b>{step.title}</b><small>{step.description}</small></span>
-                      <span className="sl-launch-step-state">{launchChecklist[step.id] ? "Done" : "Mark complete"}</span>
-                    </button>
-                  ))}
+            <section className="sl-welcome-compact" aria-label="Workspace quick actions">
+              <div className="sl-add-product-panel">
+                <span className="sl-compact-panel-icon"><Plus size={20} /></span>
+                <div className="sl-compact-panel-copy">
+                  <strong>Add a product</strong>
+                  <span>Bring your catalogue to life with your first product.</span>
                 </div>
-                <Btn
-                  onClick={() => {
-                    setPage("products");
-                    startProduct();
-                  }}
-                >
-                  <Plus size={16} /> Add a product
+                <Btn onClick={() => { setPage("products"); startProduct(); }}>
+                  <Plus size={16} /> Add product
                 </Btn>
               </div>
-              <div className="sl-banner-art">
-                <span>{business.name.toUpperCase()}</span>
-                <BookOpen size={34} />
-                <b>
-                  PRODUCT
-                  <br />
-                  CATALOGUE
-                </b>
-                <small>YOUR BRAND. YOUR RANGE.</small>
-              </div>
+              {!launchChecklistDismissed && (
+                <section className="sl-launch-checklist-banner" aria-label="Launch checklist">
+                  <button
+                    type="button"
+                    className="sl-launch-checklist-dismiss"
+                    aria-label="Dismiss launch checklist permanently"
+                    title="Dismiss launch checklist"
+                    onClick={() => {
+                      try { window.localStorage.setItem("sellora-launch-checklist-dismissed", "true"); } catch {}
+                      setLaunchChecklistDismissed(true);
+                    }}
+                  ><X size={17} /></button>
+                  <div className="sl-launch-banner-heading">
+                    <span className="sl-launch-banner-icon"><Check size={18} /></span>
+                    <div><h2>Launch Checklist</h2><p>Three simple steps to get your showroom ready to share.</p></div>
+                  </div>
+                  <div className="sl-launch-banner-steps">
+                    {[
+                      { id: "products", number: "1", title: "Add products", description: "Upload your products and details" },
+                      { id: "catalogue", number: "2", title: "Publish a catalogue", description: "Create a link customers can browse" },
+                      { id: "share", number: "3", title: "Share with customers", description: "Send your catalogue to customers" },
+                    ].map((step) => (
+                      <button
+                        type="button"
+                        key={step.id}
+                        className={`sl-launch-banner-step ${launchChecklist[step.id] ? "is-complete" : ""}`}
+                        aria-pressed={Boolean(launchChecklist[step.id])}
+                        onClick={() => setLaunchChecklist((current) => ({ ...current, [step.id]: !current[step.id] }))}
+                      >
+                        <span className="sl-launch-banner-check" aria-hidden="true">
+                          {launchChecklist[step.id] ? <Check size={15} strokeWidth={3} /> : <span>{step.number}</span>}
+                        </span>
+                        <span className="sl-launch-banner-step-copy"><b>{step.title}</b><small>{step.description}</small></span>
+                        <span className="sl-launch-banner-step-state">{launchChecklist[step.id] ? "Done" : "Mark complete"}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
             </section>
-            <section className="sl-stat-grid">
-              <div>
-                <span>ORDERS TODAY</span>
-                <ClipboardList />
-                <strong>
-                  {
-                    orders.filter(
-                      (o: any) =>
-                        new Date(o.createdAt).toLocaleDateString("en-CA", {
-                          timeZone: "Asia/Kolkata",
-                        }) ===
-                        new Date().toLocaleDateString("en-CA", {
-                          timeZone: "Asia/Kolkata",
-                        }),
-                    ).length
-                  }
-                </strong>
-                <small>Orders created today</small>
-              </div>
-              <div>
-                <span>PAYMENTS RECEIVED TODAY</span>
-                <CreditCard />
-                <strong>
-                  {formatCurrency(
-                    orders
-                      .filter(
-                        (o: any) =>
-                          o.paymentStatus === "PAID" &&
-                          o.paidAt &&
-                          new Date(o.paidAt).toLocaleDateString("en-CA", {
-                            timeZone: "Asia/Kolkata",
-                          }) ===
-                            new Date().toLocaleDateString("en-CA", {
-                              timeZone: "Asia/Kolkata",
-                            }),
-                      )
-                      .reduce(
-                        (sum: number, o: any) =>
-                          sum + Number(o.totalAmount ?? o.subtotal ?? 0),
-                        0,
-                      ),
-                    "INR",
-                  )}
-                </strong>
-                <small>Verified payments received today</small>
-              </div>
-              <div>
-                <span>PRODUCTS</span>
-                <Package />
-                <strong>{products.length}</strong>
-                <small>In your workspace</small>
-              </div>
-              <div>
-                <span>CATALOGUES</span>
-                <BookOpen />
-                <strong>{catalogues.length}</strong>
-                <small>
-                  {catalogues.filter((c) => c.isPublished).length} published
-                </small>
-              </div>
-              <div>
-                <span>ENQUIRIES TODAY</span>
-                <MessageSquare />
-                <strong>
-                  {
-                    overviewEnquiries.filter(
-                      (item: any) =>
-                        new Date(item.createdAt).toLocaleDateString("en-CA", {
-                          timeZone: "Asia/Kolkata",
-                        }) ===
-                        new Date().toLocaleDateString("en-CA", {
-                          timeZone: "Asia/Kolkata",
-                        }),
-                    ).length
-                  }
-                </strong>
-                <small>Customer enquiries received today</small>
-              </div>
-              <div>
-                <span>TOTAL CUSTOMERS</span>
-                <Users />
-                <strong>{overviewCustomers.length}</strong>
-                <small>In your customer directory</small>
-              </div>
-            </section>
+
             <OverviewPaymentActivity />
           </>
         )}
