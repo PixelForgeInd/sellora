@@ -473,29 +473,30 @@ export function PublicCatalogue({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 12px;
+          gap: 10px;
           width: 100%;
-          min-height: 64px;
+          min-height: 56px;
           margin-top: 16px;
-          padding: 15px 20px;
-          border: 3px solid #a7aaa8;
-          border-bottom-color: #555957;
-          border-radius: 16px;
-          background: #e9f3ed;
-          color: #147b49 !important;
-          box-shadow: 0 1px 0 rgba(18, 55, 34, .08);
+          padding: 13px 22px;
+          border: 1px solid #147b49;
+          border-radius: 14px;
+          background: #147b49;
+          color: #fff !important;
+          box-shadow: 0 5px 13px rgba(20, 123, 73, .12);
           font-family: inherit;
-          font-size: clamp(14px, 1.45vw, 21px);
-          font-weight: 650;
+          font-size: 17px;
+          font-weight: 700;
+          letter-spacing: 0;
           line-height: 1.25;
           text-align: center;
-          transition: background-color 160ms ease, border-color 160ms ease;
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
         }
         .sl-storefront .sl-store-enquire:hover {
-          border-color: #8eaaa0;
-          border-bottom-color: #555957;
-          background: #dcece2;
-          color: #10683f !important;
+          border-color: #10683f;
+          background: #10683f;
+          color: #fff !important;
+          box-shadow: 0 8px 18px rgba(20, 123, 73, .18);
+          transform: translateY(-1px);
         }
         .sl-storefront .sl-store-contact-primary:focus-visible,
         .sl-storefront .sl-store-contact-secondary:focus-visible,
