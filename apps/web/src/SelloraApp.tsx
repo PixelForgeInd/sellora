@@ -46,7 +46,6 @@ import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
 import { PlatformOwnerDashboard } from "./components/PlatformOwnerDashboard";
 import { SubscriptionSection } from "./components/SubscriptionSection";
 import {
-  EnquiriesSection,
   CustomersSection,
   ReportsSection,
 } from "./components/OperationsSections";
@@ -1302,7 +1301,6 @@ export default function SelloraApp() {
             { id: "products", label: "Products", icon: Package },
             { id: "catalogues", label: "Catalogues", icon: BookOpen },
             { id: "orders", label: "Orders", icon: ClipboardList },
-            { id: "enquiries", label: "Enquiries", icon: MessageSquare },
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
@@ -1353,9 +1351,7 @@ export default function SelloraApp() {
                     ? "Your catalogues"
                     : page === "orders"
                       ? "Customer orders"
-                      : page === "enquiries"
-                        ? "Customer enquiries"
-                        : page === "customers"
+                          : page === "customers"
                           ? "Customer directory"
                           : page === "reports"
                             ? "Sales reports"
@@ -1952,10 +1948,7 @@ export default function SelloraApp() {
         {page === "payments" && (
           <PaymentsSection onSettings={() => setPage("settings")} />
         )}
-        {page === "enquiries" && (
-          <EnquiriesSection setError={setError} setNotice={setNotice} />
-        )}
-        {page === "customers" && <CustomersSection setError={setError} />}
+        {page === "customers" && <CustomersSection setError={setError} setNotice={setNotice} />}
         {page === "reports" && <ReportsSection setError={setError} />}
         {page === "subscription" && (
           <SubscriptionSection
