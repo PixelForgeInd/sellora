@@ -1394,6 +1394,44 @@ export default function SelloraApp() {
                 </Btn>
               </div>
             </section>
+            <section className="sl-stat-grid" aria-label="Business analytics">
+              <div>
+                <span>ORDERS TODAY</span>
+                <ClipboardList />
+                <strong>{orders.filter((o: any) => new Date(o.createdAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).length}</strong>
+                <small>Orders created today</small>
+              </div>
+              <div>
+                <span>PAYMENTS RECEIVED TODAY</span>
+                <CreditCard />
+                <strong>{formatCurrency(orders.filter((o: any) => o.paymentStatus === "PAID" && o.paidAt && new Date(o.paidAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).reduce((sum: number, o: any) => sum + Number(o.totalAmount ?? o.subtotal ?? 0), 0), "INR")}</strong>
+                <small>Verified payments received today</small>
+              </div>
+              <div>
+                <span>PRODUCTS</span>
+                <Package />
+                <strong>{products.length}</strong>
+                <small>In your workspace</small>
+              </div>
+              <div>
+                <span>CATALOGUES</span>
+                <BookOpen />
+                <strong>{catalogues.length}</strong>
+                <small>{catalogues.filter((catalogue) => catalogue.isPublished).length} published</small>
+              </div>
+              <div>
+                <span>ENQUIRIES TODAY</span>
+                <MessageSquare />
+                <strong>{overviewEnquiries.filter((item: any) => new Date(item.createdAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).length}</strong>
+                <small>Customer enquiries received today</small>
+              </div>
+              <div>
+                <span>TOTAL CUSTOMERS</span>
+                <Users />
+                <strong>{overviewCustomers.length}</strong>
+                <small>In your customer directory</small>
+              </div>
+            </section>
 
             <OverviewPaymentActivity />
           </>
