@@ -438,6 +438,37 @@ export function PublicCatalogue({
         .sl-storefront .sl-store-out-of-stock-message {
           line-height: 1.5;
         }
+        .sl-storefront .sl-store-product-bottom button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          min-height: 56px;
+          padding: 13px 22px;
+          border: 1px solid #147b49;
+          border-radius: 14px;
+          background: #147b49;
+          color: #fff !important;
+          font-family: inherit;
+          font-size: 17px;
+          font-weight: 700;
+          letter-spacing: 0;
+          line-height: 1.25;
+          white-space: nowrap;
+          box-shadow: 0 5px 13px rgba(20, 123, 73, .12);
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .sl-storefront .sl-store-product-bottom button:hover {
+          border-color: #10683f;
+          background: #10683f;
+          color: #fff !important;
+          box-shadow: 0 8px 18px rgba(20, 123, 73, .18);
+          transform: translateY(-1px);
+        }
+        .sl-storefront .sl-store-product-bottom button:focus-visible {
+          outline: 2px solid #599c56;
+          outline-offset: 3px;
+        }
         .sl-storefront .sl-store-enquire {
           display: flex;
           align-items: center;
