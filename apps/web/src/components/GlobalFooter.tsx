@@ -15,7 +15,7 @@ export function GlobalFooter() {
         <a href="/login">Log in</a>
         <a className="sl-global-footer-cta" href="/signup">Get started <ArrowRight size={13}/></a>
       </nav>
-      <small>© {new Date().getFullYear()} Sellora</small>
     </footer>
+    <div className="sl-global-footer-copyright">{"© " + new Date().getFullYear() + " Sellora"}</div>
   );
 }
