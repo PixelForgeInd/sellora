@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireAuth } from "./sellora.js";
 
 const router = Router();
-const prisma = new PrismaClient();
+const prisma = ((globalThis as typeof globalThis & { __selloraPrisma?: PrismaClient }).__selloraPrisma ??= new PrismaClient());
 type AuthRequest = Request & { userId: string };
 const MONTHLY_PRICE = 249;
 const YEARLY_PRICE = 2490;
