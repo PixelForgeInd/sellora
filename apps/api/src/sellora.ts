@@ -8,7 +8,7 @@ import multer from "multer";
 import { promisify } from "node:util";
 
 const router = Router();
-const prisma = new PrismaClient();
+const prisma = ((globalThis as typeof globalThis & { __selloraPrisma?: PrismaClient }).__selloraPrisma ??= new PrismaClient());
 function getImageUploadDir() {
   const directory = path.resolve(process.env.UPLOAD_DIR || "./uploads");
   fs.mkdirSync(directory, { recursive: true });
