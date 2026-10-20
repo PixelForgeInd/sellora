@@ -15,7 +15,7 @@ dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
+const prisma = ((globalThis as typeof globalThis & { __selloraPrisma?: PrismaClient }).__selloraPrisma ??= new PrismaClient());
 const port = Number(process.env.API_PORT || 4000);
 const webOrigin = process.env.WEB_ORIGIN || "http://localhost:5173";
 const allowedOrigins = new Set([
