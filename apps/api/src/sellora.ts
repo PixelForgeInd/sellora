@@ -842,7 +842,7 @@ router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
   }).refine(v => Boolean(v.phone?.trim() || v.email?.trim()), {message:"Provide a phone number or email address."}).parse(req.body);
   const catalogue = await prisma.selloraCatalogue.findFirst({
     where:{slug:String(req.params.slug),isPublished:true},
-    include:{business:{select:{id:true}},items:{select:{productId:true}}}
+    include:{business:{select:{id:true,name:true,email:true}},items:{select:{productId:true,product:{select:{name:true}}}}}
   });
   if (!catalogue) return res.status(404).json({error:"Catalogue not found."});
   const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.business.id }, select: { status: true, dueAt: true } });
@@ -853,19 +853,82 @@ router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
     return res.status(400).json({error:"This product is not part of the published catalogue."});
   }
   const reference = "ENQ-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+  const email = data.email?.trim().toLowerCase() || null;
+  const phone = data.phone?.trim() || null;
+  const normalizePhone = (value: string | null | undefined) => (value || "").replace(/\\D/g, "");
+  const phoneDigits = normalizePhone(phone);
   const enquiry = await prisma.$transaction(async tx => {
-    const email = data.email?.trim().toLowerCase() || null;
-    const phone = data.phone?.trim() || null;
-    let customer = phone ? await tx.selloraCustomer.findFirst({where:{businessId:catalogue.business.id,phone}}) : null;
-    if (!customer && email) customer = await tx.selloraCustomer.findFirst({where:{businessId:catalogue.business.id,email}});
-    if (customer) customer = await tx.selloraCustomer.update({where:{id:customer.id},data:{name:data.customerName,email:email||customer.email,phone:phone||customer.phone}});
-    else customer = await tx.selloraCustomer.create({data:{businessId:catalogue.business.id,name:data.customerName,email,phone,notes:data.companyName || null}});
+    // Match within this business using normalized email or phone. Phone formatting
+    // differences such as spaces, dashes, and country-code prefixes should not
+    // create a new customer record for every enquiry.
+    const candidates = await tx.selloraCustomer.findMany({
+      where:{businessId:catalogue.business.id,OR:[...(email?[{email}]:[]),...(phone?[{phone}]:[])]},
+      orderBy:{updatedAt:"desc"}
+    });
+    let customer = candidates.find(candidate =>
+      Boolean(email && candidate.email?.trim().toLowerCase() === email) ||
+      Boolean(phoneDigits && normalizePhone(candidate.phone) === phoneDigits) ||
+      Boolean(phoneDigits && phoneDigits.length >= 10 && normalizePhone(candidate.phone).length >= 10 &&
+        normalizePhone(candidate.phone).slice(-10) === phoneDigits.slice(-10))
+    );
+    // Fallback for previously stored numbers with different formatting, which
+    // cannot be matched with an exact database query.
+    if (!customer && phoneDigits.length >= 10) {
+      const phoneCandidates = await tx.selloraCustomer.findMany({
+        where:{businessId:catalogue.business.id,phone:{not:null}},
+        orderBy:{updatedAt:"desc"}
+      });
+      customer = phoneCandidates.find(candidate => {
+        const savedDigits = normalizePhone(candidate.phone);
+        return savedDigits === phoneDigits ||
+          (savedDigits.length >= 10 && savedDigits.slice(-10) === phoneDigits.slice(-10));
+      });
+    }
+    if (customer) {
+      customer = await tx.selloraCustomer.update({where:{id:customer.id},data:{
+        name:data.customerName,
+        email:email||customer.email,
+        phone:phone||customer.phone,
+        ...(data.companyName?.trim()?{notes:data.companyName.trim()}: {})
+      }});
+    } else {
+      customer = await tx.selloraCustomer.create({data:{businessId:catalogue.business.id,name:data.customerName,email,phone,notes:data.companyName?.trim() || null}});
+    }
     return tx.selloraEnquiry.create({data:{
       reference,businessId:catalogue.business.id,catalogueId:catalogue.id,productId:data.productId||null,
-      customerId:customer.id,customerName:data.customerName,email,phone,companyName:data.companyName||null,message:data.message
+      customerId:customer.id,customerName:data.customerName,email,phone,companyName:data.companyName?.trim()||null,message:data.message
     },select:{reference:true,createdAt:true}});
   });
   await prisma.catalogueAnalyticsEvent.create({data:{catalogueId:catalogue.id,eventType:"enquiry_submitted",metadata:{reference:enquiry.reference,productId:data.productId||""}}}).catch(()=>{});
+
+  // Optional business email notification. Configure RESEND_API_KEY and set
+  // ENQUIRY_EMAIL_NOTIFICATIONS_ENABLED=true to enable it. Notification failure
+  // must never prevent the enquiry from being saved or the customer getting a reference.
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const notificationsEnabled = process.env.ENQUIRY_EMAIL_NOTIFICATIONS_ENABLED === "true";
+  if (notificationsEnabled && resendApiKey && catalogue.business.email) {
+    const productName = data.productId
+      ? catalogue.items.find(item => item.productId === data.productId)?.product.name || "Selected product"
+      : "General enquiry";
+    const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[char] || char));
+    try {
+      const response = await fetch("https://api.resend.com/emails", {
+        method:"POST",
+        headers:{"Authorization":"Bearer "+resendApiKey,"Content-Type":"application/json"},
+        body:JSON.stringify({
+          from:process.env.RESEND_FROM_EMAIL || "Sellora <onboarding@resend.dev>",
+          to:[catalogue.business.email],
+          subject:"New customer enquiry "+reference+" — "+catalogue.business.name,
+          html:"<h2>New enquiry received</h2><p><b>Reference:</b> "+escapeHtml(reference)+"</p><p><b>Customer:</b> "+escapeHtml(data.customerName)+"</p><p><b>Company:</b> "+escapeHtml(data.companyName?.trim() || "Not provided")+"</p><p><b>Email:</b> "+escapeHtml(email || "Not provided")+"</p><p><b>Phone:</b> "+escapeHtml(phone || "Not provided")+"</p><p><b>Interested in:</b> "+escapeHtml(productName)+"</p><p><b>Message:</b><br>"+escapeHtml(data.message).replace(/\\n/g,"<br>")+"</p><p>Open Sellora → Customers → Enquiries to follow up.</p>"
+        })
+      });
+      if (!response.ok) console.error("Sellora enquiry notification failed:", response.status, await response.text().catch(()=> ""));
+    } catch (notificationError) {
+      console.error("Sellora enquiry notification failed:", notificationError);
+    }
+  }
   res.status(201).json({success:true,reference:enquiry.reference,message:"Your enquiry has been sent to the business."});
 });
 
