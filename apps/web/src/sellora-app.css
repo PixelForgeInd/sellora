@@ -1128,7 +1128,7 @@ body{border-top:0;}
 
 
 /* Public marketing homepage */
-.sl-home{min-height:100vh;background:#fff;color:#26352b;font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif;overflow:hidden}
+.sl-home{width:100%;max-width:none;min-height:100vh;margin:0;background:#fff;color:#26352b;font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif;overflow:hidden;box-sizing:border-box}
 .sl-home a{text-decoration:none}
 .sl-home-nav{width:100%;max-width:none;margin:0;padding:20px clamp(22px,5vw,76px);display:flex;align-items:center;justify-content:space-between;gap:28px}
 .sl-home-nav nav{display:flex;align-items:center;gap:30px;font-size:13px;font-weight:600;color:#596457}
