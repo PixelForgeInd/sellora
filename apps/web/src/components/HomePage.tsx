@@ -120,16 +120,6 @@ export function HomePage() {
         </div>
         <span className="sl-home-bottom-note"><span aria-hidden="true">✓</span> Simple to start <span aria-hidden="true">·</span> Easy to share <span aria-hidden="true">·</span> Built for growing businesses</span>
       </section>
-      <footer className="sl-home-footer">
-        <div className="sl-home-footer-brand"><Brand/><span>Digital Catalogues. Smarter Sales.</span></div>
-        <nav className="sl-home-footer-links" aria-label="Footer links">
-          <a href="/about">About</a>
-          <a href="/terms">Terms &amp; Conditions</a>
-          <a href="/privacy">Privacy Policy</a>
-          <a href="/login">Log in</a>
-        </nav>
-        <span className="sl-home-footer-copy">© {new Date().getFullYear()} Sellora</span>
-      </footer>
     </main>
   );
 }
