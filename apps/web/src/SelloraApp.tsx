@@ -52,6 +52,7 @@ import {
 import { CatalogueModal, ProductModal } from "./components/EditorModals";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./components/ui";
 import { HomePage } from "./components/HomePage";
+import { InformationalPage } from "./components/InformationalPages";
 import type {
   Business,
   Catalogue,
@@ -803,6 +804,10 @@ export default function SelloraApp() {
   }
   if (slug || isDemo)
     return <PublicCatalogue data={pub} error={pubError} demo={isDemo} />;
+  const infoPath = window.location.pathname;
+  if (infoPath === "/about") return <InformationalPage kind="about" />;
+  if (infoPath === "/terms") return <InformationalPage kind="terms" />;
+  if (infoPath === "/privacy") return <InformationalPage kind="privacy" />;
   if (
     window.location.pathname === "/" &&
     !new URLSearchParams(window.location.search).has("resetToken")
