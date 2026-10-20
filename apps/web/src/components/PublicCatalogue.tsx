@@ -1063,7 +1063,9 @@ export function PublicCatalogue({
             <a href="/terms">Terms &amp; Conditions</a>
             <a href="/privacy">Privacy Policy</a>
           </nav>
-          <small>© {new Date().getFullYear()} Sellora. Digital catalogue platform.</small>
+          <small>
+            © {new Date().getFullYear()} Sellora. Digital catalogue platform.
+          </small>
         </div>
       </footer>
       {details && (
