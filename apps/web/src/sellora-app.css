@@ -1992,3 +1992,126 @@ body{border-top:0;}
   .sl-home-footer-links { gap: 12px 18px; }
   .sl-home-footer-links a { font-size: 12px; }
 }
+
+
+/* Public informational pages: About, Terms & Conditions, and Privacy Policy. */
+.sl-info-page {
+  min-height: 100vh;
+  color: #26352b;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(220,241,211,.62), transparent 35%),
+    radial-gradient(ellipse at 100% 4%, rgba(211,239,222,.65), transparent 36%),
+    #fbfdf9;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+.sl-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px clamp(22px,5vw,76px);
+  background: rgba(255,255,255,.92);
+  border-bottom: 1px solid #e1eddd;
+}
+.sl-info-header .sl-brand { display: inline-flex; align-items: center; gap: 10px; }
+.sl-info-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #286c3d;
+  font-size: 13px;
+  font-weight: 700;
+}
+.sl-info-back:hover { color: #08743a; }
+.sl-info-hero {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: clamp(58px,8vw,100px) 24px 48px;
+  text-align: center;
+}
+.sl-info-hero .sl-home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #287740;
+}
+.sl-info-hero h1 {
+  max-width: 900px;
+  margin: 20px auto;
+  color: #233629;
+  font: 700 clamp(36px,5.3vw,62px)/1.08 "Sora","DM Sans",sans-serif;
+  letter-spacing: -2.6px;
+}
+.sl-info-hero > p {
+  max-width: 760px;
+  margin: 0 auto;
+  color: #637464;
+  font-size: clamp(15px,1.5vw,18px);
+  line-height: 1.85;
+}
+.sl-info-updated {
+  display: inline-block;
+  margin-top: 22px;
+  color: #7d8b7c;
+  font-size: 11px;
+  font-weight: 650;
+}
+.sl-info-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 88px;
+}
+.sl-info-content section {
+  margin: 0 0 16px;
+  padding: clamp(22px,3vw,32px);
+  border: 1px solid #e3eddf;
+  border-radius: 18px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 8px 28px rgba(43,95,45,.035);
+}
+.sl-info-content h2 {
+  margin: 0 0 12px;
+  color: #2d6f3c;
+  font-size: 19px;
+  letter-spacing: -.35px;
+}
+.sl-info-content p,
+.sl-info-content li {
+  color: #58685a;
+  font-size: 14px;
+  line-height: 1.85;
+}
+.sl-info-content p:last-child { margin-bottom: 0; }
+.sl-info-content ul { margin: 12px 0 0; padding-left: 22px; }
+.sl-info-content li + li { margin-top: 10px; }
+.sl-info-notice {
+  margin: 0 0 20px;
+  padding: 18px 20px;
+  border: 1px solid #cfe5c8;
+  border-radius: 14px;
+  background: #edf7e9;
+  color: #426448 !important;
+}
+.sl-info-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 24px clamp(22px,5vw,76px);
+  border-top: 1px solid #e1eddd;
+  background: #fff;
+  color: #788676;
+  font-size: 12px;
+}
+.sl-info-footer nav { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
+.sl-info-footer a { color: #426b47; font-weight: 650; }
+.sl-info-footer a:hover { color: #08743a; }
+.sl-info-home-link { display: inline-flex; align-items: center; gap: 6px; }
+@media(max-width:600px) {
+  .sl-info-header { padding-top: 16px; padding-bottom: 16px; }
+  .sl-info-hero h1 { letter-spacing: -1.6px; }
+  .sl-info-footer { align-items: flex-start; flex-direction: column; }
+  .sl-info-footer nav { gap: 12px 18px; }
+}
