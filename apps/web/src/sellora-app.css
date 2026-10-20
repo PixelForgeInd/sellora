@@ -1695,3 +1695,89 @@ body{border-top:0;}
     transform: none !important;
   }
 }
+
+
+/* Pastel pricing refresh: richer colour while keeping text contrast high. */
+.sl-home-pricing {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(255, 215, 224, .72), transparent 35%),
+    radial-gradient(ellipse at 100% 8%, rgba(207, 224, 255, .82), transparent 36%),
+    linear-gradient(180deg, #fffafc 0%, #f6f7ff 54%, #f2fbf8 100%);
+}
+.sl-home-pricing .sl-home-section-heading h2 em {
+  color: #6c63c8;
+}
+.sl-home-price-card {
+  overflow: hidden;
+  border: 1px solid #dfe5fb;
+  background: linear-gradient(155deg, #fff 0%, #fff9fc 100%);
+  box-shadow: 0 18px 48px rgba(73, 82, 145, .09);
+}
+.sl-home-price-card:first-child::before,
+.sl-home-price-featured::before {
+  content: "";
+  display: block;
+  height: 7px;
+  position: absolute;
+  inset: 0 0 auto;
+}
+.sl-home-price-card:first-child::before {
+  background: linear-gradient(90deg, #ffc6d7, #c9d6ff, #c4f0df);
+}
+.sl-home-price-featured {
+  border: 2px solid #8e91e8;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(222, 225, 255, .65), transparent 48%),
+    linear-gradient(155deg, #fff 0%, #faf9ff 100%);
+  box-shadow: 0 22px 58px rgba(108, 99, 200, .18);
+}
+.sl-home-price-featured::before {
+  background: linear-gradient(90deg, #8b83e7, #f2a7c3, #ffcfa5);
+}
+.sl-home-price-card h3 {
+  color: #273450;
+}
+.sl-home-price-card:first-child .sl-home-eyebrow {
+  color: #b04e78;
+}
+.sl-home-price-featured .sl-home-eyebrow {
+  color: #5e61b9;
+}
+.sl-home-price strong {
+  color: #262b4a;
+}
+.sl-home-price-card ul {
+  gap: 14px;
+}
+.sl-home-price-card li {
+  color: #48516a;
+}
+.sl-home-price-card li::before {
+  color: #35a77b;
+}
+.sl-home-price-card:first-child .sl-home-price-cta {
+  color: #fff;
+  background: linear-gradient(100deg, #d85d91, #b66bd2);
+  box-shadow: 0 10px 24px rgba(196, 93, 159, .22);
+}
+.sl-home-price-card:first-child .sl-home-price-cta:hover {
+  background: linear-gradient(100deg, #c64d82, #9d58c0);
+}
+.sl-home-price-featured .sl-home-price-cta {
+  color: #fff;
+  background: linear-gradient(100deg, #5967c9, #8064d7 55%, #b56cc9);
+  box-shadow: 0 10px 24px rgba(105, 100, 203, .25);
+}
+.sl-home-price-featured .sl-home-price-cta:hover {
+  background: linear-gradient(100deg, #4654b7, #6d53c4 55%, #9f58b8);
+}
+.sl-home-price-badge {
+  color: #2c795a;
+  background: linear-gradient(100deg, #d8f5e6, #e4edff);
+  border: 1px solid #ccebdc;
+}
+.sl-home-pricing-note {
+  color: #69738b;
+}
