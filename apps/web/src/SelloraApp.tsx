@@ -779,7 +779,7 @@ export default function SelloraApp() {
       setNotice("Public link copied.");
     } catch {
       prompt("Copy this public catalogue link", url);
-      }
+    }
   }
   function shareWhatsApp(c: Catalogue) {
     const url = location.origin + "/c/" + c.slug;
@@ -1350,17 +1350,17 @@ export default function SelloraApp() {
                     ? "Your catalogues"
                     : page === "orders"
                       ? "Customer orders"
-                          : page === "customers"
-                          ? "Customer directory"
-                          : page === "reports"
-                            ? "Sales reports"
-                              : page === "settings"
-                                ? "Business settings"
-                                : page === "payments"
-                                  ? "Payments"
-                                  : page === "subscription"
-                                    ? "Subscription & billing"
-                                    : "Workspace"}
+                      : page === "customers"
+                        ? "Customer directory"
+                        : page === "reports"
+                          ? "Sales reports"
+                          : page === "settings"
+                            ? "Business settings"
+                            : page === "payments"
+                              ? "Payments"
+                              : page === "subscription"
+                                ? "Subscription & billing"
+                                : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -1377,22 +1377,45 @@ export default function SelloraApp() {
         )}
         {page === "overview" && (
           <>
-            <section className="sl-welcome-compact" aria-label="Workspace quick actions">
+            <section
+              className="sl-welcome-compact"
+              aria-label="Workspace quick actions"
+            >
               <div className="sl-add-product-panel">
-                <span className="sl-compact-panel-icon"><Plus size={20} /></span>
+                <span className="sl-compact-panel-icon">
+                  <Plus size={20} />
+                </span>
                 <div className="sl-compact-panel-copy">
                   <strong>Make your next sale with Sellora</strong>
-                  <span>Bring your products together in a beautiful digital catalogue, ready to share with every customer.</span>
+                  <span>
+                    Bring your products together in a beautiful digital
+                    catalogue, ready to share with every customer.
+                  </span>
                 </div>
                 <div className="sl-product-banner-animation" aria-hidden="true">
-                  <span className="sl-product-orbit sl-product-orbit-one"><Package size={18} /></span>
-                  <span className="sl-product-orbit sl-product-orbit-two"><Plus size={13} /></span>
+                  <span className="sl-product-orbit sl-product-orbit-one">
+                    <Package size={18} />
+                  </span>
+                  <span className="sl-product-orbit sl-product-orbit-two">
+                    <Plus size={13} />
+                  </span>
                   <span className="sl-product-orbit sl-product-orbit-three" />
-                  <span className="sl-product-animation-core"><Package size={26} /></span>
-                  <span className="sl-product-spark sl-product-spark-one">✦</span>
-                  <span className="sl-product-spark sl-product-spark-two">✧</span>
+                  <span className="sl-product-animation-core">
+                    <Package size={26} />
+                  </span>
+                  <span className="sl-product-spark sl-product-spark-one">
+                    ✦
+                  </span>
+                  <span className="sl-product-spark sl-product-spark-two">
+                    ✧
+                  </span>
                 </div>
-                <Btn onClick={() => { setPage("products"); startProduct(); }}>
+                <Btn
+                  onClick={() => {
+                    setPage("products");
+                    startProduct();
+                  }}
+                >
                   <Plus size={16} /> Add product
                 </Btn>
               </div>
@@ -1401,13 +1424,46 @@ export default function SelloraApp() {
               <div>
                 <span>ORDERS TODAY</span>
                 <ClipboardList />
-                <strong>{orders.filter((o: any) => new Date(o.createdAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).length}</strong>
+                <strong>
+                  {
+                    orders.filter(
+                      (o: any) =>
+                        new Date(o.createdAt).toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }) ===
+                        new Date().toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }),
+                    ).length
+                  }
+                </strong>
                 <small>Orders created today</small>
               </div>
               <div>
                 <span>PAYMENTS RECEIVED TODAY</span>
                 <CreditCard />
-                <strong>{formatCurrency(orders.filter((o: any) => o.paymentStatus === "PAID" && o.paidAt && new Date(o.paidAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).reduce((sum: number, o: any) => sum + Number(o.totalAmount ?? o.subtotal ?? 0), 0), "INR")}</strong>
+                <strong>
+                  {formatCurrency(
+                    orders
+                      .filter(
+                        (o: any) =>
+                          o.paymentStatus === "PAID" &&
+                          o.paidAt &&
+                          new Date(o.paidAt).toLocaleDateString("en-CA", {
+                            timeZone: "Asia/Kolkata",
+                          }) ===
+                            new Date().toLocaleDateString("en-CA", {
+                              timeZone: "Asia/Kolkata",
+                            }),
+                      )
+                      .reduce(
+                        (sum: number, o: any) =>
+                          sum + Number(o.totalAmount ?? o.subtotal ?? 0),
+                        0,
+                      ),
+                    "INR",
+                  )}
+                </strong>
                 <small>Verified payments received today</small>
               </div>
               <div>
@@ -1420,12 +1476,30 @@ export default function SelloraApp() {
                 <span>CATALOGUES</span>
                 <BookOpen />
                 <strong>{catalogues.length}</strong>
-                <small>{catalogues.filter((catalogue) => catalogue.isPublished).length} published</small>
+                <small>
+                  {
+                    catalogues.filter((catalogue) => catalogue.isPublished)
+                      .length
+                  }{" "}
+                  published
+                </small>
               </div>
               <div>
                 <span>ENQUIRIES TODAY</span>
                 <MessageSquare />
-                <strong>{overviewEnquiries.filter((item: any) => new Date(item.createdAt).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) === new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })).length}</strong>
+                <strong>
+                  {
+                    overviewEnquiries.filter(
+                      (item: any) =>
+                        new Date(item.createdAt).toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }) ===
+                        new Date().toLocaleDateString("en-CA", {
+                          timeZone: "Asia/Kolkata",
+                        }),
+                    ).length
+                  }
+                </strong>
                 <small>Customer enquiries received today</small>
               </div>
               <div>
@@ -1947,7 +2021,9 @@ export default function SelloraApp() {
         {page === "payments" && (
           <PaymentsSection onSettings={() => setPage("settings")} />
         )}
-        {page === "customers" && <CustomersSection setError={setError} setNotice={setNotice} />}
+        {page === "customers" && (
+          <CustomersSection setError={setError} setNotice={setNotice} />
+        )}
         {page === "reports" && <ReportsSection setError={setError} />}
         {page === "subscription" && (
           <SubscriptionSection
