@@ -229,13 +229,19 @@ router.post("/auth/signup", async (req, res) => {
   const email = data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where:{email} });
   if (existing) return res.status(409).json({error:"An account with this email already exists. Please log in."});
-  const user = await prisma.user.create({data:{email,passwordHash:await hashPassword(data.password),role:"BUSINESS"}});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  const role = ownerEmail && email === ownerEmail ? "PLATFORM_OWNER" : "BUSINESS";
+  const user = await prisma.user.create({data:{email,passwordHash:await hashPassword(data.password),role}});
   res.status(201).json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
 router.post("/auth/login", async (req, res) => {
   const data = z.object({email:z.string().trim().email().max(160),password:z.string().min(1).max(128)}).parse(req.body);
-  const user = await prisma.user.findUnique({where:{email:data.email.toLowerCase()}});
+  let user = await prisma.user.findUnique({where:{email:data.email.toLowerCase()}});
   if (!user || !(await verifyPassword(data.password,user.passwordHash))) return res.status(401).json({error:"Email or password is incorrect."});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  if (ownerEmail && user.email.toLowerCase() === ownerEmail && user.role !== "PLATFORM_OWNER") {
+    user = await prisma.user.update({where:{id:user.id},data:{role:"PLATFORM_OWNER"}});
+  }
   res.json({token:tokenFor(user.id),user:{id:user.id,email:user.email}});
 });
 router.patch("/auth/password", requireAuth, authenticated(async (req,res) => {
@@ -294,8 +300,12 @@ router.post("/auth/password/reset", async (req,res) => {
 });
 
 router.get("/auth/me", requireAuth, authenticated(async (req,res) => {
-  const user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
+  let user = await prisma.user.findUnique({where:{id:req.userId},select:{id:true,email:true,role:true,createdAt:true}});
   if (!user) return res.status(401).json({error:"Account not found."});
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  if (ownerEmail && user.email.toLowerCase() === ownerEmail && user.role !== "PLATFORM_OWNER") {
+    user = await prisma.user.update({where:{id:user.id},data:{role:"PLATFORM_OWNER"},select:{id:true,email:true,role:true,createdAt:true}});
+  }
   res.json({id:user.id,email:user.email,createdAt:user.createdAt,isPlatformOwner:user.role==="PLATFORM_OWNER"});
 }));
 
@@ -805,6 +815,13 @@ router.get("/public/catalogues/:slug", async (req,res) => {
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true},orderBy:{sortOrder:"asc"}}}
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
+  const subscription = await prisma.subscription.findUnique({
+    where: { businessId: catalogue.businessId },
+    select: { status: true, dueAt: true }
+  });
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now())) {
+    return res.status(402).json({ error: "This catalogue is temporarily unavailable because the business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
+  }
   res.json({
     title:catalogue.title,description:catalogue.description,slug:catalogue.slug,shareImageUrl:catalogue.shareImageUrl,
     business:{name:catalogue.business.name,industry:catalogue.business.industry,email:catalogue.business.email,phone:catalogue.business.phone,address:catalogue.business.address,website:catalogue.business.website,brandColor:catalogue.business.brandColor,logoUrl:catalogue.business.logoUrl,sellingMode:catalogue.business.sellingMode,paymentGatewayStatus:catalogue.business.paymentGatewayStatus},
@@ -828,6 +845,10 @@ router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
     include:{business:{select:{id:true}},items:{select:{productId:true}}}
   });
   if (!catalogue) return res.status(404).json({error:"Catalogue not found."});
+  const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.business.id }, select: { status: true, dueAt: true } });
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now())) {
+    return res.status(402).json({ error: "This business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
+  }
   if (data.productId && !catalogue.items.some(item=>item.productId===data.productId)) {
     return res.status(400).json({error:"This product is not part of the published catalogue."});
   }
@@ -855,6 +876,10 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
     include:{business:true,items:{where:{product:{isActive:true}},include:{product:true}}}
   });
   if(!catalogue) return res.status(404).json({error:"This catalogue is not published or no longer available."});
+  const subscription = await prisma.subscription.findUnique({ where: { businessId: catalogue.businessId }, select: { status: true, dueAt: true } });
+  if (subscription && (subscription.status !== "ACTIVE" || subscription.dueAt.getTime() + 24 * 60 * 60 * 1000 < Date.now())) {
+    return res.status(402).json({ error: "This business subscription has expired.", code: "SUBSCRIPTION_REQUIRED" });
+  }
   if(catalogue.business.sellingMode !== "ONLINE_PAYMENTS") return res.status(403).json({error:"Online checkout is not enabled."});
   if(catalogue.business.paymentGatewayProvider !== "RAZORPAY" || catalogue.business.paymentGatewayStatus !== "ACTIVE" || !catalogue.business.razorpayKeyId || !catalogue.business.razorpayKeySecretEncrypted) {
     return res.status(409).json({error:"This business has not connected Razorpay payments yet. Please contact the business."});
@@ -1225,6 +1250,217 @@ router.get("/workspace/catalogues/:id/analytics", requireAuth, authenticated(asy
     paymentsConfirmed:paymentCount,
     revenue:orders.filter(item=>item.paymentStatus==="PAID").reduce((sum,item)=>sum+Number(item._sum.subtotal||0),0)
   });
+}));
+
+
+function platformRazorpayConfig() {
+  const keyId = process.env.PLATFORM_RAZORPAY_KEY_ID?.trim() || "";
+  const keySecret = process.env.PLATFORM_RAZORPAY_KEY_SECRET || "";
+  if (!keyId || !keySecret) throw new Error("Platform subscription payments are not configured. Set PLATFORM_RAZORPAY_KEY_ID and PLATFORM_RAZORPAY_KEY_SECRET on the API server.");
+  return { keyId, keySecret };
+}
+
+const defaultSubscriptionPrices = { MONTHLY: 249, YEARLY: 2490 } as const;
+async function getSubscriptionPrices() {
+  const settings = await prisma.platformPricing.findUnique({ where: { id: "default" } });
+  return settings ? { MONTHLY: Number(settings.monthlyPrice), YEARLY: Number(settings.yearlyPrice) } : { ...defaultSubscriptionPrices };
+}
+async function platformOwnerAllowed(req: AuthedRequest, res: Response) {
+  const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { id: true, email: true, role: true } });
+  const ownerEmail = process.env.PLATFORM_OWNER_EMAIL?.trim().toLowerCase();
+  if (!user || user.role !== "PLATFORM_OWNER" || !ownerEmail || user.email.toLowerCase() !== ownerEmail) {
+    res.status(403).json({ error: "Platform owner access required." });
+    return null;
+  }
+  return user;
+}
+router.get("/public/pricing", async (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json(await getSubscriptionPrices());
+});
+router.get("/platform/owner/businesses", requireAuth, authenticated(async (req, res) => {
+  if (!await platformOwnerAllowed(req, res)) return;
+  const businesses = await prisma.business.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      owner: { select: { email: true } },
+      subscription: { include: { payments: { orderBy: { createdAt: "desc" }, take: 10 } } },
+      _count: { select: { products: true, catalogues: true, orders: true } }
+    }
+  });
+  const now = new Date();
+  res.json(businesses.map(b => {
+    const s = b.subscription;
+    const graceEnd = s ? new Date(s.dueAt.getTime() + 86400000) : null;
+    return {
+      id: b.id, name: b.name, slug: b.slug, email: b.email, phone: b.phone, createdAt: b.createdAt,
+      owner: b.owner, counts: { products: b._count.products, catalogues: b._count.catalogues, orders: b._count.orders },
+      subscription: s ? { id: s.id, status: s.status, interval: s.interval, amount: s.amount.toString(), dueAt: s.dueAt, lastPaidAt: s.lastPaidAt, isLocked: s.status !== "ACTIVE" || !graceEnd || graceEnd < now } : null,
+      recentPayments: s?.payments.map(p => ({ id:p.id, amount:p.amount.toString(), interval:p.interval, status:p.status, paidAt:p.paidAt, createdAt:p.createdAt, razorpayPaymentId:p.razorpayPaymentId, razorpayOrderId:p.razorpayOrderId })) || []
+    };
+  }));
+}));
+router.get("/platform/owner/payments", requireAuth, authenticated(async (req, res) => {
+  if (!await platformOwnerAllowed(req, res)) return;
+  const [payments, aggregate] = await Promise.all([
+    prisma.platformSubscriptionPayment.findMany({
+      include: {
+        subscription: {
+          include: {
+            business: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                owner: { select: { email: true } }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    }),
+    prisma.platformSubscriptionPayment.aggregate({ where: { status: "PAID" }, _sum: { amount: true }, _count: { _all: true } })
+  ]);
+  res.json({
+    totalCollected: (aggregate._sum.amount || new Prisma.Decimal(0)).toString(),
+    successfulPayments: aggregate._count._all,
+    payments: payments.map(p => ({ id:p.id, businessId:p.subscription.business.id, businessName:p.subscription.business.name, businessSlug:p.subscription.business.slug, customerEmail:p.subscription.business.owner?.email || "", interval:p.interval, amount:p.amount.toString(), currency:p.currency, status:p.status, razorpayOrderId:p.razorpayOrderId, razorpayPaymentId:p.razorpayPaymentId, paidAt:p.paidAt, createdAt:p.createdAt }))
+  });
+}));
+
+router.get("/platform/owner/audit", requireAuth, authenticated(async (req, res) => {
+  if (!await platformOwnerAllowed(req, res)) return;
+  const events = await prisma.platformAuditEvent.findMany({
+    orderBy: { createdAt: "desc" }, take: 200,
+    include: { subscription: { include: { business: { select: { name:true, slug:true } } } } }
+  });
+  res.json(events);
+}));
+router.patch("/platform/owner/businesses/:id/subscription", requireAuth, authenticated(async (req, res) => {
+  const owner = await platformOwnerAllowed(req, res);
+  if (!owner) return;
+  const data = z.object({
+    interval: z.enum(["MONTHLY", "YEARLY"]).optional(),
+    status: z.enum(["ACTIVE", "LOCKED", "PENDING"]).optional(),
+    dueAt: z.string().datetime().optional()
+  }).refine(v => Object.keys(v).length > 0).parse(req.body);
+  const business = await prisma.business.findUnique({ where: { id: String(req.params.id) }, select: { id:true } });
+  if (!business) return res.status(404).json({ error:"Business not found." });
+  const prices = await getSubscriptionPrices();
+  const interval = data.interval || "MONTHLY";
+  const subscription = await prisma.subscription.upsert({
+    where: { businessId: business.id },
+    create: { businessId:business.id, status:data.status || "ACTIVE", interval, amount:prices[interval], currency:"INR", currentPeriodStart:new Date(), currentPeriodEnd:data.dueAt ? new Date(data.dueAt) : new Date(Date.now()+30*86400000), dueAt:data.dueAt ? new Date(data.dueAt) : new Date(Date.now()+30*86400000) },
+    update: { ...(data.interval ? { interval, amount:prices[interval] } : {}), ...(data.status ? { status:data.status === "LOCKED" ? "PAST_DUE" : data.status } : {}), ...(data.dueAt ? { dueAt:new Date(data.dueAt) } : {}) }
+  });
+  await prisma.platformAuditEvent.create({ data: { subscriptionId:subscription.id, actorUserId:owner.id, action:"SUBSCRIPTION_UPDATED", details:data } });
+  res.json({ success:true });
+}));
+router.get("/platform/owner/pricing", requireAuth, authenticated(async (req, res) => {
+  if (!await platformOwnerAllowed(req, res)) return;
+  res.json(await getSubscriptionPrices());
+}));
+router.patch("/platform/owner/pricing", requireAuth, authenticated(async (req, res) => {
+  const owner = await platformOwnerAllowed(req, res);
+  if (!owner) return;
+  const data = z.object({ MONTHLY: z.number().finite().min(1).max(1000000), YEARLY: z.number().finite().min(1).max(10000000) }).parse(req.body);
+  const previous = await getSubscriptionPrices();
+  const updated = await prisma.platformPricing.upsert({
+    where: { id: "default" },
+    create: { id: "default", monthlyPrice: data.MONTHLY, yearlyPrice: data.YEARLY, updatedBy: owner.id },
+    update: { monthlyPrice: data.MONTHLY, yearlyPrice: data.YEARLY, updatedBy: owner.id }
+  });
+  await prisma.platformAuditEvent.create({ data: { actorUserId: owner.id, action: "SUBSCRIPTION_PRICING_UPDATED", details: { previous, next: data } } });
+  res.json({ MONTHLY: Number(updated.monthlyPrice), YEARLY: Number(updated.yearlyPrice) });
+}));
+
+function subscriptionPeriod(interval: "MONTHLY" | "YEARLY", from = new Date()) {
+  const end = new Date(from);
+  if (interval === "YEARLY") end.setFullYear(end.getFullYear() + 1);
+  else end.setMonth(end.getMonth() + 1);
+  return end;
+}
+
+// Platform subscriptions always use Sellora's merchant credentials, never a tenant's gateway keys.
+router.get("/workspace/subscription", requireAuth, authenticated(async (req,res) => {
+  const business = await prisma.business.findFirst({ where: { ownerUserId: req.userId }, select: { id: true } });
+  if (!business) return res.status(409).json({ error: "Complete business setup before subscribing." });
+  const now = new Date();
+  let subscription = await prisma.subscription.findUnique({ where: { businessId: business.id }, include: { payments: { orderBy: { createdAt: "desc" }, take: 10 } } });
+  if (!subscription) {
+    subscription = await prisma.subscription.create({ data: { businessId: business.id, status: "PENDING", interval: "MONTHLY", amount: (await getSubscriptionPrices()).MONTHLY, currency: "INR", currentPeriodStart: now, currentPeriodEnd: now, dueAt: now }, include: { payments: { orderBy: { createdAt: "desc" }, take: 10 } } });
+  }
+  let configured = true;
+  try { platformRazorpayConfig(); } catch { configured = false; }
+  const gracePeriodEndsAt = new Date(subscription.dueAt.getTime() + 24 * 60 * 60 * 1000);
+  const isPastDue = subscription.dueAt.getTime() < now.getTime();
+  const gracePeriodActive = subscription.status === "ACTIVE" && isPastDue && gracePeriodEndsAt.getTime() >= now.getTime();
+  const locked = subscription.status !== "ACTIVE" || gracePeriodEndsAt.getTime() < now.getTime();
+  res.json({
+    id: subscription.id, status: subscription.status, interval: subscription.interval,
+    amount: subscription.amount.toString(), currency: subscription.currency,
+    currentPeriodStart: subscription.currentPeriodStart, currentPeriodEnd: subscription.currentPeriodEnd,
+    dueAt: subscription.dueAt, lastPaidAt: subscription.lastPaidAt, isLocked: locked,
+    isPastDue, gracePeriodActive, gracePeriodEndsAt,
+    paymentConfigured: configured, prices: await getSubscriptionPrices(),
+    recentPayments: subscription.payments.map(p => ({ id:p.id, interval:p.interval, amount:p.amount.toString(), status:p.status, createdAt:p.createdAt, paidAt:p.paidAt }))
+  });
+}));
+
+router.post("/workspace/subscription/order", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({ interval: z.enum(["MONTHLY", "YEARLY"]) }).parse(req.body);
+  const business = await prisma.business.findFirst({ where: { ownerUserId: req.userId }, select: { id:true, name:true, email:true } });
+  if (!business) return res.status(409).json({ error: "Complete business setup before subscribing." });
+  let gateway: {keyId:string;keySecret:string};
+  try { gateway = platformRazorpayConfig(); } catch (e) { return res.status(503).json({ error: e instanceof Error ? e.message : "Platform payments are not configured." }); }
+  const prices = await getSubscriptionPrices();
+  const amount = prices[data.interval];
+  const now = new Date();
+  const subscription = await prisma.subscription.upsert({
+    where: { businessId: business.id },
+    create: { businessId: business.id, status:"PENDING", interval:data.interval, amount, currency:"INR", currentPeriodStart:now, currentPeriodEnd:now, dueAt:now },
+    update: {}
+  });
+  const receipt = ("sub_" + business.id + "_" + Date.now()).slice(0, 40);
+  try {
+    const order = await razorpayRequest<{id:string;amount:number;currency:string}>(gateway.keyId,gateway.keySecret,"/orders",{
+      method:"POST", body:JSON.stringify({ amount:amount*100, currency:"INR", receipt, notes:{ selloraSubscriptionId:subscription.id, businessId:business.id, interval:data.interval } })
+    });
+    await prisma.platformSubscriptionPayment.create({ data: { subscriptionId:subscription.id, interval:data.interval, amount, currency:"INR", razorpayOrderId:order.id, status:"CREATED" } });
+    res.status(201).json({ keyId:gateway.keyId, orderId:order.id, amount:order.amount, currency:order.currency, interval:data.interval });
+  } catch (e) {
+    res.status(502).json({ error: e instanceof Error ? "Could not create Razorpay order: " + e.message : "Could not create subscription payment." });
+  }
+}));
+
+router.post("/workspace/subscription/verify", requireAuth, authenticated(async (req,res) => {
+  const data = z.object({ razorpay_order_id:z.string().min(1).max(100), razorpay_payment_id:z.string().min(1).max(100), razorpay_signature:z.string().min(1).max(200) }).parse(req.body);
+  const business = await prisma.business.findFirst({ where: { ownerUserId:req.userId }, select:{id:true} });
+  if (!business) return res.status(409).json({error:"Business workspace not found."});
+  const payment = await prisma.platformSubscriptionPayment.findUnique({ where:{razorpayOrderId:data.razorpay_order_id}, include:{subscription:true} });
+  if (!payment || payment.subscription.businessId !== business.id) return res.status(404).json({error:"Subscription payment order not found."});
+  if (payment.status === "PAID") return res.json({success:true});
+  let gateway:{keyId:string;keySecret:string};
+  try { gateway=platformRazorpayConfig(); } catch(e) { return res.status(503).json({error:e instanceof Error?e.message:"Platform payment configuration is unavailable."}); }
+  const expected=crypto.createHmac("sha256",gateway.keySecret).update(data.razorpay_order_id+"|"+data.razorpay_payment_id).digest();
+  const supplied=Buffer.from(data.razorpay_signature,"hex");
+  if(expected.length!==supplied.length || !crypto.timingSafeEqual(expected,supplied)) return res.status(400).json({error:"Razorpay payment signature verification failed."});
+  try {
+    const razorpayPayment=await razorpayRequest<{id:string;order_id:string;amount:number;currency:string;status:string}>(gateway.keyId,gateway.keySecret,"/payments/"+encodeURIComponent(data.razorpay_payment_id));
+    const expectedAmount=Number(payment.amount)*100;
+    if(razorpayPayment.order_id!==payment.razorpayOrderId || razorpayPayment.amount!==expectedAmount || razorpayPayment.currency!==payment.currency) return res.status(400).json({error:"Payment amount or currency does not match this subscription."});
+    if(razorpayPayment.status!=="captured") return res.status(202).json({success:false,paymentStatus:razorpayPayment.status,message:"Payment is not captured yet. Please wait for confirmation."});
+    const paidAt=new Date();
+    const periodEnd=subscriptionPeriod(payment.interval as "MONTHLY"|"YEARLY",paidAt);
+    await prisma.$transaction([
+      prisma.platformSubscriptionPayment.update({where:{id:payment.id},data:{razorpayPaymentId:razorpayPayment.id,status:"PAID",paidAt}}),
+      prisma.subscription.update({where:{id:payment.subscriptionId},data:{status:"ACTIVE",interval:payment.interval,amount:payment.amount,currency:payment.currency,currentPeriodStart:paidAt,currentPeriodEnd:periodEnd,dueAt:periodEnd,lastPaidAt:paidAt}})
+    ]);
+    res.json({success:true,message:"Payment verified and subscription activated."});
+  } catch(e) {
+    res.status(502).json({error:e instanceof Error?"Could not verify payment: "+e.message:"Could not verify subscription payment."});
+  }
 }));
 
 export default router;

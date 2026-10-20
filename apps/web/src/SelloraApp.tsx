@@ -6,6 +6,7 @@ import {
   BarChart3,
   ClipboardList,
   Check,
+  CheckCircle2,
   Copy,
   CreditCard,
   Download,
@@ -42,6 +43,8 @@ import {
 import { SettingsSection } from "./components/SettingsSection";
 import { PaymentsSection } from "./components/PaymentsSection";
 import { OverviewPaymentActivity } from "./components/OverviewPaymentActivity";
+import { PlatformOwnerDashboard } from "./components/PlatformOwnerDashboard";
+import { SubscriptionSection } from "./components/SubscriptionSection";
 import {
   EnquiriesSection,
   CustomersSection,
@@ -63,6 +66,8 @@ export default function SelloraApp() {
   const [access, setAccess] = useState(getSessionToken());
   const [user, setUser] = useState("");
   const [isPlatformOwner, setIsPlatformOwner] = useState(false);
+  const [subscriptionLocked, setSubscriptionLocked] = useState(false);
+  const [subscriptionRequired, setSubscriptionRequired] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogues, setCatalogues] = useState<Catalogue[]>([]);
@@ -415,10 +420,28 @@ export default function SelloraApp() {
     }
     if (!access) return;
     api("/auth/me")
-      .then((u: { email: string; isPlatformOwner?: boolean }) => {
+      .then(async (u: { email: string; isPlatformOwner?: boolean }) => {
         setUser(u.email);
         setIsPlatformOwner(Boolean(u.isPlatformOwner));
-        return load(access);
+        if (u.isPlatformOwner) return;
+        try {
+          await load(access);
+          const subscription = await api("/workspace/subscription", {}, access);
+          const requiresPayment = Boolean(subscription.isLocked);
+          setSubscriptionRequired(requiresPayment);
+          setSubscriptionLocked(requiresPayment);
+          if (requiresPayment) setPage("subscription");
+        } catch (e) {
+          const message =
+            e instanceof Error ? e.message : "Could not load workspace.";
+          if (
+            message.toLowerCase().includes("subscription") ||
+            message.toLowerCase().includes("expired")
+          ) {
+            setSubscriptionLocked(true);
+            setPage("subscription");
+          } else setError(message);
+        }
       })
       .catch(() => {
         sessionStorage.removeItem("sellora_token");
@@ -471,8 +494,27 @@ export default function SelloraApp() {
       setUser(d.user.email);
       const currentUser = await api("/auth/me", {}, d.token);
       setIsPlatformOwner(Boolean(currentUser.isPlatformOwner));
-      const b = await api("/workspace/business", {}, d.token);
-      if (b) await load(d.token);
+      if (currentUser.isPlatformOwner) return;
+      try {
+        await load(d.token);
+        const subscription = await api("/workspace/subscription", {}, d.token);
+        const requiresPayment = Boolean(subscription.isLocked);
+        setSubscriptionRequired(requiresPayment);
+        setSubscriptionLocked(requiresPayment);
+        if (requiresPayment) setPage("subscription");
+      } catch (loadError) {
+        const message =
+          loadError instanceof Error
+            ? loadError.message
+            : "Could not load workspace.";
+        if (
+          message.toLowerCase().includes("subscription") ||
+          message.toLowerCase().includes("expired")
+        ) {
+          setSubscriptionLocked(true);
+          setPage("subscription");
+        } else throw loadError;
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not continue");
     } finally {
@@ -490,8 +532,10 @@ export default function SelloraApp() {
       });
       localStorage.setItem("sellora_active_business_id", created.id);
       await load();
-      setPage("overview");
-      setNotice("Business workspace created. Add products to get started.");
+      setSubscriptionRequired(true);
+      setSubscriptionLocked(true);
+      setPage("subscription");
+      setNotice("Business workspace created. Complete your subscription payment to unlock Sellora.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Setup failed");
     } finally {
@@ -780,6 +824,114 @@ export default function SelloraApp() {
         busy={busy}
         auth={auth}
       />
+    );
+  if (isPlatformOwner)
+    return (
+      <PlatformOwnerDashboard token={access} user={user} onSignOut={signOut} />
+    );
+  if (subscriptionRequired && business)
+    return (
+      <div className="sl-app sl-activation-app">
+        <style>{`.sl-activation-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important}.sl-activation-app>.sl-activation-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}`}</style>
+        <main className="sl-main sl-activation-main">
+          <header className="sl-workspace-top">
+            <div><span className="sl-kicker">WELCOME TO SELLORA</span><h1>Activate your workspace</h1></div>
+            <button className="sl-button sl-button-outline" onClick={signOut}><LogOut size={15}/> Sign out</button>
+          </header>
+          <p className="sl-activation-copy" style={{color:"var(--sl-muted,#6b7280)",marginBottom:20}}>Choose a plan and complete payment to unlock your dashboard. If payment fails or is cancelled, you can safely retry.</p>
+          <SubscriptionSection token={access} requirePayment onRenewed={async () => {
+            await load(access);
+            setSubscriptionRequired(false);
+            setSubscriptionLocked(false);
+            setPage("overview");
+            setNotice("Payment verified. Your Sellora dashboard is now unlocked.");
+          }} />
+        </main>
+      </div>
+    );
+  if (subscriptionLocked && !business)
+    return (
+      <div className="sl-app sl-renewal-app">
+        <style>{`.sl-renewal-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important;box-sizing:border-box}.sl-renewal-app>.sl-renewal-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-renewal-main,.sl-renewal-main>*{min-width:0;box-sizing:border-box}.sl-renewal-main>.sl-section-card{width:100%;max-width:none}.sl-renewal-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-renewal-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.sl-renewal-main .sl-analytics-metrics>span{min-width:0;overflow-wrap:anywhere}.sl-renewal-main .sl-analytics-metrics b{overflow-wrap:anywhere}@media(max-width:640px){.sl-renewal-app>.sl-renewal-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-renewal-main .sl-workspace-top{gap:12px}.sl-renewal-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-renewal-main .sl-workspace-top .sl-button{flex-shrink:0}.sl-renewal-main .sl-analytics-metrics{grid-template-columns:1fr}}
+.sl-renewal-app{background:radial-gradient(ellipse at 8% 0%,#e1f5e8 0,transparent 34%),radial-gradient(ellipse at 100% 20%,#e7edff 0,transparent 30%),#f7faf7!important}
+.sl-renewal-app{background:linear-gradient(135deg,#f0fff4 0%,#eef5ff 28%,#fff0f7 55%,#fff7e8 78%,#edfaff 100%)!important;background-size:300% 300%!important;animation:sl-renewal-background-drift 18s ease infinite!important}
+.sl-renewal-app:before{position:fixed!important;top:-12vh!important;left:-12vw!important;width:min(54vw,680px)!important;height:min(54vw,680px)!important;opacity:.68!important;background:radial-gradient(circle at 35% 35%,rgba(77,203,137,.68),rgba(115,230,187,.24) 40%,transparent 72%)!important;filter:blur(10px)!important;animation:sl-renewal-orb-green 16s ease-in-out infinite alternate!important}
+.sl-renewal-app:after{position:fixed!important;right:-12vw!important;bottom:-15vh!important;width:min(58vw,760px)!important;height:min(58vw,760px)!important;opacity:.72!important;background:radial-gradient(circle at 50% 50%,rgba(111,133,255,.58),rgba(190,132,255,.26) 42%,transparent 72%)!important;filter:blur(12px)!important;animation:sl-renewal-orb-blue 20s ease-in-out infinite alternate!important}
+.sl-renewal-main{position:relative;z-index:1}
+@keyframes sl-renewal-background-drift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes sl-renewal-orb-green{0%{transform:translate3d(0,0,0) scale(.94)}100%{transform:translate3d(9vw,7vh,0) scale(1.12)}}
+@keyframes sl-renewal-orb-blue{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(-8vw,-7vh,0) scale(1.13)}}
+@media(prefers-reduced-motion:reduce){.sl-renewal-app,.sl-renewal-app:before,.sl-renewal-app:after{animation:none!important}}
+.sl-renewal-main>.sl-section-card{border:1px solid #d7e8da!important;border-top:4px solid #599c56!important;box-shadow:0 16px 45px rgba(42,84,48,.08)!important;background:rgba(255,255,255,.96)!important}
+.sl-renewal-main .sl-section-head h3{color:#174f35}
+.sl-renewal-main .sl-analytics-metrics>span{background:linear-gradient(135deg,#f0f8f1,#f8fbf8)!important;border:1px solid #e1eee2;border-radius:12px;padding:16px!important}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(2){background:linear-gradient(135deg,#eef4ff,#f8faff)!important;border-color:#dce7ff}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(3){background:linear-gradient(135deg,#fff6e7,#fffbf4)!important;border-color:#f6e5c4}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(4){background:linear-gradient(135deg,#f5f0ff,#fcfaff)!important;border-color:#e8ddff}
+.sl-renewal-main .sl-analytics-metrics b{color:#183f32}
+.sl-renewal-main .sl-renewal-main .sl-section-card{background:#fff}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card{position:relative;overflow:hidden;border:1px solid #dce9de!important;box-shadow:0 8px 24px rgba(40,80,48,.06)!important;background:linear-gradient(155deg,#ffffff 0%,#f6fbf6 100%)!important}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(2){background:linear-gradient(155deg,#ffffff 0%,#f2f5ff 100%)!important;border-color:#dce3fb!important}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#599c56}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(2):before{background:#6478d9}
+.sl-renewal-main article.sl-section-card .sl-kicker{color:#3555a5}
+.sl-renewal-main article.sl-section-card h2{color:#194a36}
+.sl-renewal-main article.sl-section-card .sl-button{background:#599c56!important;border-color:#599c56!important;color:#fff!important;box-shadow:0 4px 12px rgba(89,156,86,.2)}
+.sl-renewal-main article.sl-section-card:nth-child(2) .sl-button{background:#5368c9!important;border-color:#5368c9!important;box-shadow:0 4px 12px rgba(83,104,201,.2)}
+.sl-renewal-main .sl-section-head .sl-button{background:#edf5ee;border-color:#d9e8da;color:#245238}
+.sl-renewal-main h4{color:#214c37}
+.sl-renewal-main .sl-section-card>div[role="alert"]{background:linear-gradient(110deg,#fff0ef,#fff7e9)!important;border-color:#ffc9b8!important;color:#a8322a!important;box-shadow:0 5px 16px rgba(196,61,61,.05)}
+.sl-renewal-main .sl-section-card>div[role="alert"] svg{flex-shrink:0}
+@media(max-width:640px){.sl-renewal-main>.sl-section-card{padding:18px!important}.sl-renewal-main .sl-analytics-metrics>span{padding:14px!important}}
+.sl-renewal-app{position:relative;isolation:isolate;overflow:hidden}
+.sl-renewal-app:before,.sl-renewal-app:after{content:"";position:fixed;z-index:-1;pointer-events:none;width:340px;height:340px;border-radius:50%;filter:blur(2px);opacity:.45;animation:sl-renewal-float 12s ease-in-out infinite alternate}
+.sl-renewal-app:before{top:10%;left:-180px;background:radial-gradient(circle,#a7e7bd 0%,rgba(167,231,189,0) 70%)}
+.sl-renewal-app:after{right:-170px;bottom:4%;background:radial-gradient(circle,#b8c7ff 0%,rgba(184,199,255,0) 70%);animation-delay:-5s}
+.sl-renewal-main>.sl-workspace-top{animation:sl-renewal-rise .55s cubic-bezier(.2,.7,.2,1) both}
+.sl-renewal-main .sl-workspace-top h1{background:linear-gradient(100deg,#214d36 0%,#599c56 42%,#5368c9 82%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sl-renewal-shimmer 7s ease-in-out infinite}
+.sl-renewal-main>.sl-section-card{animation:sl-renewal-rise .7s .08s cubic-bezier(.2,.7,.2,1) both}
+.sl-renewal-main .sl-analytics-metrics>span{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;animation:sl-renewal-rise .5s both}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(1){animation-delay:.08s}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(2){animation-delay:.14s}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(3){animation-delay:.2s}
+.sl-renewal-main .sl-analytics-metrics>span:nth-child(4){animation-delay:.26s}
+.sl-renewal-main .sl-analytics-metrics>span:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(45,83,55,.09);border-color:#b8d8bc}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card{animation:sl-renewal-rise .6s cubic-bezier(.2,.7,.2,1) both;transition:transform .25s ease,box-shadow .25s ease}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(1){animation-delay:.2s}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:nth-child(2){animation-delay:.3s}
+.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:hover{transform:translateY(-5px);box-shadow:0 18px 35px rgba(43,78,56,.12)!important}
+.sl-renewal-main article.sl-section-card .sl-button{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.sl-renewal-main article.sl-section-card .sl-button:hover:not(:disabled){transform:translateY(-2px);filter:saturate(1.12) brightness(1.03);box-shadow:0 8px 20px rgba(70,119,78,.25)}
+.sl-renewal-main article.sl-section-card .sl-button:active:not(:disabled){transform:translateY(0) scale(.98)}
+.sl-renewal-main .sl-section-head .sl-button{transition:transform .18s ease,background .18s ease}
+.sl-renewal-main .sl-section-head .sl-button:hover:not(:disabled){transform:translateY(-1px);background:#dcefe0}
+.sl-renewal-main .sl-section-card>div[role="alert"]{animation:sl-renewal-alert-in .45s ease-out both}
+@keyframes sl-renewal-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sl-renewal-float{from{transform:translate3d(0,-12px,0) scale(.96)}to{transform:translate3d(18px,18px,0) scale(1.06)}}
+@keyframes sl-renewal-shimmer{0%,100%{background-position:0% center}50%{background-position:100% center}}
+@keyframes sl-renewal-alert-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.sl-renewal-app:before,.sl-renewal-app:after,.sl-renewal-main>.sl-workspace-top,.sl-renewal-main .sl-workspace-top h1,.sl-renewal-main>.sl-section-card,.sl-renewal-main .sl-analytics-metrics>span,.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card,.sl-renewal-main .sl-section-card>div[role="alert"]{animation:none!important;transition:none!important}.sl-renewal-main .sl-analytics-metrics>span:hover,.sl-renewal-main>.sl-section-card>div[style*="grid-template-columns"]>article.sl-section-card:hover,.sl-renewal-main article.sl-section-card .sl-button:hover{transform:none!important}}
+
+`}</style>
+        <main className="sl-main sl-renewal-main">
+          <header className="sl-workspace-top">
+            <div>
+              <span className="sl-kicker">SELLORA WORKSPACE</span>
+              <h1>Renew your subscription</h1>
+            </div>
+            <button className="sl-button sl-button-outline" onClick={signOut}>
+              <LogOut size={15} /> Sign out
+            </button>
+          </header>
+          <SubscriptionSection
+            token={access}
+            onRenewed={async () => {
+              await load(access);
+              setSubscriptionLocked(false);
+            }}
+          />
+        </main>
+      </div>
     );
   if (!business)
     return (
@@ -1116,6 +1268,8 @@ export default function SelloraApp() {
             { id: "customers", label: "Customers", icon: Users },
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
+            { id: "subscription", label: "Subscription", icon: CreditCard },
+            { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
             <button
@@ -1168,11 +1322,15 @@ export default function SelloraApp() {
                           ? "Customer directory"
                           : page === "reports"
                             ? "Sales reports"
-                            : page === "settings"
-                              ? "Business settings"
-                              : page === "payments"
-                                ? "Payments"
-                                : "Workspace"}
+                            : page === "launch"
+                              ? "Launch checklist"
+                              : page === "settings"
+                                ? "Business settings"
+                                : page === "payments"
+                                  ? "Payments"
+                                  : page === "subscription"
+                                    ? "Subscription & billing"
+                                    : "Workspace"}
             </h1>
           </div>
           <span className="sl-online-dot">● Workspace active</span>
@@ -1822,6 +1980,15 @@ export default function SelloraApp() {
         )}
         {page === "customers" && <CustomersSection setError={setError} />}
         {page === "reports" && <ReportsSection setError={setError} />}
+        {page === "subscription" && (
+          <SubscriptionSection
+            token={access}
+            onRenewed={async () => {
+              await load(access);
+              setSubscriptionLocked(false);
+            }}
+          />
+        )}
         {page === "settings" && (
           <SettingsSection
             business={business}

@@ -304,7 +304,10 @@ export function OnboardingScreen({
                   setBform({
                     ...bform,
                     productCategory: v,
-                    industry: cats.find((c) => c[0] === v)?.[2] || "General",
+                    industry:
+                      v === "other"
+                        ? ""
+                        : cats.find((c) => c[0] === v)?.[2] || "General",
                   });
                 }}
               >
@@ -314,6 +317,18 @@ export function OnboardingScreen({
                   </option>
                 ))}
               </select>
+              {bform.productCategory === "other" && (
+                <input
+                  required
+                  maxLength={100}
+                  value={bform.industry}
+                  onChange={(e) =>
+                    setBform({ ...bform, industry: e.target.value })
+                  }
+                  placeholder="Enter your product category"
+                  aria-label="Specify what you sell"
+                />
+              )}
             </label>
             <label>
               Business model
@@ -325,7 +340,6 @@ export function OnboardingScreen({
               >
                 <option>B2B</option>
                 <option>B2C</option>
-                <option>B2B2C</option>
               </select>
             </label>
           </div>

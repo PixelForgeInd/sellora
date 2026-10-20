@@ -578,13 +578,13 @@ export function SettingsSection({
             />
           </label>
 
-          <label className="sl-field-required-toggle">
+          <label className="sl-field-required-toggle sl-settings-toggle">
             <input
               type="checkbox"
               checked={gatewayTestMode}
               onChange={(e) => setGatewayTestMode(e.target.checked)}
-            />{" "}
-            Test mode (recommended)
+            />
+            <span>Test mode <small>(recommended)</small></span>
           </label>
           <div className="sl-gateway-status">
             <div>
@@ -686,13 +686,13 @@ export function SettingsSection({
           checkout.
         </p>
         <form className="sl-form" onSubmit={saveTaxSettings}>
-          <label className="sl-field-required-toggle">
+          <label className="sl-field-required-toggle sl-settings-toggle">
             <input
               type="checkbox"
               checked={taxEnabled}
               onChange={(e) => setTaxEnabled(e.target.checked)}
             />
-            Calculate tax on online orders
+            <span>Calculate tax on online orders</span>
           </label>
           {taxEnabled && (
             <label>
