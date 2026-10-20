@@ -1389,6 +1389,14 @@ export default function SelloraApp() {
                   <strong>Add a product</strong>
                   <span>Bring your catalogue to life with your first product.</span>
                 </div>
+                <div className="sl-product-banner-animation" aria-hidden="true">
+                  <span className="sl-product-orbit sl-product-orbit-one"><Package size={18} /></span>
+                  <span className="sl-product-orbit sl-product-orbit-two"><Plus size={13} /></span>
+                  <span className="sl-product-orbit sl-product-orbit-three" />
+                  <span className="sl-product-animation-core"><Package size={26} /></span>
+                  <span className="sl-product-spark sl-product-spark-one">✦</span>
+                  <span className="sl-product-spark sl-product-spark-two">✧</span>
+                </div>
                 <Btn onClick={() => { setPage("products"); startProduct(); }}>
                   <Plus size={16} /> Add product
                 </Btn>
