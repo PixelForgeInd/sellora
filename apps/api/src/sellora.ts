@@ -437,7 +437,7 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
     productCategory: z.enum(["yarn-textiles","clothing","furniture","electronics","food-beverage","beauty-personal-care","automotive","healthcare","building-materials","agriculture","other"]).optional(),
     businessModel: z.enum(["B2B","B2C","B2B2C"]).optional(),
     phone: z.string().trim().min(7, "Enter a valid phone number.").max(30).nullable().optional(),
-    email: z.union([z.string().trim().email().max(160), z.literal("")]).nullable().optional(),
+    email: z.string().trim().email().max(160).optional(),
     address: z.string().trim().max(1000).nullable().optional(),
     logoUrl: z.union([z.string().trim().url().max(500), z.literal("")]).nullable().optional(),
     website: z.union([z.string().trim().url().max(200),z.literal("")]).nullable().optional(),
@@ -448,7 +448,7 @@ router.patch("/workspace/business/settings", requireAuth, authenticated(async (r
   if (data.sellingMode === "ONLINE_PAYMENTS" && (business.paymentGatewayStatus !== "ACTIVE" || !business.razorpayKeyId || !business.razorpayKeySecretEncrypted)) return res.status(409).json({error:"Connect and verify Razorpay before enabling online payments."});
   const updated = await prisma.business.update({
     where:{id:business.id},
-    data:{...data,email:data.email === "" ? null : data.email,address:data.address === "" ? null : data.address,logoUrl:data.logoUrl === "" ? null : data.logoUrl,website:data.website === "" ? null : data.website},
+    data:{...data,address:data.address === "" ? null : data.address,logoUrl:data.logoUrl === "" ? null : data.logoUrl,website:data.website === "" ? null : data.website},
     select:{
       id:true,name:true,slug:true,industry:true,productCategory:true,businessModel:true,email:true,phone:true,address:true,website:true,logoUrl:true,brandColor:true,sellingMode:true,paymentGatewayProvider:true,paymentGatewayStatus:true,updatedAt:true
     }
