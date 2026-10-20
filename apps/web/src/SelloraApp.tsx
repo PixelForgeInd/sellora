@@ -1344,7 +1344,6 @@ export default function SelloraApp() {
             { id: "reports", label: "Reports", icon: BarChart3 },
             { id: "payments", label: "Payments", icon: CreditCard },
             { id: "subscription", label: "Subscription", icon: CreditCard },
-            { id: "launch", label: "Launch checklist", icon: CheckCircle2 },
             { id: "settings", label: "Settings", icon: Settings },
           ].map((item) => (
             <button
