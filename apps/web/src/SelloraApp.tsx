@@ -834,7 +834,15 @@ export default function SelloraApp() {
   if (subscriptionRequired && business)
     return (
       <div className="sl-app sl-activation-app">
-        <style>{`.sl-activation-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important}.sl-activation-app>.sl-activation-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}`}</style>
+        <style>{`.sl-activation-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important}.sl-activation-app>.sl-activation-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}
+.sl-welcome-launch-checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 24px;max-width:780px}
+.sl-welcome-launch-checklist>div{display:flex;align-items:flex-start;gap:10px;min-width:0;padding:12px;border:1px solid rgba(82,137,78,.2);border-radius:12px;background:rgba(255,255,255,.58)}
+.sl-welcome-launch-checklist>div>span:first-child{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:8px;background:#e2f0df;color:#397b3d;font-size:11px;font-weight:850}
+.sl-welcome-launch-checklist>div>span:last-child{display:grid;gap:4px;min-width:0}
+.sl-welcome-launch-checklist b{font-size:13px;line-height:1.35;color:#29382d}
+.sl-welcome-launch-checklist small{font-size:11px;line-height:1.4;color:#758173}
+@media(max-width:760px){.sl-welcome-launch-checklist{grid-template-columns:1fr;gap:8px;margin:18px 0}.sl-welcome-launch-checklist>div{padding:10px 12px}}
+`}</style>
         <main className="sl-main sl-activation-main">
           <header className="sl-workspace-top">
             <div>
@@ -1378,6 +1386,11 @@ export default function SelloraApp() {
                   Add your products, create a catalogue, and publish a link
                   customers can open anywhere.
                 </p>
+                <div className="sl-welcome-launch-checklist" aria-label="Launch checklist">
+                  <div><span>01</span><span><b>Add products</b><small>Upload your products and details</small></span></div>
+                  <div><span>02</span><span><b>Publish a catalogue</b><small>Give your products a shareable home</small></span></div>
+                  <div><span>03</span><span><b>Share with customers</b><small>Start receiving enquiries</small></span></div>
+                </div>
                 <Btn
                   onClick={() => {
                     setPage("products");
