@@ -372,11 +372,11 @@ export function PublicCatalogue({
           width: 100%;
           min-height: 54px;
           padding: 14px 22px;
-          border: 1px solid #080d49;
+          border: 1px solid #147b49;
           border-radius: 14px;
-          background: #080d49;
+          background: #147b49;
           color: #fff;
-          box-shadow: 0 8px 18px rgba(8, 13, 73, 0.12);
+          box-shadow: 0 8px 18px rgba(20, 123, 73, 0.12);
           font-family: inherit;
           font-size: 16px;
           font-weight: 600;
@@ -387,8 +387,8 @@ export function PublicCatalogue({
           transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
         }
         .sl-storefront .sl-store-enquiry-submit:hover:not(:disabled) {
-          background: #11195f;
-          box-shadow: 0 10px 22px rgba(8, 13, 73, 0.18);
+          background: #10683f;
+          box-shadow: 0 10px 22px rgba(20, 123, 73, 0.18);
           transform: translateY(-1px);
         }
         .sl-storefront .sl-store-enquiry-submit:active:not(:disabled) {
@@ -412,11 +412,11 @@ export function PublicCatalogue({
           min-height: 48px;
           margin-top: 12px;
           padding: 12px 18px;
-          border: 1px solid #080d49;
+          border: 1px solid #147b49;
           border-radius: 12px;
-          background: #080d49;
+          background: #147b49;
           color: #fff;
-          box-shadow: 0 6px 16px rgba(8, 13, 73, 0.14);
+          box-shadow: 0 6px 16px rgba(20, 123, 73, 0.14);
           cursor: pointer;
         }
         .sl-storefront .sl-store-out-of-stock-enquire-label {
@@ -428,8 +428,8 @@ export function PublicCatalogue({
           opacity: 1 !important;
         }
         .sl-storefront .sl-store-out-of-stock-message + .sl-store-enquire:hover {
-          background: #11195f;
-          border-color: #11195f;
+          background: #10683f;
+          border-color: #10683f;
         }
         .sl-storefront .sl-store-detail-content > .sl-store-contact-primary + .sl-store-out-of-stock-message,
         .sl-storefront .sl-store-detail-content > .sl-store-contact-primary + .sl-store-contact-primary {
