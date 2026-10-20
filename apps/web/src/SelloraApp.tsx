@@ -90,6 +90,20 @@ export default function SelloraApp() {
   useEffect(() => {
     window.localStorage.setItem("sellora-launch-checklist", JSON.stringify(launchChecklist));
   }, [launchChecklist]);
+
+  // Derive checklist progress from actual workspace activity instead of requiring manual ticks.
+  useEffect(() => {
+    setLaunchChecklist((current) => {
+      const next = {
+        ...current,
+        products: products.length > 0,
+        catalogue: catalogues.some((catalogue) => catalogue.isPublished),
+      };
+      return next.products === current.products && next.catalogue === current.catalogue
+        ? current
+        : next;
+    });
+  }, [products, catalogues]);
   const [launchChecklistDismissed, setLaunchChecklistDismissed] = useState(() => {
     try {
       return window.localStorage.getItem("sellora-launch-checklist-dismissed") === "true";
@@ -791,13 +805,18 @@ export default function SelloraApp() {
       setError(e instanceof Error ? e.message : "Publish failed");
     }
   }
+  function markCatalogueShared() {
+    setLaunchChecklist((current) => ({ ...current, share: true }));
+  }
   async function share(c: Catalogue) {
     const url = location.origin + "/c/" + c.slug;
     try {
       await navigator.clipboard.writeText(url);
+      markCatalogueShared();
       setNotice("Public link copied.");
     } catch {
       prompt("Copy this public catalogue link", url);
+      markCatalogueShared();
     }
   }
   function shareWhatsApp(c: Catalogue) {
@@ -810,6 +829,7 @@ export default function SelloraApp() {
       "_blank",
       "noopener,noreferrer",
     );
+    markCatalogueShared();
   }
   function signOut() {
     sessionStorage.removeItem("sellora_token");
@@ -1431,23 +1451,21 @@ export default function SelloraApp() {
                   </div>
                   <div className="sl-launch-banner-steps">
                     {[
-                      { id: "products", number: "1", title: "Add products", description: "Upload your products and details" },
-                      { id: "catalogue", number: "2", title: "Publish a catalogue", description: "Create a link customers can browse" },
-                      { id: "share", number: "3", title: "Share with customers", description: "Send your catalogue to customers" },
+                      { id: "products", number: "1", title: "Add products", description: "Automatically completes when you add a product" },
+                      { id: "catalogue", number: "2", title: "Publish a catalogue", description: "Automatically completes when a catalogue is published" },
+                      { id: "share", number: "3", title: "Share with customers", description: "Completes when you share or copy a catalogue link" },
                     ].map((step) => (
-                      <button
-                        type="button"
+                      <div
                         key={step.id}
                         className={`sl-launch-banner-step ${launchChecklist[step.id] ? "is-complete" : ""}`}
-                        aria-pressed={Boolean(launchChecklist[step.id])}
-                        onClick={() => setLaunchChecklist((current) => ({ ...current, [step.id]: !current[step.id] }))}
+                        aria-label={`${step.title}: ${launchChecklist[step.id] ? "complete" : "incomplete"}`}
                       >
                         <span className="sl-launch-banner-check" aria-hidden="true">
                           {launchChecklist[step.id] ? <Check size={15} strokeWidth={3} /> : <span>{step.number}</span>}
                         </span>
                         <span className="sl-launch-banner-step-copy"><b>{step.title}</b><small>{step.description}</small></span>
-                        <span className="sl-launch-banner-step-state">{launchChecklist[step.id] ? "Done" : "Mark complete"}</span>
-                      </button>
+                        <span className="sl-launch-banner-step-state">{launchChecklist[step.id] ? "Done" : "Pending"}</span>
+                      </div>
                     ))}
                   </div>
                 </section>
@@ -1897,11 +1915,13 @@ export default function SelloraApp() {
                                 setCatalogueActionMessage(
                                   "Share dialog opened.",
                                 );
+                                setLaunchChecklist((current) => ({ ...current, share: true }));
                               } else {
                                 await navigator.clipboard.writeText(url);
                                 setCatalogueActionMessage(
                                   "Catalogue link copied.",
                                 );
+                                setLaunchChecklist((current) => ({ ...current, share: true }));
                               }
                             } catch (e) {
                               if (e instanceof Error && e.name === "AbortError")
@@ -1923,6 +1943,7 @@ export default function SelloraApp() {
                               setCatalogueActionMessage(
                                 "Catalogue link copied.",
                               );
+                              setLaunchChecklist((current) => ({ ...current, share: true }));
                             } catch {
                               setError(
                                 "Could not copy the link. Open the catalogue and copy its URL from your browser.",
