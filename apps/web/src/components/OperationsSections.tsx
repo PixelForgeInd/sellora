@@ -288,8 +288,9 @@ export function InventorySection({
   );
 }
 
-export function CustomersSection({ setError = () => {} }: Props) {
+export function CustomersSection({ setError = () => {}, setNotice = () => {} }: Props) {
   const [customers, setCustomers] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"customers" | "enquiries">("customers");
   const [busy, setBusy] = useState(true);
   useEffect(() => {
     api("/workspace/customers")
@@ -303,27 +304,35 @@ export function CustomersSection({ setError = () => {} }: Props) {
     <section className="sl-section-card">
       <div className="sl-section-head">
         <div>
-          <h3>Customers</h3>
-          <p>Customer profiles, prior catalogue orders and enquiries.</p>
+          <h3>{activeTab === "customers" ? "Customers" : "Customer enquiries"}</h3>
+          <p>{activeTab === "customers" ? "Customer profiles, order history and enquiries in one place." : "Review and update enquiries received from your published catalogues."}</p>
         </div>
-        <Btn
-          kind="outline"
-          onClick={() => {
-            setBusy(true);
-            api("/workspace/customers")
-              .then(setCustomers)
-              .catch((e) =>
-                setError(
-                  e instanceof Error ? e.message : "Could not load customers.",
-                ),
-              )
-              .finally(() => setBusy(false));
-          }}
-        >
-          Refresh
-        </Btn>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div role="tablist" aria-label="Customer workspace sections" style={{ display: "flex", gap: 6, padding: 4, borderRadius: 12, background: "#f1f5ef" }}>
+            <button type="button" role="tab" aria-selected={activeTab === "customers"} onClick={() => setActiveTab("customers")} className={activeTab === "customers" ? "sl-button" : "sl-button sl-button-outline"}>Customers</button>
+            <button type="button" role="tab" aria-selected={activeTab === "enquiries"} onClick={() => setActiveTab("enquiries")} className={activeTab === "enquiries" ? "sl-button" : "sl-button sl-button-outline"}>Enquiries</button>
+          </div>
+          {activeTab === "customers" && <Btn
+            kind="outline"
+            onClick={() => {
+              setBusy(true);
+              api("/workspace/customers")
+                .then(setCustomers)
+                .catch((e) =>
+                  setError(
+                    e instanceof Error ? e.message : "Could not load customers.",
+                  ),
+                )
+                .finally(() => setBusy(false));
+            }}
+          >
+            Refresh
+          </Btn>}
+        </div>
       </div>
-      {busy ? (
+      {activeTab === "enquiries" ? (
+        <EnquiriesSection setError={setError} setNotice={setNotice} />
+      ) : busy ? (
         <p>Loading customers…</p>
       ) : !customers.length ? (
         <div className="sl-empty">
