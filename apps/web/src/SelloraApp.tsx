@@ -80,6 +80,16 @@ export default function SelloraApp() {
   const [analytics, setAnalytics] = useState<Record<string, any>>({});
   const [analyticsBusy, setAnalyticsBusy] = useState("");
   const [catalogueActionMessage, setCatalogueActionMessage] = useState("");
+  const [launchChecklist, setLaunchChecklist] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("sellora-launch-checklist") || "{}");
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    window.localStorage.setItem("sellora-launch-checklist", JSON.stringify(launchChecklist));
+  }, [launchChecklist]);
 
   // Authentication screen state
   const [email, setEmail] = useState("");
@@ -835,13 +845,24 @@ export default function SelloraApp() {
     return (
       <div className="sl-app sl-activation-app">
         <style>{`.sl-activation-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important}.sl-activation-app>.sl-activation-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}
-.sl-welcome-launch-checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 24px;max-width:780px}
-.sl-welcome-launch-checklist>div{display:flex;align-items:flex-start;gap:10px;min-width:0;padding:12px;border:1px solid rgba(82,137,78,.2);border-radius:12px;background:rgba(255,255,255,.58)}
-.sl-welcome-launch-checklist>div>span:first-child{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:8px;background:#e2f0df;color:#397b3d;font-size:11px;font-weight:850}
-.sl-welcome-launch-checklist>div>span:last-child{display:grid;gap:4px;min-width:0}
-.sl-welcome-launch-checklist b{font-size:13px;line-height:1.35;color:#29382d}
-.sl-welcome-launch-checklist small{font-size:11px;line-height:1.4;color:#758173}
-@media(max-width:760px){.sl-welcome-launch-checklist{grid-template-columns:1fr;gap:8px;margin:18px 0}.sl-welcome-launch-checklist>div{padding:10px 12px}}
+.sl-welcome-launch-checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 24px;max-width:900px}
+.sl-welcome-launch-checklist .sl-launch-step{display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:11px;row-gap:2px;min-width:0;padding:14px;text-align:left;border:1px solid rgba(82,137,78,.22);border-radius:14px;background:rgba(255,255,255,.64);color:#29382d;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease}
+.sl-welcome-launch-checklist .sl-launch-step:hover{transform:translateY(-2px);border-color:rgba(82,137,78,.5);box-shadow:0 7px 18px rgba(44,83,44,.08)}
+.sl-welcome-launch-checklist .sl-launch-step:focus-visible{outline:3px solid rgba(89,156,86,.35);outline-offset:3px}
+.sl-welcome-launch-checklist .sl-launch-step-check{grid-column:1;grid-row:1/3;display:grid;place-items:center;width:32px;height:32px;border:2px solid #b7cbb3;border-radius:9px;background:#fff;color:#fff;transition:background .22s ease,border-color .22s ease,transform .22s ease;box-sizing:border-box}
+.sl-welcome-launch-checklist .sl-launch-step-number{font-size:11px;font-weight:850;color:#62805e}
+.sl-welcome-launch-checklist .sl-launch-step-copy{grid-column:2;grid-row:1/2;display:grid;gap:4px;min-width:0}
+.sl-welcome-launch-checklist .sl-launch-step-copy b{font-size:13px;line-height:1.35;color:#29382d}
+.sl-welcome-launch-checklist .sl-launch-step-copy small{font-size:11px;line-height:1.4;color:#758173}
+.sl-welcome-launch-checklist .sl-launch-step-state{grid-column:2;grid-row:2;font-size:10px;font-weight:750;color:#718071}
+.sl-welcome-launch-checklist .sl-launch-step.is-complete{border-color:#9ac99b;background:linear-gradient(135deg,#edf8ed,#fff);box-shadow:0 4px 14px rgba(57,123,61,.09)}
+.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-check{background:#398747;border-color:#398747;animation:sl-launch-check-pop .35s cubic-bezier(.2,.9,.3,1.35) both}
+.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-number{color:#fff}
+.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-state{color:#318043}
+.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-copy b{text-decoration:line-through;text-decoration-color:#a7c9a8;color:#607463}
+@keyframes sl-launch-check-pop{0%{transform:scale(.65) rotate(-12deg)}65%{transform:scale(1.14) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+@media(prefers-reduced-motion:reduce){.sl-welcome-launch-checklist .sl-launch-step,.sl-welcome-launch-checklist .sl-launch-step-check{transition:none;animation:none!important}}
+@media(max-width:760px){.sl-welcome-launch-checklist{grid-template-columns:1fr;gap:8px;margin:18px 0}.sl-welcome-launch-checklist .sl-launch-step{padding:11px 12px}}
 `}</style>
         <main className="sl-main sl-activation-main">
           <header className="sl-workspace-top">
@@ -1387,9 +1408,25 @@ export default function SelloraApp() {
                   customers can open anywhere.
                 </p>
                 <div className="sl-welcome-launch-checklist" aria-label="Launch checklist">
-                  <div><span>01</span><span><b>Add products</b><small>Upload your products and details</small></span></div>
-                  <div><span>02</span><span><b>Publish a catalogue</b><small>Give your products a shareable home</small></span></div>
-                  <div><span>03</span><span><b>Share with customers</b><small>Start receiving enquiries</small></span></div>
+                  {[
+                    { id: "products", number: "01", title: "Add products", description: "Upload your products and details" },
+                    { id: "catalogue", number: "02", title: "Publish a catalogue", description: "Give your products a shareable home" },
+                    { id: "share", number: "03", title: "Share with customers", description: "Start receiving enquiries" },
+                  ].map((step) => (
+                    <button
+                      type="button"
+                      key={step.id}
+                      className={`sl-launch-step ${launchChecklist[step.id] ? "is-complete" : ""}`}
+                      aria-pressed={Boolean(launchChecklist[step.id])}
+                      onClick={() => setLaunchChecklist((current) => ({ ...current, [step.id]: !current[step.id] }))}
+                    >
+                      <span className="sl-launch-step-check" aria-hidden="true">
+                        {launchChecklist[step.id] ? <Check size={17} strokeWidth={3} /> : <span className="sl-launch-step-number">{step.number}</span>}
+                      </span>
+                      <span className="sl-launch-step-copy"><b>{step.title}</b><small>{step.description}</small></span>
+                      <span className="sl-launch-step-state">{launchChecklist[step.id] ? "Completed" : "Mark done"}</span>
+                    </button>
+                  ))}
                 </div>
                 <Btn
                   onClick={() => {
