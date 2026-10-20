@@ -1056,6 +1056,15 @@ export function PublicCatalogue({
             Create your catalogue <ArrowRight size={14} />
           </a>
         </div>
+        <div className="sl-store-footer-legal">
+          <span>Platform information</span>
+          <nav aria-label="Sellora legal and company links">
+            <a href="/about">About Sellora</a>
+            <a href="/terms">Terms &amp; Conditions</a>
+            <a href="/privacy">Privacy Policy</a>
+          </nav>
+          <small>© {new Date().getFullYear()} Sellora. Digital catalogue platform.</small>
+        </div>
       </footer>
       {details && (
         <div
