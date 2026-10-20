@@ -584,7 +584,9 @@ export function SettingsSection({
               checked={gatewayTestMode}
               onChange={(e) => setGatewayTestMode(e.target.checked)}
             />
-            <span>Test mode <small>(recommended)</small></span>
+            <span>
+              Test mode <small>(recommended)</small>
+            </span>
           </label>
           <div className="sl-gateway-status">
             <div>
