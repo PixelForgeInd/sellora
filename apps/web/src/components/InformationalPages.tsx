@@ -82,6 +82,19 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
       )}
 
       {(kind === "terms" || kind === "privacy") && (
+        <section className={"sl-policy-overview sl-policy-overview-" + kind} aria-label={kind === "terms" ? "Terms at a glance" : "Privacy at a glance"}>
+          <div className="sl-policy-overview-heading"><span className="sl-policy-overview-icon">{kind === "terms" ? <BookOpen size={19} /> : <ShieldCheck size={19} />}</span><div><span>{kind === "terms" ? "BEFORE YOU BEGIN" : "YOUR PRIVACY, AT A GLANCE"}</span><h2>{kind === "terms" ? "The essentials, up front." : "Know what to expect."}</h2></div></div>
+          <div className="sl-policy-overview-grid">
+            {(kind === "terms"
+              ? [{title:"Your workspace",text:"Keep account details secure and activity lawful."},{title:"Your content",text:"You control what you publish and must have permission to use it."},{title:"Plans & payments",text:"Check plan, renewal and cancellation details before paying."}]
+              : [{title:"What may be used",text:"Account, catalogue, enquiry and technical information, as applicable."},{title:"Why it is used",text:"To operate, secure and support the platform."},{title:"Your choices",text:"You may request access or corrections where applicable law allows."}]
+            ).map((item, index) => <article key={item.title}><span>0{index+1}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}
+          </div>
+          <p className="sl-policy-overview-note"><ShieldCheck size={14} /> {kind === "terms" ? "Please read the full terms below. This page is currently a draft template." : "Please read the full notice below. The published policy must match actual data practices."}</p>
+        </section>
+      )}
+
+      {(kind === "terms" || kind === "privacy") && (
         <div className="sl-info-tools">
           <div className="sl-info-tools-label"><ListChecks size={16} /> On this page</div>
           <nav aria-label="Policy sections">
