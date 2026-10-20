@@ -1381,8 +1381,8 @@ export default function SelloraApp() {
               <div className="sl-add-product-panel">
                 <span className="sl-compact-panel-icon"><Plus size={20} /></span>
                 <div className="sl-compact-panel-copy">
-                  <strong>Add a product</strong>
-                  <span>Bring your catalogue to life with your first product.</span>
+                  <strong>Make your next sale with Sellora</strong>
+                  <span>Bring your products together in a beautiful digital catalogue, ready to share with every customer.</span>
                 </div>
                 <div className="sl-product-banner-animation" aria-hidden="true">
                   <span className="sl-product-orbit sl-product-orbit-one"><Package size={18} /></span>
