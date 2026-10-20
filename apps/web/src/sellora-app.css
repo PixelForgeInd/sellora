@@ -1367,3 +1367,40 @@ body{border-top:0;}
 .sl-launch-banner-step.is-complete .sl-launch-banner-step-state{color:#318043}
 @media(prefers-reduced-motion:reduce){.sl-launch-banner-step,.sl-launch-banner-check{transition:none!important;animation:none!important}}
 @media(max-width:760px){.sl-add-product-panel{align-items:flex-start;flex-wrap:wrap;padding:16px}.sl-compact-panel-copy{flex-basis:calc(100% - 65px)}.sl-add-product-panel .sl-button{margin-left:59px}.sl-launch-checklist-banner{padding:18px 14px}.sl-launch-banner-heading h2{font-size:20px}.sl-launch-banner-steps{grid-template-columns:1fr;gap:8px}.sl-launch-banner-step{min-height:68px;padding:11px 12px}}
+
+
+/* Homepage pastel hero refinement — feature/homepage-pastel-design */
+.sl-add-product-panel{
+  min-height:132px;
+  padding:24px 28px;
+  border-radius:22px;
+  background:linear-gradient(112deg,#fff5eb 0%,#f1ffe9 25%,#eaf7ff 52%,#f4efff 76%,#fff0f6 100%);
+  border-color:rgba(190,207,231,.72);
+  box-shadow:0 12px 34px rgba(67,78,112,.09),inset 0 1px 0 rgba(255,255,255,.9);
+}
+.sl-compact-panel-copy strong{
+  color:#202a45;
+  font-size:clamp(19px,2vw,24px);
+  font-weight:750;
+  letter-spacing:-.035em;
+  line-height:1.25;
+}
+.sl-compact-panel-copy span{
+  max-width:520px;
+  color:#626b7c;
+  font-size:14px;
+  line-height:1.65;
+}
+.sl-compact-panel-icon{
+  flex-basis:52px;
+  width:52px;
+  height:52px;
+  border-radius:17px;
+  background:linear-gradient(145deg,#d8f8c9,#c6f0dc 55%,#d5e8ff);
+  color:#286c4a;
+}
+@media(max-width:760px){
+  .sl-add-product-panel{min-height:unset;padding:18px;border-radius:18px}
+  .sl-compact-panel-copy strong{font-size:19px}
+  .sl-compact-panel-copy span{font-size:13px}
+}
