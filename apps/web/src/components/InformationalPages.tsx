@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, ShieldCheck, Sprout, Printer, ListChecks } from "lucide-react";
 import { Brand } from "./ui";
 
@@ -23,6 +24,32 @@ const pageContent = {
 
 export function InformationalPage({ kind }: { kind: InfoPageKind }) {
   const content = pageContent[kind];
+  const [activeSection, setActiveSection] = useState("");
+  const [readingProgress, setReadingProgress] = useState(0);
+
+  useEffect(() => {
+    if (kind === "about") return;
+    const sectionIds = kind === "terms"
+      ? ["using-service", "account-security", "content-products", "enquiries-orders", "billing-payments", "acceptable-use", "availability-changes", "suspension-termination", "disclaimers-liability", "updates-contact"]
+      : ["information-processed", "how-information-used", "public-catalogue-information", "privacy-payments", "service-providers-sharing", "security-retention", "choices-requests", "children", "privacy-changes-contact"];
+    const updateReadingState = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      setReadingProgress(scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 100);
+      let current = sectionIds[0];
+      for (const id of sectionIds) {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top <= 180) current = id;
+      }
+      setActiveSection(current);
+    };
+    updateReadingState();
+    window.addEventListener("scroll", updateReadingState, { passive: true });
+    window.addEventListener("resize", updateReadingState);
+    return () => {
+      window.removeEventListener("scroll", updateReadingState);
+      window.removeEventListener("resize", updateReadingState);
+    };
+  }, [kind]);
   return (
     <main className="sl-info-page">
       <header className="sl-info-header">
@@ -38,6 +65,12 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
         <p>{content.intro}</p>
         <span className="sl-info-updated">General information · Please review the details below</span>
       </section>
+
+      {kind !== "about" && (
+        <div className="sl-info-reading-progress" aria-label={`Reading progress: ${Math.round(readingProgress)}%`}>
+          <span style={{ width: `${readingProgress}%` }} />
+        </div>
+      )}
 
       {kind === "about" && (
         <div className="sl-info-content">
@@ -56,7 +89,7 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
               ? [{"label":"Using the service","id":"using-service"},{"label":"Your account and security","id":"account-security"},{"label":"Your content and products","id":"content-products"},{"label":"Customer enquiries and orders","id":"enquiries-orders"},{"label":"Plans, billing and payments","id":"billing-payments"},{"label":"Acceptable use","id":"acceptable-use"},{"label":"Availability and changes","id":"availability-changes"},{"label":"Suspension or termination","id":"suspension-termination"},{"label":"Disclaimers and liability","id":"disclaimers-liability"},{"label":"Updates and contact","id":"updates-contact"}]
               : [{"label":"Information that may be processed","id":"information-processed"},{"label":"How information is used","id":"how-information-used"},{"label":"Public catalogue information","id":"public-catalogue-information"},{"label":"Payments","id":"privacy-payments"},{"label":"Service providers and sharing","id":"service-providers-sharing"},{"label":"Security and retention","id":"security-retention"},{"label":"Your choices and requests","id":"choices-requests"},{"label":"Children","id":"children"},{"label":"Changes and contact","id":"privacy-changes-contact"}]
             ).map((item) => (
-              <a key={item.id} href={"#" + item.id}>{item.label}</a>
+              <a key={item.id} href={"#" + item.id} className={activeSection === item.id ? "is-active" : undefined} aria-current={activeSection === item.id ? "location" : undefined}>{item.label}</a>
             ))}
           </nav>
           <button type="button" className="sl-info-print" onClick={() => window.print()}><Printer size={15} /> Print / Save PDF</button>
