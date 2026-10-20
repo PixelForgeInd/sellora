@@ -120,12 +120,13 @@ export function PublicCatalogue({
     setEnquiryError("");
     setEnquirySuccess("");
     setDetails(null);
-    window.location.hash = "enquiry-form";
+    window.history.replaceState(null, "", "#enquiry-form");
     window.setTimeout(() => {
-      document
-        .getElementById("enquiry-form")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
+      const enquirySection = document.getElementById("enquiry-form");
+      if (enquirySection) {
+        enquirySection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   };
   const copyCatalogue = async () => {
     try {
