@@ -1130,7 +1130,7 @@ body{border-top:0;}
 /* Public marketing homepage */
 .sl-home{width:100%;max-width:none;min-height:100vh;margin:0;background:#fff;color:#26352b;font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif;overflow:hidden;box-sizing:border-box}
 .sl-home a{text-decoration:none}
-.sl-home-nav{width:100%;max-width:none;margin:0;padding:20px clamp(22px,5vw,76px);display:flex;align-items:center;justify-content:space-between;gap:28px}
+.sl-home-nav{position:relative;width:100vw;max-width:none;margin:0 0 0 calc(50% - 50vw);padding:20px clamp(22px,5vw,76px);display:flex;align-items:center;justify-content:space-between;gap:28px;box-sizing:border-box}
 .sl-home-nav nav{display:flex;align-items:center;gap:30px;font-size:13px;font-weight:600;color:#596457}
 .sl-home-nav nav>a:not(.sl-home-cta):hover,.sl-home-footer>a:hover{color:#599c56}
 .sl-home-nav .sl-brand .sl-mark,.sl-home-footer .sl-brand .sl-mark{width:38px;height:38px}
