@@ -80,38 +80,6 @@ export default function SelloraApp() {
   const [analytics, setAnalytics] = useState<Record<string, any>>({});
   const [analyticsBusy, setAnalyticsBusy] = useState("");
   const [catalogueActionMessage, setCatalogueActionMessage] = useState("");
-  const [launchChecklist, setLaunchChecklist] = useState<Record<string, boolean>>(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem("sellora-launch-checklist") || "{}");
-    } catch {
-      return {};
-    }
-  });
-  useEffect(() => {
-    window.localStorage.setItem("sellora-launch-checklist", JSON.stringify(launchChecklist));
-  }, [launchChecklist]);
-
-  // Derive checklist progress from actual workspace activity instead of requiring manual ticks.
-  useEffect(() => {
-    setLaunchChecklist((current) => {
-      const next = {
-        ...current,
-        products: products.length > 0,
-        catalogue: catalogues.some((catalogue) => catalogue.isPublished),
-      };
-      return next.products === current.products && next.catalogue === current.catalogue
-        ? current
-        : next;
-    });
-  }, [products, catalogues]);
-  const [launchChecklistDismissed, setLaunchChecklistDismissed] = useState(() => {
-    try {
-      return window.localStorage.getItem("sellora-launch-checklist-dismissed") === "true";
-    } catch {
-      return false;
-    }
-  });
-
   // Authentication screen state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -805,19 +773,14 @@ export default function SelloraApp() {
       setError(e instanceof Error ? e.message : "Publish failed");
     }
   }
-  function markCatalogueShared() {
-    setLaunchChecklist((current) => ({ ...current, share: true }));
-  }
   async function share(c: Catalogue) {
     const url = location.origin + "/c/" + c.slug;
     try {
       await navigator.clipboard.writeText(url);
-      markCatalogueShared();
       setNotice("Public link copied.");
     } catch {
       prompt("Copy this public catalogue link", url);
-      markCatalogueShared();
-    }
+      }
   }
   function shareWhatsApp(c: Catalogue) {
     const url = location.origin + "/c/" + c.slug;
@@ -1396,8 +1359,6 @@ export default function SelloraApp() {
                           ? "Customer directory"
                           : page === "reports"
                             ? "Sales reports"
-                            : page === "launch"
-                              ? "Launch checklist"
                               : page === "settings"
                                 ? "Business settings"
                                 : page === "payments"
@@ -1432,43 +1393,6 @@ export default function SelloraApp() {
                   <Plus size={16} /> Add product
                 </Btn>
               </div>
-              {!launchChecklistDismissed && (
-                <section className="sl-launch-checklist-banner" aria-label="Launch checklist">
-                  <button
-                    type="button"
-                    className="sl-launch-checklist-dismiss"
-                    aria-label="Dismiss launch checklist permanently"
-                    title="Dismiss launch checklist"
-                    onClick={() => {
-                      try { window.localStorage.setItem("sellora-launch-checklist-dismissed", "true"); } catch {}
-                      setLaunchChecklistDismissed(true);
-                    }}
-                  ><X size={17} /></button>
-                  <div className="sl-launch-banner-heading">
-                    <span className="sl-launch-banner-icon"><Check size={18} /></span>
-                    <div><h2>Launch Checklist</h2><p>Three simple steps to get your showroom ready to share.</p></div>
-                  </div>
-                  <div className="sl-launch-banner-steps">
-                    {[
-                      { id: "products", number: "1", title: "Add products", description: "Automatically completes when you add a product" },
-                      { id: "catalogue", number: "2", title: "Publish a catalogue", description: "Automatically completes when a catalogue is published" },
-                      { id: "share", number: "3", title: "Share with customers", description: "Completes when you share or copy a catalogue link" },
-                    ].map((step) => (
-                      <div
-                        key={step.id}
-                        className={`sl-launch-banner-step ${launchChecklist[step.id] ? "is-complete" : ""}`}
-                        aria-label={`${step.title}: ${launchChecklist[step.id] ? "complete" : "incomplete"}`}
-                      >
-                        <span className="sl-launch-banner-check" aria-hidden="true">
-                          {launchChecklist[step.id] ? <Check size={15} strokeWidth={3} /> : <span>{step.number}</span>}
-                        </span>
-                        <span className="sl-launch-banner-step-copy"><b>{step.title}</b><small>{step.description}</small></span>
-                        <span className="sl-launch-banner-step-state">{launchChecklist[step.id] ? "Done" : "Pending"}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
             </section>
 
             <OverviewPaymentActivity />
@@ -1914,13 +1838,11 @@ export default function SelloraApp() {
                                 setCatalogueActionMessage(
                                   "Share dialog opened.",
                                 );
-                                setLaunchChecklist((current) => ({ ...current, share: true }));
                               } else {
                                 await navigator.clipboard.writeText(url);
                                 setCatalogueActionMessage(
                                   "Catalogue link copied.",
                                 );
-                                setLaunchChecklist((current) => ({ ...current, share: true }));
                               }
                             } catch (e) {
                               if (e instanceof Error && e.name === "AbortError")
@@ -1942,7 +1864,6 @@ export default function SelloraApp() {
                               setCatalogueActionMessage(
                                 "Catalogue link copied.",
                               );
-                              setLaunchChecklist((current) => ({ ...current, share: true }));
                             } catch {
                               setError(
                                 "Could not copy the link. Open the catalogue and copy its URL from your browser.",
