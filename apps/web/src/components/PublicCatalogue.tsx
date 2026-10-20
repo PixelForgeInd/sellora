@@ -933,23 +933,24 @@ export function PublicCatalogue({
                 </div>
                 <div className="sl-form-row">
                   <label>
-                    Email <small>{enquiryPhone.trim() ? "(optional)" : "(required if phone is empty)"}</small>
+                    Email <small>(required)</small>
                     <input
                       type="email"
                       maxLength={160}
                       autoComplete="email"
-                      required={!enquiryPhone.trim()}
+                      required
                       value={enquiryEmail}
                       onChange={(e) => setEnquiryEmail(e.target.value)}
                     />
                   </label>
                   <label>
-                    Phone <small>{enquiryEmail.trim() ? "(optional)" : "(required if email is empty)"}</small>
+                    Phone <small>(required)</small>
                     <input
                       type="tel"
                       maxLength={30}
                       autoComplete="tel"
-                      required={!enquiryEmail.trim()}
+                      required
+                      minLength={7}
                       value={enquiryPhone}
                       onChange={(e) => setEnquiryPhone(e.target.value)}
                     />
@@ -1331,10 +1332,11 @@ export function PublicCatalogue({
                     />
                   </label>
                   <label>
-                    Email address <small>(optional)</small>
+                    Email address <small>(required)</small>
                     <input
                       type="email"
                       autoComplete="email"
+                      required
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
                       placeholder="you@example.com"
