@@ -2161,3 +2161,69 @@ body{border-top:0;}
   }
   .sl-store-footer-legal nav { justify-content: flex-start; gap: 12px 18px; }
 }
+
+
+/* One shared Sellora footer rendered after every route in the application. */
+.sl-global-footer {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(210px,1fr) auto auto;
+  align-items: center;
+  gap: 22px 32px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 24px clamp(22px,5vw,76px);
+  border-top: 1px solid #deead9;
+  background: #fff;
+  color: #6d7d6d;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+.sl-global-footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.sl-global-footer-brand .sl-brand { display: inline-flex; align-items: center; gap: 9px; }
+.sl-global-footer-brand > span { color: #7c8979; font-size: 11px; }
+.sl-global-footer nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px clamp(14px,2vw,26px);
+}
+.sl-global-footer nav a {
+  color: #526b56;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color .18s ease;
+}
+.sl-global-footer nav a:hover { color: #08743a; }
+.sl-global-footer nav .sl-global-footer-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: #edf6e9;
+  color: #287740;
+}
+.sl-global-footer > small {
+  color: #8a9588;
+  font-size: 10px;
+  white-space: nowrap;
+}
+@media(max-width:900px) {
+  .sl-global-footer { grid-template-columns: 1fr auto; }
+  .sl-global-footer nav { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; }
+  .sl-global-footer > small { grid-column: 2; grid-row: 1; }
+}
+@media(max-width:560px) {
+  .sl-global-footer { grid-template-columns: 1fr; gap: 18px; padding-top: 22px; padding-bottom: 22px; }
+  .sl-global-footer nav { grid-column: 1; grid-row: auto; justify-content: flex-start; gap: 14px 18px; }
+  .sl-global-footer > small { grid-column: 1; grid-row: auto; }
+}
