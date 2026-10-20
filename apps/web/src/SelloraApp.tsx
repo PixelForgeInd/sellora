@@ -845,21 +845,20 @@ export default function SelloraApp() {
     return (
       <div className="sl-app sl-activation-app">
         <style>{`.sl-activation-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important}.sl-activation-app>.sl-activation-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}
-.sl-welcome-launch-checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 24px;max-width:900px}
-.sl-welcome-launch-checklist .sl-launch-step{display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:11px;row-gap:2px;min-width:0;padding:14px;text-align:left;border:1px solid rgba(82,137,78,.22);border-radius:14px;background:rgba(255,255,255,.64);color:#29382d;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease}
-.sl-welcome-launch-checklist .sl-launch-step:hover{transform:translateY(-2px);border-color:rgba(82,137,78,.5);box-shadow:0 7px 18px rgba(44,83,44,.08)}
+.sl-welcome-launch-checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0 24px;max-width:900px;width:100%}
+.sl-welcome-launch-checklist .sl-launch-step{appearance:none;-webkit-appearance:none;display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:11px;row-gap:4px;width:100%;min-width:0;min-height:84px;padding:14px;text-align:left;font:inherit;color:#29382d;border:1px solid #dce6d8;border-radius:13px;background:rgba(255,255,255,.68);box-shadow:0 2px 6px rgba(35,60,35,.025);cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;box-sizing:border-box}
+.sl-welcome-launch-checklist .sl-launch-step:hover{transform:translateY(-2px);border-color:#a6c8a1;background:#fff;box-shadow:0 7px 18px rgba(44,83,44,.08)}
 .sl-welcome-launch-checklist .sl-launch-step:focus-visible{outline:3px solid rgba(89,156,86,.35);outline-offset:3px}
-.sl-welcome-launch-checklist .sl-launch-step-check{grid-column:1;grid-row:1/3;display:grid;place-items:center;width:32px;height:32px;border:2px solid #b7cbb3;border-radius:9px;background:#fff;color:#fff;transition:background .22s ease,border-color .22s ease,transform .22s ease;box-sizing:border-box}
-.sl-welcome-launch-checklist .sl-launch-step-number{font-size:11px;font-weight:850;color:#62805e}
-.sl-welcome-launch-checklist .sl-launch-step-copy{grid-column:2;grid-row:1/2;display:grid;gap:4px;min-width:0}
-.sl-welcome-launch-checklist .sl-launch-step-copy b{font-size:13px;line-height:1.35;color:#29382d}
-.sl-welcome-launch-checklist .sl-launch-step-copy small{font-size:11px;line-height:1.4;color:#758173}
-.sl-welcome-launch-checklist .sl-launch-step-state{grid-column:2;grid-row:2;font-size:10px;font-weight:750;color:#718071}
+.sl-welcome-launch-checklist .sl-launch-step-check{grid-column:1;grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border:1.5px solid #a8bca4;border-radius:8px;background:#fff;color:#fff;transition:background .22s ease,border-color .22s ease,transform .22s ease;box-sizing:border-box}
+.sl-welcome-launch-checklist .sl-launch-step-number{font-size:12px;font-weight:800;color:#71866d}
+.sl-welcome-launch-checklist .sl-launch-step-copy{grid-column:2;grid-row:1;display:grid;gap:5px;min-width:0}
+.sl-welcome-launch-checklist .sl-launch-step-copy b{font-size:13px;font-weight:750;line-height:1.35;color:#29382d}
+.sl-welcome-launch-checklist .sl-launch-step-copy small{font-size:11px;line-height:1.45;color:#758173;white-space:normal}
+.sl-welcome-launch-checklist .sl-launch-step-state{grid-column:2;grid-row:2;font-size:10px;font-weight:750;line-height:1.3;color:#758173}
 .sl-welcome-launch-checklist .sl-launch-step.is-complete{border-color:#9ac99b;background:linear-gradient(135deg,#edf8ed,#fff);box-shadow:0 4px 14px rgba(57,123,61,.09)}
 .sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-check{background:#398747;border-color:#398747;animation:sl-launch-check-pop .35s cubic-bezier(.2,.9,.3,1.35) both}
-.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-number{color:#fff}
 .sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-state{color:#318043}
-.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-copy b{text-decoration:line-through;text-decoration-color:#a7c9a8;color:#607463}
+.sl-welcome-launch-checklist .sl-launch-step.is-complete .sl-launch-step-copy b{color:#607463}
 @keyframes sl-launch-check-pop{0%{transform:scale(.65) rotate(-12deg)}65%{transform:scale(1.14) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
 @media(prefers-reduced-motion:reduce){.sl-welcome-launch-checklist .sl-launch-step,.sl-welcome-launch-checklist .sl-launch-step-check{transition:none;animation:none!important}}
 @media(max-width:760px){.sl-welcome-launch-checklist{grid-template-columns:1fr;gap:8px;margin:18px 0}.sl-welcome-launch-checklist .sl-launch-step{padding:11px 12px}}
@@ -1409,9 +1408,9 @@ export default function SelloraApp() {
                 </p>
                 <div className="sl-welcome-launch-checklist" aria-label="Launch checklist">
                   {[
-                    { id: "products", number: "01", title: "Add products", description: "Upload your products and details" },
-                    { id: "catalogue", number: "02", title: "Publish a catalogue", description: "Give your products a shareable home" },
-                    { id: "share", number: "03", title: "Share with customers", description: "Start receiving enquiries" },
+                    { id: "products", number: "1", title: "Add products", description: "Upload your products and details" },
+                    { id: "catalogue", number: "2", title: "Publish a catalogue", description: "Create a link customers can browse" },
+                    { id: "share", number: "3", title: "Share with customers", description: "Send your catalogue to customers" },
                   ].map((step) => (
                     <button
                       type="button"
@@ -1421,10 +1420,10 @@ export default function SelloraApp() {
                       onClick={() => setLaunchChecklist((current) => ({ ...current, [step.id]: !current[step.id] }))}
                     >
                       <span className="sl-launch-step-check" aria-hidden="true">
-                        {launchChecklist[step.id] ? <Check size={17} strokeWidth={3} /> : <span className="sl-launch-step-number">{step.number}</span>}
+                        {launchChecklist[step.id] ? <Check size={16} strokeWidth={3} /> : <span className="sl-launch-step-number">{step.number}</span>}
                       </span>
                       <span className="sl-launch-step-copy"><b>{step.title}</b><small>{step.description}</small></span>
-                      <span className="sl-launch-step-state">{launchChecklist[step.id] ? "Completed" : "Mark done"}</span>
+                      <span className="sl-launch-step-state">{launchChecklist[step.id] ? "Done" : "Mark complete"}</span>
                     </button>
                   ))}
                 </div>
