@@ -845,6 +845,7 @@ export default function SelloraApp() {
     return (
       <div className="sl-app sl-activation-app">
         <style>{`.sl-activation-app{display:block!important;width:100%!important;max-width:none!important;min-height:100vh;margin:0!important;padding:0!important}.sl-activation-app>.sl-activation-main{display:block!important;width:calc(100% - 48px)!important;max-width:1120px!important;min-width:0!important;margin:0 auto!important;padding:40px 0 64px!important;box-sizing:border-box;flex:none!important;grid-column:1/-1!important}.sl-activation-main .sl-workspace-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.sl-activation-main .sl-workspace-top h1{max-width:none;overflow-wrap:normal}.sl-activation-copy{max-width:760px;line-height:1.65}.sl-activation-main .sl-payment-failed{width:100%;max-width:680px;margin:40px auto;padding:clamp(28px,5vw,54px)!important;box-sizing:border-box}@media(max-width:640px){.sl-activation-main{width:calc(100% - 32px)!important;padding-top:24px!important}.sl-activation-main .sl-workspace-top{gap:12px}.sl-activation-main .sl-workspace-top h1{font-size:clamp(32px,9vw,48px)}.sl-activation-main .sl-workspace-top .sl-button{flex-shrink:0}}
+.sl-welcome-launch-checklist-title{margin:24px 0 0!important;font-size:clamp(22px,2vw,28px)!important;line-height:1.2!important;font-weight:850!important;font-style:italic!important;letter-spacing:-.035em!important;color:#111!important}
 .sl-welcome-launch-checklist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0 24px;max-width:900px;width:100%}
 .sl-welcome-launch-checklist .sl-launch-step{appearance:none;-webkit-appearance:none;display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:11px;row-gap:4px;width:100%;min-width:0;min-height:84px;padding:14px;text-align:left;font:inherit;color:#29382d;border:1px solid #dce6d8;border-radius:13px;background:rgba(255,255,255,.68);box-shadow:0 2px 6px rgba(35,60,35,.025);cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;box-sizing:border-box}
 .sl-welcome-launch-checklist .sl-launch-step:hover{transform:translateY(-2px);border-color:#a6c8a1;background:#fff;box-shadow:0 7px 18px rgba(44,83,44,.08)}
@@ -1406,6 +1407,7 @@ export default function SelloraApp() {
                   Add your products, create a catalogue, and publish a link
                   customers can open anywhere.
                 </p>
+                <h3 className="sl-welcome-launch-checklist-title">Launch Checklist</h3>
                 <div className="sl-welcome-launch-checklist" aria-label="Launch checklist">
                   {[
                     { id: "products", number: "1", title: "Add products", description: "Upload your products and details" },
