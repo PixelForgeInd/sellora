@@ -834,12 +834,12 @@ router.get("/public/catalogues/:slug", async (req,res) => {
 router.post("/public/catalogues/:slug/enquiries", async (req,res) => {
   const data = z.object({
     customerName:z.string().trim().min(2).max(120),
-    email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
-    phone:z.string().trim().max(30).optional(),
+    email:z.string().trim().email().max(160),
+    phone:z.string().trim().min(7,"Enter a valid phone number.").max(30),
     companyName:z.string().trim().max(160).optional(),
     message:z.string().trim().min(3).max(2000),
     productId:z.string().optional()
-  }).refine(v => Boolean(v.phone?.trim() || v.email?.trim()), {message:"Provide a phone number or email address."}).parse(req.body);
+  }).parse(req.body);
   const catalogue = await prisma.selloraCatalogue.findFirst({
     where:{slug:String(req.params.slug),isPublished:true},
     include:{business:{select:{id:true,name:true,email:true}},items:{select:{productId:true,product:{select:{name:true}}}}}
@@ -949,7 +949,7 @@ router.post("/public/catalogues/:slug/orders", async (req,res) => {
   }
   const data = z.object({
     customerName:z.string().trim().min(2).max(120),
-    email:z.union([z.string().trim().email().max(160),z.literal("")]).optional(),
+    email:z.string().trim().email().max(160),
     phone:z.string().trim().min(7).max(30),
     address:z.string().trim().min(5).max(1000),
     notes:z.string().trim().max(1000).optional(),
