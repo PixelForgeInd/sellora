@@ -250,9 +250,10 @@ export function SettingsSection({
           </div>
           <div className="sl-form-row">
             <label>
-              Business email
+              Business email *
               <input
                 type="email"
+                required
                 value={profileForm.email}
                 onChange={(e) =>
                   setProfileForm({ ...profileForm, email: e.target.value })
