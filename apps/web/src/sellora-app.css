@@ -1415,7 +1415,7 @@ body{border-top:0;}
     radial-gradient(ellipse at 90% 14%,rgba(211,231,255,.82),transparent 34%),
     #fff;
 }
-.sl-home-nav{max-width:1320px;padding:24px clamp(22px,5vw,76px)}
+.sl-home-nav{max-width:none;width:100%;padding:24px clamp(22px,5vw,76px)}
 .sl-home-nav nav{gap:clamp(16px,2.4vw,34px)}
 .sl-home-nav .sl-home-cta,.sl-home .sl-home-cta{
   border-radius:999px;
