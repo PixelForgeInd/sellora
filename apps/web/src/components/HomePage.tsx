@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, MessageCircle, PackageCheck, Share2, ShoppingBag } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Copy, MessageCircle, PackageCheck, Search, Send, Share2, ShoppingBag, X } from "lucide-react";
 import { api } from "../sellora/api-client";
 import { Brand } from "./ui";
 
@@ -10,8 +10,28 @@ const features = [
   { icon: PackageCheck, title: "Orders in one place", text: "Keep products, enquiries and incoming orders organised in your Sellora workspace." },
 ];
 
+const demoProducts = [
+  { id: "lotus", name: "Lotus Glow Set", category: "Gift sets", price: 1299, description: "A thoughtful set for special moments.", tone: "rose", mark: "✿" },
+  { id: "classic", name: "Classic Daily Wear", category: "Everyday", price: 799, description: "Easy-to-love essentials for every day.", tone: "sage", mark: "✧" },
+  { id: "festive", name: "Festive Edit", category: "New arrivals", price: 1899, description: "A little extra sparkle for celebrations.", tone: "gold", mark: "❋" },
+  { id: "mini", name: "Mini Keepsake Box", category: "Gift sets", price: 549, description: "Small details, beautifully presented.", tone: "lilac", mark: "♡" },
+];
+const demoCategories = ["All products", "Gift sets", "Everyday", "New arrivals"];
+
 export function HomePage() {
   const [prices, setPrices] = useState({ MONTHLY: 249, YEARLY: 2490 });
+  const [demoCategory, setDemoCategory] = useState("All products");
+  const [demoSearch, setDemoSearch] = useState("");
+  const [enquiryProduct, setEnquiryProduct] = useState<(typeof demoProducts)[number] | null>(null);
+  const [enquiryName, setEnquiryName] = useState("");
+  const [enquiryContact, setEnquiryContact] = useState("");
+  const [enquiryMessage, setEnquiryMessage] = useState("");
+  const [enquirySent, setEnquirySent] = useState(false);
+  const [copiedDemoLink, setCopiedDemoLink] = useState(false);
+  const filteredDemoProducts = demoProducts.filter((product) =>
+    (demoCategory === "All products" || product.category === demoCategory) &&
+    (product.name + " " + product.description + " " + product.category).toLowerCase().includes(demoSearch.toLowerCase())
+  );
   useEffect(() => { api("/public/pricing", {}, "").then(setPrices).catch(() => undefined); }, []);
   const savings = Math.max(0, prices.MONTHLY * 12 - prices.YEARLY);
   return (
@@ -70,6 +90,54 @@ export function HomePage() {
           </div>
           <div className="sl-home-floating"><span><MessageCircle size={17}/></span><div><b>Customer enquiries</b><small>All starting with your catalogue</small></div></div>
         </div>
+      </section>
+
+      <section className="sl-live-demo" id="live-demo">
+        <div className="sl-live-demo-intro">
+          <span className="sl-home-eyebrow"><span className="sl-live-demo-dot" /> TRY IT YOURSELF</span>
+          <h2>Explore a catalogue.<br /><em>Imagine it as yours.</em></h2>
+          <p>This interactive sample shows how customers can browse products and start an enquiry from a business catalogue.</p>
+          <div className="sl-live-demo-points"><span><Check size={15} /> Filter collections</span><span><Check size={15} /> Search products</span><span><Check size={15} /> Try an enquiry</span></div>
+          <button type="button" className="sl-live-demo-share" onClick={() => {
+            const link = window.location.origin + "/#live-demo";
+            if (navigator.clipboard?.writeText) navigator.clipboard.writeText(link).then(() => setCopiedDemoLink(true)).catch(() => setCopiedDemoLink(false));
+            else setCopiedDemoLink(false);
+          }}><Copy size={15} /> {copiedDemoLink ? "Demo link copied" : "Copy demo link"}</button>
+          <small className="sl-live-demo-disclaimer">Sample catalogue for preview only. Enquiries here are not sent to a real business.</small>
+        </div>
+        <div className="sl-live-catalogue">
+          <div className="sl-live-catalogue-top"><div><span className="sl-live-store-mark">✿</span><span><b>Studio &amp; Co.</b><small>Sample digital catalogue</small></span></div><span className="sl-live-catalogue-status"><i /> Preview</span></div>
+          <div className="sl-live-catalogue-hero"><small>THE COLLECTION</small><h3>Little things.<br />Lovely details.</h3><p>Thoughtfully picked for your everyday and your special days.</p></div>
+          <label className="sl-live-search"><Search size={16} /><input aria-label="Search sample products" value={demoSearch} onChange={(event) => setDemoSearch(event.target.value)} placeholder="Search this catalogue" /><span>{filteredDemoProducts.length}</span></label>
+          <div className="sl-live-categories" aria-label="Filter sample products by category">
+            {demoCategories.map((category) => <button key={category} type="button" className={demoCategory === category ? "is-active" : ""} aria-pressed={demoCategory === category} onClick={() => setDemoCategory(category)}>{category}</button>)}
+          </div>
+          <div className="sl-live-products">
+            {filteredDemoProducts.map((product) => <article className="sl-live-product" key={product.id}>
+              <div className={"sl-live-product-art " + product.tone}><span>{product.mark}</span><small>STUDIO &amp; CO.</small></div>
+              <div className="sl-live-product-copy"><span>{product.category}</span><h4>{product.name}</h4><p>{product.description}</p><div><b>₹{product.price.toLocaleString("en-IN")}</b><button type="button" onClick={() => { setEnquiryProduct(product); setEnquirySent(false); setEnquiryMessage("Hi, I’d like to know more about " + product.name + "."); }} aria-label={"Enquire about " + product.name}>Enquire <ArrowRight size={14} /></button></div></div>
+            </article>)}
+            {filteredDemoProducts.length === 0 && <div className="sl-live-empty"><Search size={20} /><b>No matching products</b><span>Try another search or category.</span><button type="button" onClick={() => { setDemoSearch(""); setDemoCategory("All products"); }}>Clear filters</button></div>}
+          </div>
+          <div className="sl-live-catalogue-foot"><Share2 size={14} /><span>A catalogue link customers can browse anywhere</span><span>Powered by Sellora</span></div>
+        </div>
+        {enquiryProduct && <div className="sl-enquiry-backdrop" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) setEnquiryProduct(null); }}>
+          <section className="sl-enquiry-modal" role="dialog" aria-modal="true" aria-labelledby="sl-demo-enquiry-title">
+            <button type="button" className="sl-enquiry-close" aria-label="Close enquiry" onClick={() => setEnquiryProduct(null)}><X size={18} /></button>
+            {!enquirySent ? <>
+              <span className="sl-home-eyebrow"><MessageCircle size={15} /> SAMPLE CUSTOMER ENQUIRY</span>
+              <h3 id="sl-demo-enquiry-title">Ask about {enquiryProduct.name}</h3>
+              <p>This is a demo form. Try filling it in to see the customer experience.</p>
+              <form onSubmit={(event) => { event.preventDefault(); setEnquirySent(true); }}>
+                <label>Your name<input required value={enquiryName} onChange={(event) => setEnquiryName(event.target.value)} placeholder="Enter your name" /></label>
+                <label>Email or phone<input required value={enquiryContact} onChange={(event) => setEnquiryContact(event.target.value)} placeholder="How could the business reach you?" /></label>
+                <label>Your message<textarea required rows={3} value={enquiryMessage} onChange={(event) => setEnquiryMessage(event.target.value)} /></label>
+                <button className="sl-enquiry-submit" type="submit">Preview enquiry <Send size={15} /></button>
+                <small>Demo only — nothing is sent or stored.</small>
+              </form>
+            </> : <div className="sl-enquiry-success"><span><Check size={24} /></span><h3 id="sl-demo-enquiry-title">Your preview is ready</h3><p>This is how a customer enquiry confirmation could look. No message was sent to a real business.</p><div><b>{enquiryProduct.name}</b><span>From {enquiryName}</span><span>{enquiryContact}</span><p>{enquiryMessage}</p></div><button type="button" className="sl-enquiry-submit" onClick={() => setEnquiryProduct(null)}>Back to catalogue <ArrowRight size={15} /></button></div>}
+          </section>
+        </div>}
       </section>
 
       <section className="sl-home-features" id="features">
