@@ -79,13 +79,6 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
         </div>
       )}
 
-      <footer className="sl-info-footer">
-        <span>Sellora · Digital Catalogues. Smarter Sales.</span>
-        <nav aria-label="Information pages">
-          <a href="/about">About</a><a href="/terms">Terms &amp; Conditions</a><a href="/privacy">Privacy Policy</a>
-        </nav>
-        <a href="/" className="sl-info-home-link">Home <ArrowRight size={14}/></a>
-      </footer>
     </main>
   );
 }
