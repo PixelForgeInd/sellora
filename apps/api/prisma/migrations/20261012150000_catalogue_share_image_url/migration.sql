@@ -1,1 +1,1 @@
-ALTER TABLE "SelloraCatalogue" ADD COLUMN "shareImageUrl" TEXT;
+ALTER TABLE "SelloraCatalogue" ADD COLUMN IF NOT EXISTS "shareImageUrl" TEXT;

@@ -476,7 +476,7 @@ export function SettingsSection({
           ))}
         </div>
         <form className="sl-form sl-add-field-form" onSubmit={addIndustryField}>
-          <div className="sl-form-row">
+          <div className="sl-field-builder-row">
             <label>
               Field label
               <input
@@ -485,35 +485,11 @@ export function SettingsSection({
                 maxLength={80}
                 value={fieldForm.label}
                 onChange={(e) =>
-                  setFieldForm({
-                    ...fieldForm,
-                    label: e.target.value,
-                    key:
-                      fieldForm.key ||
-                      e.target.value
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, "_")
-                        .replace(/^_+|_+$/g, ""),
-                  })
+                  setFieldForm({ ...fieldForm, label: e.target.value })
                 }
                 placeholder="e.g. Fabric composition"
               />
             </label>
-            <label>
-              Field key
-              <input
-                required
-                pattern="[a-z][a-zA-Z0-9_]*"
-                maxLength={48}
-                value={fieldForm.key}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, key: e.target.value })
-                }
-                placeholder="fabricComposition"
-              />
-            </label>
-          </div>
-          <div className="sl-form-row">
             <label>
               Field type
               <select
@@ -535,14 +511,21 @@ export function SettingsSection({
                 type="checkbox"
                 checked={fieldForm.required}
                 onChange={(e) =>
-                  setFieldForm({
-                    ...fieldForm,
-                    required: e.target.checked,
-                  })
+                  setFieldForm({ ...fieldForm, required: e.target.checked })
                 }
               />{" "}
-              Required field
+              Required
             </label>
+            <Btn type="submit" disabled={busy}>
+              {busy ? "Adding…" : "Add product field"} <Plus size={15} />
+            </Btn>
+            <Btn
+              kind="outline"
+              onClick={() => void restoreIndustryFields()}
+              disabled={busy}
+            >
+              Restore recommended fields
+            </Btn>
           </div>
           {["select", "multiselect"].includes(fieldForm.type) && (
             <label>
@@ -558,18 +541,6 @@ export function SettingsSection({
               />
             </label>
           )}
-          <div className="sl-modal-actions">
-            <Btn type="submit" disabled={busy}>
-              {busy ? "Adding…" : "Add product field"} <Plus size={15} />
-            </Btn>
-            <Btn
-              kind="outline"
-              onClick={() => void restoreIndustryFields()}
-              disabled={busy}
-            >
-              Restore recommended fields
-            </Btn>
-          </div>
         </form>
       </section>
 
@@ -607,13 +578,15 @@ export function SettingsSection({
             />
           </label>
 
-          <label className="sl-field-required-toggle">
+          <label className="sl-field-required-toggle sl-settings-toggle">
             <input
               type="checkbox"
               checked={gatewayTestMode}
               onChange={(e) => setGatewayTestMode(e.target.checked)}
-            />{" "}
-            Test mode (recommended)
+            />
+            <span>
+              Test mode <small>(recommended)</small>
+            </span>
           </label>
           <div className="sl-gateway-status">
             <div>
@@ -715,13 +688,13 @@ export function SettingsSection({
           checkout.
         </p>
         <form className="sl-form" onSubmit={saveTaxSettings}>
-          <label className="sl-field-required-toggle">
+          <label className="sl-field-required-toggle sl-settings-toggle">
             <input
               type="checkbox"
               checked={taxEnabled}
               onChange={(e) => setTaxEnabled(e.target.checked)}
             />
-            Calculate tax on online orders
+            <span>Calculate tax on online orders</span>
           </label>
           {taxEnabled && (
             <label>
