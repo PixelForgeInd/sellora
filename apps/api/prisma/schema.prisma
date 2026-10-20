@@ -167,6 +167,7 @@ model Business {
   razorpayWebhookSecretEncrypted String?
   razorpayTestMode Boolean @default(true)
   paymentOrders PaymentOrder[]
+  subscription Subscription?
 
   lastOrderNumber Int @default(0)
 
@@ -420,4 +421,61 @@ model CatalogueAnalyticsEvent {
   createdAt   DateTime @default(now())
   @@index([catalogueId, eventType, createdAt])
   @@index([catalogueId, sessionId, eventType])
+}
+
+model Subscription {
+  id String @id @default(cuid())
+  businessId String @unique
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  status String @default("ACTIVE")
+  interval String @default("MONTHLY")
+  amount Decimal @default(249) @db.Decimal(12, 2)
+  currency String @default("INR")
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd DateTime
+  dueAt DateTime
+  lastPaidAt DateTime?
+  payments PlatformSubscriptionPayment[]
+  auditEvents PlatformAuditEvent[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, dueAt])
+}
+
+model PlatformSubscriptionPayment {
+  id String @id @default(cuid())
+  subscriptionId String
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  interval String
+  amount Decimal @db.Decimal(12, 2)
+  currency String @default("INR")
+  razorpayOrderId String @unique
+  razorpayPaymentId String? @unique
+  status String @default("CREATED")
+  paidAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([subscriptionId, createdAt])
+  @@index([status, createdAt])
+}
+
+model PlatformAuditEvent {
+  id String @id @default(cuid())
+  subscriptionId String?
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  actorUserId String
+  action String
+  details Json?
+  createdAt DateTime @default(now())
+  @@index([subscriptionId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+
+model PlatformPricing {
+  id           String   @id @default("default")
+  monthlyPrice Decimal  @default(249) @db.Decimal(12, 2)
+  yearlyPrice  Decimal  @default(2490) @db.Decimal(12, 2)
+  updatedBy    String?
+  updatedAt    DateTime @updatedAt
 }
