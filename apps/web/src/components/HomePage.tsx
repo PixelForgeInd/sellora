@@ -99,7 +99,7 @@ export function HomePage() {
           <p>This interactive sample shows how customers can browse products and start an enquiry from a business catalogue.</p>
           <div className="sl-live-demo-points"><span><Check size={15} /> Filter collections</span><span><Check size={15} /> Search products</span><span><Check size={15} /> Try an enquiry</span></div>
           <button type="button" className="sl-live-demo-share" onClick={() => {
-            const link = window.location.origin + "/#live-demo";
+            const link = window.location.origin + "/demo/ganeshaa-sutra";
             if (navigator.clipboard?.writeText) navigator.clipboard.writeText(link).then(() => setCopiedDemoLink(true)).catch(() => setCopiedDemoLink(false));
             else setCopiedDemoLink(false);
           }}><Copy size={15} /> {copiedDemoLink ? "Demo link copied" : "Copy demo link"}</button>
