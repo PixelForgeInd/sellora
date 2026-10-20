@@ -439,6 +439,34 @@ export function PublicCatalogue({
           line-height: 1.5;
         }
         .sl-storefront .sl-store-product-bottom button {
+          min-height: 36px;
+          padding: 7px 12px;
+          gap: 7px;
+          border-radius: 10px;
+          font-size: 12px;
+        }
+        .sl-storefront .sl-store-product-bottom .sl-price-request-link {
+          min-height: 0;
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          color: #147b49 !important;
+          font-size: 13px;
+          font-weight: 750;
+          white-space: normal;
+          text-align: left;
+        }
+        .sl-storefront .sl-store-product-bottom .sl-price-request-link:hover {
+          background: transparent;
+          border-color: transparent;
+          box-shadow: none;
+          color: #10683f !important;
+          text-decoration: underline;
+          transform: none;
+        }
+        .sl-storefront .sl-store-product-bottom button {
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -739,7 +767,18 @@ export function PublicCatalogue({
                       ))}
                   </div>
                   <div className="sl-store-product-bottom">
-                    <strong>{money(p.price, p.currency, p.unit)}</strong>
+                    {p.price == null || p.price === "" ? (
+                      <button
+                        type="button"
+                        className="sl-price-request-link"
+                        onClick={() => startEnquiry(p.id)}
+                        aria-label={"Enquire for price of " + p.name}
+                      >
+                        Price on request
+                      </button>
+                    ) : (
+                      <strong>{money(p.price, p.currency, p.unit)}</strong>
+                    )}
                     <button onClick={() => openProduct(p)}>
                       Details <ArrowRight size={14} />
                     </button>
