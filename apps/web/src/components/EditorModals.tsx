@@ -144,7 +144,11 @@ export function ProductModal({
                 <span>Product price</span>
                 <span className="sl-muted">Optional</span>
               </div>
-              <div className="sl-price-mode" role="group" aria-label="Product pricing mode">
+              <div
+                className="sl-price-mode"
+                role="group"
+                aria-label="Product pricing mode"
+              >
                 <button
                   type="button"
                   className={pform.price === "" ? "is-active" : ""}
@@ -157,13 +161,18 @@ export function ProductModal({
                   type="button"
                   className={pform.price !== "" ? "is-active" : ""}
                   aria-pressed={pform.price !== ""}
-                  onClick={() => setPform({ ...pform, price: pform.price || "0.00" })}
+                  onClick={() =>
+                    setPform({ ...pform, price: pform.price || "0.00" })
+                  }
                 >
                   Set a price
                 </button>
               </div>
               {pform.price === "" ? (
-                <p className="sl-muted">Customers will see “Price on request” and can enquire about this product.</p>
+                <p className="sl-muted">
+                  Customers will see “Price on request” and can enquire about
+                  this product.
+                </p>
               ) : (
                 <label>
                   Price amount
@@ -173,7 +182,9 @@ export function ProductModal({
                     step="0.01"
                     required
                     value={pform.price}
-                    onChange={(e) => setPform({ ...pform, price: e.target.value })}
+                    onChange={(e) =>
+                      setPform({ ...pform, price: e.target.value })
+                    }
                     placeholder="Enter product price"
                   />
                 </label>
