@@ -791,7 +791,6 @@ export default function SelloraApp() {
       "_blank",
       "noopener,noreferrer",
     );
-    markCatalogueShared();
   }
   function signOut() {
     sessionStorage.removeItem("sellora_token");
