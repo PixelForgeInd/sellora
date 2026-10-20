@@ -2227,3 +2227,16 @@ body{border-top:0;}
   .sl-global-footer nav { grid-column: 1; grid-row: auto; justify-content: flex-start; gap: 14px 18px; }
   .sl-global-footer > small { grid-column: 1; grid-row: auto; }
 }
+
+.sl-global-footer { padding-bottom: 18px; }
+.sl-global-footer-copyright {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 20px 18px;
+  border-top: 1px solid #edf1ea;
+  background: #fff;
+  color: #8a9588;
+  text-align: center;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+}
