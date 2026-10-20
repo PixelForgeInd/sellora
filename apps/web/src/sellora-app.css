@@ -2324,3 +2324,37 @@ body{border-top:0;}
   .sl-info-content { max-width: none; padding: 0; }
   .sl-info-content section { break-inside: avoid; box-shadow: none; }
 }
+
+
+/* Live reading feedback for long-form policy pages. */
+.sl-info-reading-progress {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  height: 3px;
+  width: 100%;
+  overflow: hidden;
+  background: #e7f0e3;
+}
+.sl-info-reading-progress > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #72bd66, #08743a);
+  transition: width .12s linear;
+}
+.sl-info-tools nav a.is-active {
+  background: #287740;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(40,119,64,.18);
+}
+.sl-info-tools nav a.is-active::before {
+  content: "✓";
+  margin-right: 5px;
+  font-weight: 800;
+}
+@media(prefers-reduced-motion: reduce) {
+  .sl-info-reading-progress > span { transition: none; }
+}
+@media print {
+  .sl-info-reading-progress { display: none !important; }
+}
