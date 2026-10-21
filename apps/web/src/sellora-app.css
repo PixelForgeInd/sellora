@@ -2897,3 +2897,80 @@ body{border-top:0;}
     padding: 38px 22px 44px;
   }
 }
+
+
+/* Correct vertical rhythm: let the hero breathe and distribute content between header and footer. */
+.sl-auth-page .sl-auth-layout {
+  min-height: clamp(650px, calc(100svh - 225px), 860px);
+}
+.sl-auth-page .sl-auth-story {
+  padding-top: clamp(64px, 8vh, 100px);
+  padding-bottom: clamp(54px, 7vh, 86px);
+}
+.sl-auth-page .sl-story-content {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.sl-auth-page .sl-story-content > .sl-kicker {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.sl-auth-page .sl-story-content h1 {
+  margin-top: 14px;
+  margin-bottom: 24px;
+}
+.sl-auth-page .sl-story-content p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.sl-auth-page .sl-story-points {
+  margin-top: 30px;
+  gap: 16px;
+}
+.sl-auth-page .sl-auth-story > small {
+  margin-top: auto;
+  padding-top: 48px;
+}
+.sl-auth-page .sl-auth-main {
+  padding-top: clamp(56px, 7vh, 90px);
+  padding-bottom: clamp(56px, 7vh, 90px);
+}
+.sl-auth-page .sl-auth-card {
+  transform: translateY(-2px);
+}
+.sl-auth-page .sl-auth-card .sl-kicker {
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.sl-auth-page .sl-auth-card h2 {
+  margin-top: 12px;
+  margin-bottom: 14px;
+}
+.sl-auth-page .sl-auth-card > p {
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+@media (max-width: 900px) {
+  .sl-auth-page .sl-auth-layout {
+    min-height: clamp(650px, calc(100svh - 205px), 820px);
+  }
+}
+@media (max-width: 650px) {
+  .sl-auth-page .sl-auth-layout {
+    min-height: 0;
+  }
+  .sl-auth-page .sl-auth-story {
+    padding-top: 42px;
+    padding-bottom: 30px;
+  }
+  .sl-auth-page .sl-story-content {
+    margin: 0;
+  }
+  .sl-auth-page .sl-auth-story > small {
+    padding-top: 32px;
+  }
+  .sl-auth-page .sl-auth-main {
+    padding-top: 44px;
+    padding-bottom: 50px;
+  }
+}
