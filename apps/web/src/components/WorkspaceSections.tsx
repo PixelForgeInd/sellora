@@ -76,9 +76,31 @@ export function AuthScreen({
   auth,
   notice = "",
 }: AuthScreenProps) {
-  const [authLanguage, setAuthLanguage] = useState<"en" | "ta">("en");
-  const isTamil = authLanguage === "ta";
   return (
+      <style>{`
+        .sl-auth-page{min-height:100vh;display:flex;flex-direction:column;background:#fff;color:#26352a}
+        .sl-auth-header{min-height:78px;padding:16px clamp(20px,5vw,72px);display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid #edf0e9;background:#fff}
+        .sl-auth-header>a{color:inherit;text-decoration:none;display:flex;align-items:center}
+        .sl-auth-header nav,.sl-auth-footer nav{display:flex;align-items:center;gap:clamp(14px,3vw,36px)}
+        .sl-auth-header nav a,.sl-auth-footer nav a{color:#344238;text-decoration:none;font-size:14px;font-weight:650}
+        .sl-auth-header nav a:hover,.sl-auth-footer nav a:hover{color:#168044}
+        .sl-auth-header nav .sl-auth-header-cta{background:#167b43;color:#fff;border-radius:999px;padding:12px 22px}
+        .sl-auth-layout{flex:1}
+        .sl-auth-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px clamp(20px,5vw,72px);border-top:1px solid #edf0e9;color:#778176;font-size:12px}
+        @media(max-width:700px){.sl-auth-header{align-items:flex-start;flex-direction:column}.sl-auth-header nav{width:100%;flex-wrap:wrap;gap:14px}.sl-auth-footer{align-items:flex-start;flex-direction:column}.sl-auth-footer nav{flex-wrap:wrap}}
+      `}</style>
+    <div className="sl-auth-page">
+      <header className="sl-auth-header">
+        <a href="/" aria-label="Sellora home"><Brand /></a>
+        <nav aria-label="Main navigation">
+          <a href="/#features">Features</a>
+          <a href="/#how-it-works">How it works</a>
+          <a href="/#pricing">Pricing</a>
+          {mode === "signup"
+            ? <a className="sl-auth-header-cta" href="/login">Log in</a>
+            : <a className="sl-auth-header-cta" href="/signup">Get started</a>}
+        </nav>
+      </header>
     <div className="sl-auth-layout">
       <section className="sl-auth-story">
         <Brand />
@@ -109,7 +131,7 @@ export function AuthScreen({
       </section>
       <section className="sl-auth-main">
         <div className="sl-auth-card">
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><Brand /><button type="button" className="sl-home-language-toggle" onClick={() => setAuthLanguage(authLanguage === "en" ? "ta" : "en")}>{isTamil ? "English" : "தமிழ்"}</button></div>
+          <Brand />
           <span className="sl-kicker">
             {mode === "signup"
               ? "DIGITAL CATALOGUES. SMARTER SALES."
@@ -117,7 +139,7 @@ export function AuthScreen({
                 ? "PASSWORD RECOVERY"
                 : mode === "reset"
                   ? "CHOOSE A NEW PASSWORD"
-                  : isTamil ? "மீண்டும் வரவேற்கிறோம்" : "WELCOME BACK"}
+                  : "WELCOME BACK"}
           </span>
           <h2>
             {mode === "signup"
@@ -126,7 +148,7 @@ export function AuthScreen({
                 ? "Reset your password"
                 : mode === "reset"
                   ? "Set a new password"
-                  : isTamil ? "Sellora-வில் உள்நுழைக" : "Log in to Sellora"}
+                  : "Log in to Sellora"}
           </h2>
           <p>
             {mode === "signup"
@@ -135,7 +157,7 @@ export function AuthScreen({
                 ? "We will email a secure reset link if the account exists."
                 : mode === "reset"
                   ? "Choose a password you have not used before."
-                  : isTamil ? "தயாரிப்புகள் மற்றும் பட்டியல்களைத் தொடர்ந்து நிர்வகிக்கவும்." : "Continue managing products and catalogues."}
+                  : "Continue managing products and catalogues."}
           </p>
           <Err text={error} />
           {notice && (
@@ -146,7 +168,7 @@ export function AuthScreen({
           <form className="sl-form" onSubmit={auth}>
             {mode !== "reset" && (
               <label>
-                {isTamil ? "மின்னஞ்சல் முகவரி" : "Email address"}
+                Email address
                 <input
                   type="email"
                   required
@@ -159,7 +181,7 @@ export function AuthScreen({
             )}
             {mode !== "forgot" && (
               <label>
-                {mode === "reset" ? (authLanguage === "en" ? "New password" : "புதிய கடவுச்சொல்") : (authLanguage === "en" ? "Password" : "கடவுச்சொல்")}
+                {mode === "reset" ? "New password" : "Password"}
                 <div className="sl-password-wrap">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -247,6 +269,16 @@ export function AuthScreen({
           </small>
         </div>
       </section>
+    </div>
+      <footer className="sl-auth-footer">
+        <span>© {new Date().getFullYear()} Sellora</span>
+        <span>Digital Catalogues. Smarter Sales.</span>
+        <nav aria-label="Footer navigation">
+          <a href="/#features">Features</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/login">Account</a>
+        </nav>
+      </footer>
     </div>
   );
 }
