@@ -13,10 +13,6 @@ export function GlobalFooter() {
           <a href="/about">About</a>
           <a href="/terms">Terms &amp; Conditions</a>
           <a href="/privacy">Privacy Policy</a>
-          <a href="/login">Log in</a>
-          <a className="sl-global-footer-cta" href="/signup">
-            Get started <ArrowRight size={13} />
-          </a>
         </nav>
       </footer>
     </>
