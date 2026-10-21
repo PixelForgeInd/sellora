@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./ui";
+import { SiteHeader } from "./SiteHeader";
 import {
   categories as cats,
   fallbackFields as fallback,
@@ -79,15 +80,7 @@ export function AuthScreen({
   return (
     <>
     <div className="sl-auth-page">
-      <header className="sl-home-nav">
-        <a href="/" aria-label="Sellora home"><Brand /></a>
-        <nav aria-label="Main navigation">
-          <a href="/#features">Features</a>
-          <a href="/#how-it-works">How it works</a>
-          <a href="/#pricing">Pricing</a>
-          <a className="sl-home-cta" href="/signup">Get started <ArrowRight size={15} /></a>
-        </nav>
-      </header>
+      <SiteHeader />
     <div className="sl-auth-layout">
       <section className="sl-auth-story">
         <Brand />
