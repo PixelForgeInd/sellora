@@ -20,6 +20,7 @@ const demoCategories = ["All products", "Gift sets", "Everyday", "New arrivals"]
 
 export function HomePage() {
   const [prices, setPrices] = useState({ MONTHLY: 249, YEARLY: 2490 });
+  const [homeLanguage, setHomeLanguage] = useState<"en" | "ta">("en");
   const [demoCategory, setDemoCategory] = useState("All products");
   const [demoSearch, setDemoSearch] = useState("");
   const [enquiryProduct, setEnquiryProduct] = useState<(typeof demoProducts)[number] | null>(null);
@@ -37,7 +38,7 @@ export function HomePage() {
   return (
     <main className="sl-home">
       <style>{`
-        .sl-home-pricing{padding:clamp(64px,8vw,108px) clamp(20px,6vw,88px);background:#f7f9f5}
+        .sl-home-language-toggle{border:1px solid #dce8d7;border-radius:999px;padding:8px 12px;background:#fff;color:#2e7332;font:700 12px inherit;cursor:pointer}\n        .sl-home-pricing{padding:clamp(64px,8vw,108px) clamp(20px,6vw,88px);background:#f7f9f5}
         .sl-home-pricing-grid{max-width:900px;margin:38px auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
         .sl-home-price-card{position:relative;background:#fff;border:1px solid #e1e8de;border-radius:20px;padding:30px;display:flex;flex-direction:column;box-shadow:0 8px 26px rgba(32,48,32,.04)}
         .sl-home-price-featured{border:2px solid #599c56;box-shadow:0 12px 34px rgba(46,108,48,.10)}
@@ -58,7 +59,7 @@ export function HomePage() {
 
       <header className="sl-home-nav">
         <Brand />
-        <nav aria-label="Main navigation">
+        <nav aria-label="Main navigation">\n          <button type="button" className="sl-home-language-toggle" onClick={() => setHomeLanguage(homeLanguage === "en" ? "ta" : "en")} aria-label="Switch language">{homeLanguage === "en" ? "தமிழ்" : "English"}</button>
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
