@@ -77,6 +77,7 @@ export function AuthScreen({
   notice = "",
 }: AuthScreenProps) {
   return (
+    <>
       <style>{`
         .sl-auth-page{min-height:100vh;display:flex;flex-direction:column;background:#fff;color:#26352a}
         .sl-auth-header{min-height:78px;padding:16px clamp(20px,5vw,72px);display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid #edf0e9;background:#fff}
@@ -280,6 +281,7 @@ export function AuthScreen({
         </nav>
       </footer>
     </div>
+    </>
   );
 }
 
