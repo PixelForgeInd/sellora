@@ -23,7 +23,8 @@ export function PublicCatalogue({
   error: string;
   demo?: boolean;
 }) {
-  const [query, setQuery] = useState("");\n  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
+  const [query, setQuery] = useState("");
+  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
   const [category, setCategory] = useState("All products");
   const [details, setDetails] = useState<Product | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
