@@ -84,7 +84,6 @@ export function AuthScreen({
       <SiteHeader language={authHeaderLanguage} onToggleLanguage={() => setAuthHeaderLanguage(authHeaderLanguage === "en" ? "ta" : "en")} showLanguageToggle />
     <div className="sl-auth-layout">
       <section className="sl-auth-story">
-        <Brand />
         <div className="sl-story-content">
           <span className="sl-kicker">YOUR PRODUCTS. YOUR BRAND.</span>
           <h1>
@@ -112,7 +111,6 @@ export function AuthScreen({
       </section>
       <section className="sl-auth-main">
         <div className="sl-auth-card">
-          <Brand />
           <span className="sl-kicker">
             {mode === "signup"
               ? "DIGITAL CATALOGUES. SMARTER SALES."
