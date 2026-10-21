@@ -87,8 +87,8 @@ export function AuthScreen({
         .sl-auth-header nav a:hover,.sl-auth-footer nav a:hover{color:#168044}
         .sl-auth-header nav .sl-auth-header-cta{background:#167b43;color:#fff;border-radius:999px;padding:12px 22px}
         .sl-auth-layout{flex:1}
-        .sl-auth-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px clamp(20px,5vw,72px);border-top:1px solid #edf0e9;color:#778176;font-size:12px}
-        @media(max-width:700px){.sl-auth-header{align-items:flex-start;flex-direction:column}.sl-auth-header nav{width:100%;flex-wrap:wrap;gap:14px}.sl-auth-footer{align-items:flex-start;flex-direction:column}.sl-auth-footer nav{flex-wrap:wrap}}
+        .sl-auth-footer{display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px 24px;padding:22px clamp(20px,5vw,72px);border-top:1px solid #edf0e9;color:#778176;font-size:12px}.sl-auth-footer-brand{display:flex;flex-direction:column;gap:8px}.sl-auth-footer-brand>a{display:flex;align-items:center}.sl-auth-footer-brand .sl-brand{max-width:140px}.sl-auth-footer .sl-auth-footer-cta{background:#eaf5e7;color:#167b43;border-radius:999px;padding:10px 16px}.sl-auth-footer>small{grid-column:1/-1;text-align:center;border-top:1px solid #edf0e9;padding-top:14px}
+        @media(max-width:700px){.sl-auth-header{align-items:flex-start;flex-direction:column}.sl-auth-header nav{width:100%;flex-wrap:wrap;gap:14px}.sl-auth-footer{grid-template-columns:1fr}.sl-auth-footer nav{flex-wrap:wrap;gap:14px}.sl-auth-footer>small{grid-column:auto;text-align:left}}
       `}</style>
     <div className="sl-auth-page">
       <header className="sl-auth-header">
@@ -272,13 +272,19 @@ export function AuthScreen({
       </section>
     </div>
       <footer className="sl-auth-footer">
-        <span>© {new Date().getFullYear()} Sellora</span>
-        <span>Digital Catalogues. Smarter Sales.</span>
+        <div className="sl-auth-footer-brand">
+          <a href="/" aria-label="Sellora home"><Brand /></a>
+          <span>Digital Catalogues. Smarter Sales.</span>
+        </div>
         <nav aria-label="Footer navigation">
-          <a href="/#features">Features</a>
-          <a href="/#pricing">Pricing</a>
-          <a href="/login">Account</a>
+          <a href="/about">About</a>
+          <a href="/terms">Terms &amp; Conditions</a>
+          <a href="/privacy">Privacy Policy</a>
+          {mode === "signup"
+            ? <a href="/login">Log in</a>
+            : <a className="sl-auth-footer-cta" href="/signup">Get started</a>}
         </nav>
+        <small>© {new Date().getFullYear()} Sellora</small>
       </footer>
     </div>
     </>
