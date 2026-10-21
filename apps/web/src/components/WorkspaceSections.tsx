@@ -157,7 +157,7 @@ export function AuthScreen({
             )}
             {mode !== "forgot" && (
               <label>
-                {mode === "reset" ? "New password" : "Password"}
+                {mode === "reset" ? (authLanguage === "en" ? "New password" : "புதிய கடவுச்சொல்") : (authLanguage === "en" ? "Password" : "கடவுச்சொல்")}
                 <div className="sl-password-wrap">
                   <input
                     type={showPassword ? "text" : "password"}
