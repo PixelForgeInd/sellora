@@ -23,7 +23,7 @@ export function PublicCatalogue({
   error: string;
   demo?: boolean;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("");\n  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
   const [category, setCategory] = useState("All products");
   const [details, setDetails] = useState<Product | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -100,7 +100,7 @@ export function PublicCatalogue({
         "Hi " + data.business.name + ", I'm interested in your products.",
       )
     : "#contact";
-  const publicUrl = typeof window !== "undefined" ? window.location.href : "";
+  const publicUrl = typeof window !== "undefined" ? window.location.origin + window.location.pathname + (catalogueLanguage === "ta" ? "?lang=ta" : "") : "";
   const shareText =
     "View " +
     (data?.title || "catalogue") +
