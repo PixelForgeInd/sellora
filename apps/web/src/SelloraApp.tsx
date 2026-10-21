@@ -1368,7 +1368,7 @@ export default function SelloraApp() {
                                 : "Workspace"}
             </h1>
           </div>
-          <span className="sl-online-dot">● Workspace active</span>
+          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><button type="button" className="sl-button sl-outline" onClick={() => { const next = new URL(window.location.href); next.searchParams.set("uiLanguage", next.searchParams.get("uiLanguage") === "ta" ? "en" : "ta"); window.history.replaceState(null, "", next.toString()); window.dispatchEvent(new CustomEvent("sellora-language-change", {detail: next.searchParams.get("uiLanguage")})); }}>{new URLSearchParams(window.location.search).get("uiLanguage") === "ta" ? "English" : "தமிழ்"}</button><span className="sl-online-dot">● Workspace active</span></div>
         </header>
         {error && <Err text={error} />}
         {notice && (
