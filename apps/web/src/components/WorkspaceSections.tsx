@@ -80,177 +80,129 @@ export function AuthScreen({
   const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">("en");
   return (
     <>
-    <div className="sl-auth-page">
-      <SiteHeader language={authHeaderLanguage} onToggleLanguage={() => setAuthHeaderLanguage(authHeaderLanguage === "en" ? "ta" : "en")} showLanguageToggle />
-    <div className="sl-auth-layout">
-      <section className="sl-auth-story">
-        <div className="sl-story-content">
-          <span className="sl-kicker">YOUR PRODUCTS. YOUR BRAND.</span>
-          <h1>
-            One catalogue.
-            <br />
-            <em>More possibilities.</em>
-          </h1>
-          <p>
-            Create a polished, shareable product catalogue for your business. No
-            design tools or technical skills required.
-          </p>
-          <div className="sl-story-points">
-            <span>
-              <Check size={16} /> Set up in minutes
-            </span>
-            <span>
-              <Check size={16} /> Fields for your industry
-            </span>
-            <span>
-              <Check size={16} /> Share one simple link
-            </span>
-          </div>
-        </div>
-        <small>SELLORA · DIGITAL CATALOGUES. SMARTER SALES.</small>
-      </section>
-      <section className="sl-auth-main">
-        <div className="sl-auth-card">
-          <span className="sl-kicker">
-            {mode === "signup"
-              ? "DIGITAL CATALOGUES. SMARTER SALES."
-              : mode === "forgot"
-                ? "PASSWORD RECOVERY"
-                : mode === "reset"
-                  ? "CHOOSE A NEW PASSWORD"
-                  : "WELCOME BACK"}
-          </span>
-          <h2>
-            {mode === "signup"
-              ? "Create your Sellora account"
-              : mode === "forgot"
-                ? "Reset your password"
-                : mode === "reset"
-                  ? "Set a new password"
-                  : "Log in to Sellora"}
-          </h2>
-          <p>
-            {mode === "signup"
-              ? "Your catalogue journey starts here."
-              : mode === "forgot"
-                ? "We will email a secure reset link if the account exists."
-                : mode === "reset"
-                  ? "Choose a password you have not used before."
-                  : "Continue managing products and catalogues."}
-          </p>
-          <Err text={error} />
-          {notice && (
-            <p className="sl-notice" role="status">
-              {notice}
-            </p>
+      <SiteHeader
+        language={authHeaderLanguage}
+        onToggleLanguage={() =>
+          setAuthHeaderLanguage(authHeaderLanguage === "en" ? "ta" : "en")
+        }
+        showLanguageToggle
+      />
+      <main>
+        <h1>
+          {mode === "signup"
+            ? "Create your Sellora account"
+            : mode === "forgot"
+              ? "Reset your password"
+              : mode === "reset"
+                ? "Set a new password"
+                : "Log in to Sellora"}
+        </h1>
+        <p>
+          {mode === "signup"
+            ? "Your catalogue journey starts here."
+            : mode === "forgot"
+              ? "We will email a secure reset link if the account exists."
+              : mode === "reset"
+                ? "Choose a password you have not used before."
+                : "Continue managing products and catalogues."}
+        </p>
+        <Err text={error} />
+        {notice && <p role="status">{notice}</p>}
+        <form onSubmit={auth}>
+          {mode !== "reset" && (
+            <label>
+              Email address
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+              />
+            </label>
           )}
-          <form className="sl-form" onSubmit={auth}>
-            {mode !== "reset" && (
-              <label>
-                Email address
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                />
-              </label>
-            )}
-            {mode !== "forgot" && (
-              <label>
-                {mode === "reset" ? "New password" : "Password"}
-                <div className="sl-password-wrap">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    minLength={mode === "signup" || mode === "reset" ? 8 : 1}
-                    autoComplete={
-                      mode === "signup" || mode === "reset"
-                        ? "new-password"
-                        : "current-password"
-                    }
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      mode === "signup" || mode === "reset"
-                        ? "At least 8 characters"
-                        : "Your password"
-                    }
-                  />
-                  <button
-                    className="sl-password-toggle"
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                    aria-pressed={showPassword}
-                  >
-                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                  </button>
-                </div>
-              </label>
-            )}
-            <Btn type="submit" disabled={busy}>
-              {busy
-                ? "Please wait…"
-                : mode === "signup"
-                  ? "Create account"
-                  : mode === "forgot"
-                    ? "Send reset link"
-                    : mode === "reset"
-                      ? "Reset password"
-                      : isTamil ? "உள்நுழைக" : "Log in"}{" "}
-              <ArrowRight size={16} />
-            </Btn>
-          </form>
-          {mode === "login" && (
-            <p className="sl-auth-switch">
+          {mode !== "forgot" && (
+            <label>
+              {mode === "reset" ? "New password" : "Password"}
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={mode === "signup" || mode === "reset" ? 8 : 1}
+                autoComplete={
+                  mode === "signup" || mode === "reset"
+                    ? "new-password"
+                    : "current-password"
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={
+                  mode === "signup" || mode === "reset"
+                    ? "At least 8 characters"
+                    : "Your password"
+                }
+              />
               <button
                 type="button"
-                onClick={() => {
-                  setMode("forgot");
-                  setError("");
-                }}
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
               >
-                Forgot password?
+                {showPassword ? "Hide password" : "Show password"}
               </button>
-            </p>
+            </label>
           )}
-          <p className="sl-auth-switch">
-            {mode === "forgot" || mode === "reset"
-              ? "Remember your password?"
+          <button type="submit" disabled={busy}>
+            {busy
+              ? "Please wait…"
               : mode === "signup"
-                ? "Already have an account?"
-                : "New to Sellora?"}{" "}
+                ? "Create account"
+                : mode === "forgot"
+                  ? "Send reset link"
+                  : mode === "reset"
+                    ? "Reset password"
+                    : "Log in"}
+          </button>
+        </form>
+        {mode === "login" && (
+          <p>
             <button
               type="button"
               onClick={() => {
-                setMode(
-                  mode === "signup" || mode === "forgot" || mode === "reset"
-                    ? "login"
-                    : "signup",
-                );
+                setMode("forgot");
                 setError("");
               }}
             >
-              {mode === "signup"
-                ? "Log in"
-                : mode === "forgot" || mode === "reset"
-                  ? "Back to log in"
-                  : "Create account"}
+              Forgot password?
             </button>
           </p>
-          <small className="sl-muted">
-            Your workspace is private to your account.
-          </small>
-        </div>
-      </section>
-    </div>
-
-    </div>
+        )}
+        <p>
+          {mode === "forgot" || mode === "reset"
+            ? "Remember your password?"
+            : mode === "signup"
+              ? "Already have an account?"
+              : "New to Sellora?"}{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setMode(
+                mode === "signup" || mode === "forgot" || mode === "reset"
+                  ? "login"
+                  : "signup",
+              );
+              setError("");
+            }}
+          >
+            {mode === "signup"
+              ? "Log in"
+              : mode === "forgot" || mode === "reset"
+                ? "Back to log in"
+                : "Create account"}
+          </button>
+        </p>
+        <small>Your workspace is private to your account.</small>
+      </main>
     </>
   );
 }
