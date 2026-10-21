@@ -41,7 +41,7 @@ export function HomePage() {
         .sl-home-pricing-grid{max-width:900px;margin:38px auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
         .sl-home-price-card{position:relative;background:#fff;border:1px solid #e1e8de;border-radius:20px;padding:30px;display:flex;flex-direction:column;box-shadow:0 8px 26px rgba(32,48,32,.04)}
         .sl-home-price-featured{border:2px solid #599c56;box-shadow:0 12px 34px rgba(46,108,48,.10)}
-        .sl-home-price-badge{align-self:flex-start;background:#eaf5e7;color:#2e7332;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.04em;margin-bottom:18px}\n        .sl-home-recommended{position:absolute;top:-13px;right:24px;background:#2e7332;color:#fff;border-radius:999px;padding:7px 13px;font-size:11px;font-weight:800;letter-spacing:.06em;box-shadow:0 4px 12px rgba(46,115,50,.2)}
+        .sl-home-price-badge{align-self:flex-start;background:#eaf5e7;color:#2e7332;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;letter-spacing:.04em;margin-bottom:18px}\n        .sl-home-recommended{position:absolute;top:18px;right:24px;background:#eaf5e7;color:#2e7332;border:1px solid #c8e8c2;border-radius:999px;padding:7px 13px;font-size:11px;font-weight:800;letter-spacing:.06em;box-shadow:0 4px 12px rgba(46,115,50,.08)}
         .sl-home-price-card h3{font-size:23px;margin:10px 0 0;color:#26352a}
         .sl-home-price{display:flex;align-items:baseline;gap:7px;margin:20px 0 8px}
         .sl-home-price strong{font-size:clamp(34px,4vw,44px);line-height:1.1;letter-spacing:-.04em;color:#1d3022}
