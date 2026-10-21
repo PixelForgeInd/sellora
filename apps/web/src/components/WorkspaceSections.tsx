@@ -76,6 +76,8 @@ export function AuthScreen({
   auth,
   notice = "",
 }: AuthScreenProps) {
+  const [authLanguage, setAuthLanguage] = useState<"en" | "ta">("en");
+  const isTamil = authLanguage === "ta";
   return (
     <div className="sl-auth-layout">
       <section className="sl-auth-story">
@@ -107,7 +109,7 @@ export function AuthScreen({
       </section>
       <section className="sl-auth-main">
         <div className="sl-auth-card">
-          <Brand />
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><Brand /><button type="button" className="sl-home-language-toggle" onClick={() => setAuthLanguage(authLanguage === "en" ? "ta" : "en")}>{isTamil ? "English" : "தமிழ்"}</button></div>
           <span className="sl-kicker">
             {mode === "signup"
               ? "DIGITAL CATALOGUES. SMARTER SALES."
@@ -115,7 +117,7 @@ export function AuthScreen({
                 ? "PASSWORD RECOVERY"
                 : mode === "reset"
                   ? "CHOOSE A NEW PASSWORD"
-                  : "WELCOME BACK"}
+                  : isTamil ? "மீண்டும் வரவேற்கிறோம்" : "WELCOME BACK"}
           </span>
           <h2>
             {mode === "signup"
@@ -124,7 +126,7 @@ export function AuthScreen({
                 ? "Reset your password"
                 : mode === "reset"
                   ? "Set a new password"
-                  : "Log in to Sellora"}
+                  : isTamil ? "Sellora-வில் உள்நுழைக" : "Log in to Sellora"}
           </h2>
           <p>
             {mode === "signup"
@@ -133,7 +135,7 @@ export function AuthScreen({
                 ? "We will email a secure reset link if the account exists."
                 : mode === "reset"
                   ? "Choose a password you have not used before."
-                  : "Continue managing products and catalogues."}
+                  : isTamil ? "தயாரிப்புகள் மற்றும் பட்டியல்களைத் தொடர்ந்து நிர்வகிக்கவும்." : "Continue managing products and catalogues."}
           </p>
           <Err text={error} />
           {notice && (
@@ -144,7 +146,7 @@ export function AuthScreen({
           <form className="sl-form" onSubmit={auth}>
             {mode !== "reset" && (
               <label>
-                Email address
+                {isTamil ? "மின்னஞ்சல் முகவரி" : "Email address"}
                 <input
                   type="email"
                   required
@@ -199,7 +201,7 @@ export function AuthScreen({
                     ? "Send reset link"
                     : mode === "reset"
                       ? "Reset password"
-                      : "Log in"}{" "}
+                      : isTamil ? "உள்நுழைக" : "Log in"}{" "}
               <ArrowRight size={16} />
             </Btn>
           </form>
