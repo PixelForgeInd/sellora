@@ -3053,3 +3053,64 @@ footer [class*="Copyright"] {
 .sl-home-footer + .sl-global-footer-copyright {
   display: none !important;
 }
+
+
+/* Give the auth content more room to breathe on desktop without enlarging the footer. */
+@media (min-width: 901px) {
+  .sl-auth-page .sl-auth-layout {
+    min-height: clamp(700px, calc(100svh - 190px), 960px);
+  }
+  .sl-auth-page .sl-auth-story {
+    padding: clamp(76px, 8.5vh, 112px) clamp(36px, 8.7vw, 140px);
+  }
+  .sl-auth-page .sl-story-content {
+    width: min(100%, 600px);
+  }
+  .sl-auth-page .sl-story-content h1 {
+    font-size: clamp(54px, 4.8vw, 76px);
+    line-height: 1.12;
+    margin-top: 22px;
+    margin-bottom: 28px;
+  }
+  .sl-auth-page .sl-story-content p {
+    font-size: 15px;
+    line-height: 1.95;
+    max-width: 470px;
+  }
+  .sl-auth-page .sl-story-points {
+    margin-top: 34px;
+    gap: 18px;
+  }
+  .sl-auth-page .sl-auth-main {
+    padding: clamp(64px, 7.5vw, 112px);
+  }
+  .sl-auth-page .sl-auth-card {
+    width: min(100%, 480px);
+  }
+  .sl-auth-page .sl-auth-card h2 {
+    font-size: clamp(36px, 3vw, 43px);
+    line-height: 1.22;
+    margin-bottom: 18px;
+  }
+  .sl-auth-page .sl-auth-card > p {
+    margin-bottom: 34px;
+    font-size: 14px;
+  }
+  .sl-auth-page .sl-auth-card .sl-form {
+    gap: 22px;
+  }
+  .sl-auth-page .sl-auth-card .sl-form input {
+    min-height: 56px;
+    padding: 16px;
+  }
+  .sl-auth-page .sl-auth-card .sl-form .sl-primary,
+  .sl-auth-page .sl-auth-card .sl-form button[type="submit"] {
+    min-height: 56px;
+  }
+  .sl-auth-page .sl-auth-switch {
+    margin-top: 28px;
+  }
+  .sl-auth-page .sl-auth-card > .sl-muted {
+    margin-top: 24px;
+  }
+}
