@@ -2564,3 +2564,163 @@ body{border-top:0;}
     min-height: auto;
   }
 }
+
+
+/* Signup/login: centered form, homepage-inspired color and balanced full-height composition. */
+.sl-auth-page .sl-auth-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: calc(100vh - 106px);
+}
+.sl-auth-page .sl-auth-story {
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 8% 10%, rgba(207, 235, 197, .78), transparent 38%),
+    radial-gradient(ellipse at 100% 88%, rgba(190, 224, 182, .48), transparent 42%),
+    linear-gradient(145deg, #f5f8ef 0%, #edf5e8 54%, #e5f0df 100%);
+}
+.sl-auth-page .sl-auth-story::before {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  top: -110px;
+  right: -95px;
+  border: 1px solid rgba(89, 156, 86, .2);
+  border-radius: 50%;
+  box-shadow: 0 0 0 22px rgba(89, 156, 86, .035), 0 0 0 48px rgba(89, 156, 86, .025);
+  pointer-events: none;
+}
+.sl-auth-page .sl-story-content {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  margin: auto;
+}
+.sl-auth-page .sl-story-content h1 {
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(44px, 5vw, 72px);
+  line-height: 1.08;
+  letter-spacing: -2.7px;
+  color: #26372c;
+}
+.sl-auth-page .sl-story-content h1 em {
+  color: #599c56;
+}
+.sl-auth-page .sl-story-content p {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #6e7c6a;
+}
+.sl-auth-page .sl-story-points {
+  gap: 15px;
+  margin-top: 28px;
+  font-size: 13px;
+}
+.sl-auth-page .sl-story-points svg {
+  color: #599c56;
+  filter: drop-shadow(0 2px 4px rgba(89, 156, 86, .16));
+}
+.sl-auth-page .sl-auth-story > small {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: 32px;
+  color: #71866c;
+}
+.sl-auth-page .sl-auth-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(32px, 5vw, 76px);
+  background:
+    radial-gradient(ellipse at 92% 6%, rgba(241, 248, 237, .72), transparent 35%),
+    #fff;
+}
+.sl-auth-page .sl-auth-card {
+  width: min(100%, 450px);
+  margin: auto;
+}
+.sl-auth-page .sl-auth-card h2 {
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(30px, 3vw, 38px);
+  line-height: 1.2;
+  letter-spacing: -1.15px;
+  color: #293a2e;
+}
+.sl-auth-page .sl-auth-card > p {
+  color: #768171;
+  font-size: 13px;
+}
+.sl-auth-page .sl-auth-card .sl-form {
+  gap: 17px;
+}
+.sl-auth-page .sl-auth-card .sl-form label {
+  font-size: 12px;
+  color: #4e5e4c;
+}
+.sl-auth-page .sl-auth-card .sl-form input {
+  min-height: 51px;
+  padding: 14px;
+  border-color: #dce7d8;
+  border-radius: 10px;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+}
+.sl-auth-page .sl-auth-card .sl-form input:focus {
+  border-color: #599c56;
+  box-shadow: 0 0 0 4px rgba(89, 156, 86, .12);
+}
+.sl-auth-page .sl-auth-card .sl-form .sl-primary,
+.sl-auth-page .sl-auth-card .sl-form button[type="submit"] {
+  min-height: 49px;
+  border-radius: 10px;
+  background: linear-gradient(105deg, #599c56, #4c914a);
+  box-shadow: 0 8px 20px rgba(66, 128, 63, .18);
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+}
+.sl-auth-page .sl-auth-card .sl-form .sl-primary:hover:not(:disabled),
+.sl-auth-page .sl-auth-card .sl-form button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(105deg, #477f44, #376f3b);
+  box-shadow: 0 10px 24px rgba(66, 128, 63, .22);
+}
+.sl-auth-page .sl-auth-switch {
+  font-size: 12px;
+}
+.sl-auth-page .sl-auth-card > .sl-muted {
+  font-size: 10px;
+}
+@media (max-width: 900px) {
+  .sl-auth-page .sl-auth-layout {
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  }
+  .sl-auth-page .sl-auth-main {
+    padding: 32px;
+  }
+  .sl-auth-page .sl-story-content h1 {
+    font-size: clamp(40px, 5vw, 56px);
+  }
+}
+@media (max-width: 650px) {
+  .sl-auth-page .sl-auth-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .sl-auth-page .sl-auth-story {
+    padding: 30px 22px 24px;
+    min-height: auto;
+  }
+  .sl-auth-page .sl-story-content h1 {
+    font-size: clamp(40px, 11vw, 52px);
+    letter-spacing: -1.8px;
+  }
+  .sl-auth-page .sl-auth-story > small {
+    padding-top: 25px;
+  }
+  .sl-auth-page .sl-auth-main {
+    padding: 38px 22px 44px;
+  }
+}
