@@ -379,7 +379,8 @@ export function CatalogueModal({
   setModal,
   saveCatalogue,
 }: CatalogueModalProps) {
-  const [productSearch, setProductSearch] = useState("");\n  const [shareLanguage, setShareLanguage] = useState<"en" | "ta">("en");
+  const [productSearch, setProductSearch] = useState("");
+  const [shareLanguage, setShareLanguage] = useState<"en" | "ta">("en");
   const shareImagePreview = useMemo(
     () =>
       cform.shareImageFile
