@@ -64,7 +64,6 @@ export function HomePage() {
           <a href="#features">{homeLanguage === "en" ? "Features" : "அம்சங்கள்"}</a>
           <a href="#how-it-works">{homeLanguage === "en" ? "How it works" : "எப்படி செயல்படுகிறது"}</a>
           <a href="#pricing">{homeLanguage === "en" ? "Pricing" : "விலைத் திட்டங்கள்"}</a>
-          <a className="sl-home-login" href="/login">{homeLanguage === "en" ? "Log in" : "உள்நுழைக"}</a>
           <a className="sl-home-cta" href="/signup">{homeLanguage === "en" ? "Get started" : "தொடங்குங்கள்"} <ArrowRight size={15} /></a>
         </nav>
       </header>
