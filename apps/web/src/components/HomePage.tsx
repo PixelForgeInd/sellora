@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Check, Copy, MessageCircle, PackageCheck, Search, Send, Share2, ShoppingBag, X } from "lucide-react";
 import { api } from "../sellora/api-client";
-import { Brand } from "./ui";
+import { SiteHeader } from "./SiteHeader";
 
 const features = [
   { icon: BookOpen, title: "Digital catalogues", text: "Present your products in a clean, professional catalogue that customers can browse anywhere." },
@@ -57,16 +57,7 @@ export function HomePage() {
         @media(max-width:680px){.sl-home-pricing-grid{grid-template-columns:1fr;max-width:430px}.sl-home-price-card{padding:24px}.sl-home-price-desc{min-height:0}}
       `}</style>
 
-      <header className="sl-home-nav">
-        <Brand />
-        <nav aria-label="Main navigation">
-          <button type="button" className="sl-home-language-toggle" onClick={() => setHomeLanguage(homeLanguage === "en" ? "ta" : "en")} aria-label="Switch language">{homeLanguage === "en" ? "தமிழ்" : "English"}</button>
-          <a href="#features">{homeLanguage === "en" ? "Features" : "அம்சங்கள்"}</a>
-          <a href="#how-it-works">{homeLanguage === "en" ? "How it works" : "எப்படி செயல்படுகிறது"}</a>
-          <a href="#pricing">{homeLanguage === "en" ? "Pricing" : "விலைத் திட்டங்கள்"}</a>
-          <a className="sl-home-cta" href="/signup">{homeLanguage === "en" ? "Get started" : "தொடங்குங்கள்"} <ArrowRight size={15} /></a>
-        </nav>
-      </header>
+      <SiteHeader language={homeLanguage} onToggleLanguage={() => setHomeLanguage(homeLanguage === "en" ? "ta" : "en")} showLanguageToggle />
 
       <section className="sl-home-hero">
         <div className="sl-home-copy">
