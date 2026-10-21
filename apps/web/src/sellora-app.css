@@ -3032,3 +3032,24 @@ footer [class*="Copyright"] {
     transform: none;
   }
 }
+
+
+/* Keep the shared footer compact after removing the copyright row. */
+.sl-auth-page + .sl-home-footer,
+.sl-home-footer {
+  min-height: 0 !important;
+  height: auto !important;
+  padding-top: 18px !important;
+  padding-bottom: 18px !important;
+  margin-bottom: 0 !important;
+  align-content: center;
+}
+.sl-auth-page + .sl-home-footer > *,
+.sl-home-footer > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.sl-home-footer + .sl-home-footer-copy,
+.sl-home-footer + .sl-global-footer-copyright {
+  display: none !important;
+}
