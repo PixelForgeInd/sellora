@@ -2378,3 +2378,75 @@ body{border-top:0;}
 @media(max-width:720px){.sl-policy-overview{margin-left:14px;margin-right:14px;border-radius:18px}.sl-policy-overview-grid{grid-template-columns:1fr}.sl-policy-overview-grid article{padding:14px}}
 @media(prefers-reduced-motion:reduce){.sl-policy-overview-grid article,.sl-info-content section[id]{transition:none!important}.sl-policy-overview-grid article:hover{transform:none}}
 @media print{.sl-policy-overview{box-shadow:none;background:#fff!important}.sl-policy-overview-grid article{break-inside:avoid}}
+
+
+/* Keep the shared global header visually identical on home, login and signup. */
+.sl-home-nav,
+.sl-auth-page .sl-home-nav{
+  font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif!important;
+  font-size:13px;
+  color:#596457;
+}
+.sl-home-nav nav a,
+.sl-auth-page .sl-home-nav nav a{
+  font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif!important;
+  font-size:13px!important;
+  font-weight:600!important;
+  text-decoration:none!important;
+  line-height:1.4;
+}
+.sl-home-nav nav>a:not(.sl-home-cta),
+.sl-auth-page .sl-home-nav nav>a:not(.sl-home-cta){
+  color:#332f2f!important;
+  background:transparent!important;
+  border:0;
+  box-shadow:none;
+  padding:0;
+  border-radius:0;
+}
+.sl-home-nav nav .sl-home-cta,
+.sl-auth-page .sl-home-nav nav .sl-home-cta{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:#599c56!important;
+  color:#fff!important;
+  padding:13px 18px!important;
+  border:0;
+  border-radius:999px;
+  font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif!important;
+  font-size:13px!important;
+  font-weight:700!important;
+  text-decoration:none!important;
+  box-shadow:0 6px 16px #599c5625;
+}
+.sl-home-nav nav .sl-home-cta:hover,
+.sl-auth-page .sl-home-nav nav .sl-home-cta:hover{
+  background:#477f44!important;
+  color:#fff!important;
+}
+.sl-home-nav nav .sl-home-language-toggle,
+.sl-auth-page .sl-home-nav nav .sl-home-language-toggle{
+  appearance:none;
+  -webkit-appearance:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #dce8d7!important;
+  border-radius:999px!important;
+  padding:8px 12px!important;
+  background:#fff!important;
+  color:#2e7332!important;
+  font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif!important;
+  font-size:13px!important;
+  font-weight:600!important;
+  line-height:1.3;
+  text-decoration:none!important;
+  box-shadow:none!important;
+  cursor:pointer;
+}
+.sl-home-nav nav .sl-home-language-toggle:hover,
+.sl-auth-page .sl-home-nav nav .sl-home-language-toggle:hover{
+  background:#f3f8f0!important;
+}
