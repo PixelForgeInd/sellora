@@ -171,16 +171,7 @@ export function HomePage() {
         <ol><li><span>01</span><div><b>Set up your workspace</b><p>Add your business details and brand.</p></div></li><li><span>02</span><div><b>Add your products</b><p>Build a catalogue that reflects your business.</p></div></li><li><span>03</span><div><b>Share and connect</b><p>Send your catalogue link and hear from customers.</p></div></li></ol>
       </section>
 
-      <section className="sl-home-bottom">
-        <span className="sl-home-eyebrow">MADE FOR THE WAY YOU SELL</span>
-        <h2>Bring your products <em>into focus.</em></h2>
-        <p>Create a beautiful digital catalogue, share it in seconds and turn product interest into customer enquiries — all from one workspace.</p>
-        <div className="sl-home-bottom-actions">
-          <a className="sl-home-cta" href="/signup">Create your Sellora workspace <ArrowRight size={16}/></a>
-          <a className="sl-home-bottom-secondary" href="#features">Explore Sellora</a>
-        </div>
-        <span className="sl-home-bottom-note"><span aria-hidden="true">✓</span> Simple to start <span aria-hidden="true">·</span> Easy to share <span aria-hidden="true">·</span> Built for growing businesses</span>
-      </section>
+
     </main>
   );
 }
