@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./ui";
+import { SiteHeader } from "./SiteHeader";
 import {
   categories as cats,
   fallbackFields as fallback,
@@ -76,10 +77,13 @@ export function AuthScreen({
   auth,
   notice = "",
 }: AuthScreenProps) {
+  const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">("en");
   return (
+    <>
+    <div className="sl-auth-page">
+      <SiteHeader language={authHeaderLanguage} onToggleLanguage={() => setAuthHeaderLanguage(authHeaderLanguage === "en" ? "ta" : "en")} showLanguageToggle />
     <div className="sl-auth-layout">
       <section className="sl-auth-story">
-        <Brand />
         <div className="sl-story-content">
           <span className="sl-kicker">YOUR PRODUCTS. YOUR BRAND.</span>
           <h1>
@@ -107,7 +111,6 @@ export function AuthScreen({
       </section>
       <section className="sl-auth-main">
         <div className="sl-auth-card">
-          <Brand />
           <span className="sl-kicker">
             {mode === "signup"
               ? "DIGITAL CATALOGUES. SMARTER SALES."
@@ -199,7 +202,7 @@ export function AuthScreen({
                     ? "Send reset link"
                     : mode === "reset"
                       ? "Reset password"
-                      : "Log in"}{" "}
+                      : isTamil ? "உள்நுழைக" : "Log in"}{" "}
               <ArrowRight size={16} />
             </Btn>
           </form>
@@ -246,6 +249,9 @@ export function AuthScreen({
         </div>
       </section>
     </div>
+
+    </div>
+    </>
   );
 }
 

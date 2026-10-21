@@ -139,16 +139,57 @@ export function ProductModal({
             />
           </label>
           <div className="sl-form-row">
-            <label>
-              Price (optional)
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={pform.price}
-                onChange={(e) => setPform({ ...pform, price: e.target.value })}
-              />
-            </label>
+            <div className="sl-price-editor">
+              <div className="sl-price-editor-heading">
+                <span>Product price</span>
+                <span className="sl-muted">Optional</span>
+              </div>
+              <div
+                className="sl-price-mode"
+                role="group"
+                aria-label="Product pricing mode"
+              >
+                <button
+                  type="button"
+                  className={pform.price === "" ? "is-active" : ""}
+                  aria-pressed={pform.price === ""}
+                  onClick={() => setPform({ ...pform, price: "" })}
+                >
+                  Price on request
+                </button>
+                <button
+                  type="button"
+                  className={pform.price !== "" ? "is-active" : ""}
+                  aria-pressed={pform.price !== ""}
+                  onClick={() =>
+                    setPform({ ...pform, price: pform.price || "0.00" })
+                  }
+                >
+                  Set a price
+                </button>
+              </div>
+              {pform.price === "" ? (
+                <p className="sl-muted">
+                  Customers will see “Price on request” and can enquire about
+                  this product.
+                </p>
+              ) : (
+                <label>
+                  Price amount
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                    value={pform.price}
+                    onChange={(e) =>
+                      setPform({ ...pform, price: e.target.value })
+                    }
+                    placeholder="Enter product price"
+                  />
+                </label>
+              )}
+            </div>
             <label>
               Currency
               <select
@@ -339,6 +380,7 @@ export function CatalogueModal({
   saveCatalogue,
 }: CatalogueModalProps) {
   const [productSearch, setProductSearch] = useState("");
+  const [shareLanguage, setShareLanguage] = useState<"en" | "ta">("en");
   const shareImagePreview = useMemo(
     () =>
       cform.shareImageFile

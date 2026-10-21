@@ -24,6 +24,7 @@ export function PublicCatalogue({
   demo?: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
   const [category, setCategory] = useState("All products");
   const [details, setDetails] = useState<Product | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -100,7 +101,7 @@ export function PublicCatalogue({
         "Hi " + data.business.name + ", I'm interested in your products.",
       )
     : "#contact";
-  const publicUrl = typeof window !== "undefined" ? window.location.href : "";
+  const publicUrl = typeof window !== "undefined" ? window.location.origin + window.location.pathname + (catalogueLanguage === "ta" ? "?lang=ta" : "") : "";
   const shareText =
     "View " +
     (data?.title || "catalogue") +
@@ -120,12 +121,13 @@ export function PublicCatalogue({
     setEnquiryError("");
     setEnquirySuccess("");
     setDetails(null);
-    window.location.hash = "enquiry-form";
+    window.history.replaceState(null, "", "#enquiry-form");
     window.setTimeout(() => {
-      document
-        .getElementById("enquiry-form")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
+      const enquirySection = document.getElementById("enquiry-form");
+      if (enquirySection) {
+        enquirySection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   };
   const copyCatalogue = async () => {
     try {
@@ -372,11 +374,11 @@ export function PublicCatalogue({
           width: 100%;
           min-height: 54px;
           padding: 14px 22px;
-          border: 1px solid #080d49;
+          border: 1px solid #147b49;
           border-radius: 14px;
-          background: #080d49;
+          background: #147b49;
           color: #fff;
-          box-shadow: 0 8px 18px rgba(8, 13, 73, 0.12);
+          box-shadow: 0 8px 18px rgba(20, 123, 73, 0.12);
           font-family: inherit;
           font-size: 16px;
           font-weight: 600;
@@ -387,8 +389,8 @@ export function PublicCatalogue({
           transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
         }
         .sl-storefront .sl-store-enquiry-submit:hover:not(:disabled) {
-          background: #11195f;
-          box-shadow: 0 10px 22px rgba(8, 13, 73, 0.18);
+          background: #10683f;
+          box-shadow: 0 10px 22px rgba(20, 123, 73, 0.18);
           transform: translateY(-1px);
         }
         .sl-storefront .sl-store-enquiry-submit:active:not(:disabled) {
@@ -412,11 +414,11 @@ export function PublicCatalogue({
           min-height: 48px;
           margin-top: 12px;
           padding: 12px 18px;
-          border: 1px solid #080d49;
+          border: 1px solid #147b49;
           border-radius: 12px;
-          background: #080d49;
+          background: #147b49;
           color: #fff;
-          box-shadow: 0 6px 16px rgba(8, 13, 73, 0.14);
+          box-shadow: 0 6px 16px rgba(20, 123, 73, 0.14);
           cursor: pointer;
         }
         .sl-storefront .sl-store-out-of-stock-enquire-label {
@@ -428,8 +430,8 @@ export function PublicCatalogue({
           opacity: 1 !important;
         }
         .sl-storefront .sl-store-out-of-stock-message + .sl-store-enquire:hover {
-          background: #11195f;
-          border-color: #11195f;
+          background: #10683f;
+          border-color: #10683f;
         }
         .sl-storefront .sl-store-detail-content > .sl-store-contact-primary + .sl-store-out-of-stock-message,
         .sl-storefront .sl-store-detail-content > .sl-store-contact-primary + .sl-store-contact-primary {
@@ -437,6 +439,94 @@ export function PublicCatalogue({
         }
         .sl-storefront .sl-store-out-of-stock-message {
           line-height: 1.5;
+        }
+        .sl-storefront .sl-store-product-bottom button {
+          min-height: 36px;
+          padding: 7px 12px;
+          gap: 7px;
+          border-radius: 10px;
+          font-size: 12px;
+        }
+        .sl-storefront .sl-store-product-bottom .sl-price-request-link {
+          min-height: 0;
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          color: #147b49 !important;
+          font-size: 13px;
+          font-weight: 750;
+          white-space: normal;
+          text-align: left;
+        }
+        .sl-storefront .sl-store-product-bottom .sl-price-request-link:hover {
+          background: transparent;
+          border-color: transparent;
+          box-shadow: none;
+          color: #10683f !important;
+          text-decoration: underline;
+          transform: none;
+        }
+        .sl-storefront .sl-store-product-bottom button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          min-height: 42px;
+          padding: 9px 15px;
+          border: 1px solid #147b49;
+          border-radius: 14px;
+          background: #147b49;
+          color: #fff !important;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 700;
+          letter-spacing: 0;
+          line-height: 1.25;
+          white-space: nowrap;
+          box-shadow: 0 5px 13px rgba(20, 123, 73, .12);
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .sl-storefront .sl-store-product-bottom button:hover {
+          border-color: #10683f;
+          background: #10683f;
+          color: #fff !important;
+          box-shadow: 0 8px 18px rgba(20, 123, 73, .18);
+          transform: translateY(-1px);
+        }
+        .sl-storefront .sl-store-product-bottom button:focus-visible {
+          outline: 2px solid #599c56;
+          outline-offset: 3px;
+        }
+        .sl-storefront .sl-store-enquire {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          min-height: 42px;
+          margin-top: 12px;
+          padding: 9px 15px;
+          border: 1px solid #147b49;
+          border-radius: 14px;
+          background: #147b49;
+          color: #fff !important;
+          box-shadow: 0 5px 13px rgba(20, 123, 73, .12);
+          font-family: inherit;
+          font-size: 17px;
+          font-weight: 700;
+          letter-spacing: 0;
+          line-height: 1.25;
+          text-align: center;
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .sl-storefront .sl-store-enquire:hover {
+          border-color: #10683f;
+          background: #10683f;
+          color: #fff !important;
+          box-shadow: 0 8px 18px rgba(20, 123, 73, .18);
+          transform: translateY(-1px);
         }
         .sl-storefront .sl-store-contact-primary:focus-visible,
         .sl-storefront .sl-store-contact-secondary:focus-visible,
@@ -679,7 +769,18 @@ export function PublicCatalogue({
                       ))}
                   </div>
                   <div className="sl-store-product-bottom">
-                    <strong>{money(p.price, p.currency, p.unit)}</strong>
+                    {p.price == null || p.price === "" ? (
+                      <button
+                        type="button"
+                        className="sl-price-request-link"
+                        onClick={() => startEnquiry(p.id)}
+                        aria-label={"Enquire for price of " + p.name}
+                      >
+                        Price on request
+                      </button>
+                    ) : (
+                      <strong>{money(p.price, p.currency, p.unit)}</strong>
+                    )}
                     <button onClick={() => openProduct(p)}>
                       Details <ArrowRight size={14} />
                     </button>
