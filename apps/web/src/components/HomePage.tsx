@@ -59,7 +59,8 @@ export function HomePage() {
 
       <header className="sl-home-nav">
         <Brand />
-        <nav aria-label="Main navigation">\n          <button type="button" className="sl-home-language-toggle" onClick={() => setHomeLanguage(homeLanguage === "en" ? "ta" : "en")} aria-label="Switch language">{homeLanguage === "en" ? "தமிழ்" : "English"}</button>
+        <nav aria-label="Main navigation">
+          <button type="button" className="sl-home-language-toggle" onClick={() => setHomeLanguage(homeLanguage === "en" ? "ta" : "en")} aria-label="Switch language">{homeLanguage === "en" ? "தமிழ்" : "English"}</button>
           <a href="#features">{homeLanguage === "en" ? "Features" : "அம்சங்கள்"}</a>
           <a href="#how-it-works">{homeLanguage === "en" ? "How it works" : "எப்படி செயல்படுகிறது"}</a>
           <a href="#pricing">{homeLanguage === "en" ? "Pricing" : "விலைத் திட்டங்கள்"}</a>
