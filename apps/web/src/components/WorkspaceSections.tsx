@@ -77,10 +77,11 @@ export function AuthScreen({
   auth,
   notice = "",
 }: AuthScreenProps) {
+  const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">("en");
   return (
     <>
     <div className="sl-auth-page">
-      <SiteHeader />
+      <SiteHeader language={authHeaderLanguage} onToggleLanguage={() => setAuthHeaderLanguage(authHeaderLanguage === "en" ? "ta" : "en")} showLanguageToggle />
     <div className="sl-auth-layout">
       <section className="sl-auth-story">
         <Brand />
