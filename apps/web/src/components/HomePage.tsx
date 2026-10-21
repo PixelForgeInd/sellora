@@ -157,7 +157,7 @@ export function HomePage() {
             <h3>Flexible</h3>
             <p className="sl-home-price"><strong>₹{prices.MONTHLY.toLocaleString("en-IN")}</strong><span>/ month</span></p>
             <p className="sl-home-price-desc">A simple monthly subscription with flexibility to renew each month.</p>
-            <ul><li>Digital product catalogue</li><li>Shareable public catalogue link</li><li>Product and catalogue management</li><li>Customer enquiries and orders</li><li>Subscription management</li></ul>
+            <ul><li>Digital product catalogue</li><li>Shareable public catalogue link</li><li>Product and catalogue management</li><li>Customer enquiries and orders</li><li>Custom payment setup</li></ul>
             <a className="sl-home-price-cta" href="/signup">Get started monthly <ArrowRight size={16}/></a>
           </article>
           <article className="sl-home-price-card sl-home-price-featured">
