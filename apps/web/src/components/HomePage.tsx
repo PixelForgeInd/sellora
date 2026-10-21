@@ -161,6 +161,7 @@ export function HomePage() {
             <a className="sl-home-price-cta" href="/signup">Get started monthly <ArrowRight size={16}/></a>
           </article>
           <article className="sl-home-price-card sl-home-price-featured">
+            <span className="sl-home-recommended">RECOMMENDED</span>
             <span className="sl-home-price-badge">BEST VALUE · SAVE ₹{savings.toLocaleString("en-IN")}</span>
             <span className="sl-home-eyebrow">YEARLY</span>
             <h3>Annual</h3>
