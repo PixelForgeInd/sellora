@@ -1151,7 +1151,7 @@ body{border-top:0;}
 .sl-home-preview{position:relative;padding:15px 12px 30px 28px}
 .sl-preview-window{background:#fff;border:1px solid #e5ebe2;border-radius:16px;padding:20px;box-shadow:0 25px 80px #233b2017;transform:rotate(1deg)}
 .sl-preview-top{height:23px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #edf0ea;padding-bottom:15px}
-.sl-preview-top>span{width:7px;height:7px;background:#cbd7c6;border-radius:50%}
+.sl-preview-top>span{width:7px;height:7px;border-radius:50%}.sl-preview-top>span:nth-child(1){background:#ff5f57}.sl-preview-top>span:nth-child(2){background:#febc2e}.sl-preview-top>span:nth-child(3){background:#28c840}
 .sl-preview-top small{margin-left:auto;font-size:8px;letter-spacing:1.4px;color:#8b9587}
 .sl-preview-heading{display:flex;justify-content:space-between;align-items:center;padding:25px 5px 22px}
 .sl-preview-heading small{font-size:8px;letter-spacing:1.3px;color:#6e9667;font-weight:800}
