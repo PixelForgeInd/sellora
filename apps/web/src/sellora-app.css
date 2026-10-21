@@ -2450,3 +2450,67 @@ body{border-top:0;}
 .sl-auth-page .sl-home-nav nav .sl-home-language-toggle:hover{
   background:#f3f8f0!important;
 }
+
+
+/* Keep login, sign-up and password recovery aligned with the Sellora homepage theme. */
+.sl-auth-layout {
+  --sl-green: #599c56;
+  --sl-dark: #315633;
+}
+.sl-auth-story,
+.sl-auth-page .sl-auth-story {
+  background: linear-gradient(135deg, #f5f7ef 0%, #edf4e8 100%);
+}
+.sl-story-content h1 em,
+.sl-auth-page .sl-story-content h1 em {
+  color: #599c56;
+}
+.sl-story-points svg,
+.sl-auth-page .sl-story-points svg {
+  color: #599c56;
+}
+.sl-auth-story > small,
+.sl-auth-page .sl-auth-story > small {
+  color: #6f8068;
+}
+.sl-auth-card .sl-kicker,
+.sl-auth-page .sl-auth-card .sl-kicker {
+  color: #599c56;
+}
+.sl-auth-layout .sl-form input:focus,
+.sl-auth-layout .sl-form select:focus,
+.sl-auth-layout .sl-form textarea:focus,
+.sl-auth-page .sl-form input:focus,
+.sl-auth-page .sl-form select:focus,
+.sl-auth-page .sl-form textarea:focus {
+  border-color: #599c56;
+  box-shadow: 0 0 0 3px #599c561c;
+}
+.sl-auth-layout .sl-form .sl-primary,
+.sl-auth-page .sl-form .sl-primary {
+  background: #599c56;
+  color: #fff;
+  transition: background .15s ease, transform .15s ease;
+}
+.sl-auth-layout .sl-form .sl-primary:hover:not(:disabled),
+.sl-auth-page .sl-form .sl-primary:hover:not(:disabled) {
+  background: #477f44;
+  transform: translateY(-1px);
+}
+.sl-auth-layout .sl-auth-switch button,
+.sl-auth-page .sl-auth-switch button {
+  color: #599c56;
+}
+.sl-auth-layout .sl-auth-switch button:hover,
+.sl-auth-page .sl-auth-switch button:hover {
+  color: #315633;
+}
+.sl-auth-layout .sl-password-toggle:hover,
+.sl-auth-page .sl-password-toggle:hover {
+  color: #315633;
+  background: #edf4e8;
+}
+.sl-auth-layout .sl-password-toggle:focus-visible,
+.sl-auth-page .sl-password-toggle:focus-visible {
+  outline-color: #599c56;
+}
