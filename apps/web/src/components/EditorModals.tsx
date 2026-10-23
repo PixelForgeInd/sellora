@@ -108,7 +108,7 @@ export function ProductModal({
                 {tx("Or add an image URL", "அல்லது பட URL-ஐச் சேர்க்கவும்")}
                 <input type="url" value={pform.imageUrl.startsWith("data:") ? "" : (pform.imageUrls[0] && !pform.imageUrls[0].startsWith("data:") ? pform.imageUrls[0] : "")} onChange={(e) => setPform(old => { const imageUrls = [...old.imageUrls]; if (imageUrls.length) imageUrls[0] = e.target.value; else if (e.target.value) imageUrls.push(e.target.value); return { ...old, imageUrl: e.target.value, imageUrls }; })} placeholder="https://…" />
               </label>
-            </div>      </div>
+            </div>
           </div>
           <label>
             {tx("Description", "விளக்கம்")}
