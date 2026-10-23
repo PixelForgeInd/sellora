@@ -3015,3 +3015,21 @@ body{border-top:0;}
 /* Match the public home-page Sellora wordmark scale inside the workspace sidebar. */
 .sl-app .sl-sidebar > .sl-brand .sl-mark{width:52px;height:52px}
 .sl-app .sl-sidebar > .sl-brand .sl-wordmark{font-family:"Sora","DM Sans",ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700;letter-spacing:-.8px}
+
+
+/* Product editor photo gallery and consistent Sellora form styling */
+.sl-photo-gallery { min-width: 0; padding: 18px; border: 1px dashed #c9dbc5; border-radius: 16px; background: #fbfcf9; }
+.sl-photo-gallery__heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; color:#26382c; }
+.sl-photo-gallery__picker { display:flex; align-items:center; justify-content:center; gap:10px; min-height:76px; padding:16px; border:1px solid #d9e5d5; border-radius:12px; background:#fff; color:#287442; font-weight:700; cursor:pointer; transition:border-color .18s, background .18s; }
+.sl-photo-gallery__picker:hover { border-color:#599c56; background:#f5faf3; }
+.sl-photo-gallery__picker input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
+.sl-photo-gallery__grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin:14px 0; }
+.sl-photo-gallery__item { position:relative; min-width:0; aspect-ratio:1; overflow:hidden; border:1px solid #dfe8db; border-radius:12px; background:#f3f6f0; }
+.sl-photo-gallery__item img { display:block; width:100%; height:100%; object-fit:cover; }
+.sl-photo-gallery__item > span { position:absolute; left:6px; bottom:6px; padding:3px 7px; border-radius:999px; background:rgba(255,255,255,.94); color:#315633; font-size:11px; font-weight:700; }
+.sl-photo-gallery__item > button { position:absolute; top:5px; right:5px; display:grid; place-items:center; width:27px; height:27px; border:0; border-radius:50%; background:#fff; color:#8f2f2f; box-shadow:0 2px 8px #0002; cursor:pointer; }
+.sl-photo-gallery .sl-image-url-label { display:block; margin-top:14px; }
+.sl-modal .sl-form input:not([type=file]), .sl-modal .sl-form textarea, .sl-modal .sl-form select { font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif; }
+.sl-modal .sl-form label { color:#435347; font-size:14px; font-weight:650; }
+.sl-modal .sl-modal-actions button { font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif; font-weight:700; }
+@media(max-width:640px) { .sl-photo-gallery__grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .sl-photo-gallery { padding:12px; } }
