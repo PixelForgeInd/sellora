@@ -79,11 +79,12 @@ export function AuthScreen({
 }: AuthScreenProps) {
   const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
   const isTamil = authHeaderLanguage === "ta";
+  useEffect(() => { document.documentElement.lang = isTamil ? "ta" : "en"; }, [isTamil]);
   const isSignup = mode === "signup";
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
   const heading = isSignup
-    ? "One catalogue. A world of possibilities."
+    ? "{isTamil ? "ஒரே தயாரிப்புப் பட்டியல்." : "One catalogue."} A world of possibilities."
     : isForgot
       ? "Let’s get you back in."
       : isReset
@@ -111,25 +112,25 @@ export function AuthScreen({
           <div className="sl-auth-new__story-inner">
             <span className="sl-auth-new__eyebrow">
               <span className="sl-auth-new__eyebrow-dot" />
-              YOUR PRODUCTS. YOUR BRAND.
+              {isTamil ? "உங்கள் தயாரிப்புகள். உங்கள் பிராண்ட்." : "YOUR PRODUCTS. YOUR BRAND."}
             </span>
             <h1>
               One catalogue.
               <br />
-              <em>More possibilities.</em>
+              <em>{isTamil ? "மேலும் பல வாய்ப்புகள்." : "More possibilities."}</em>
             </h1>
             <p className="sl-auth-new__intro">
               A polished, shareable product catalogue for your business. No design
               tools or technical skills required.
             </p>
             <div className="sl-auth-new__benefits">
-              <div><span><Check size={15} /></span><p><strong>Set up in minutes</strong><small>Get your catalogue ready without the hassle.</small></p></div>
-              <div><span><Check size={15} /></span><p><strong>Made for your industry</strong><small>Showcase products the way you want.</small></p></div>
-              <div><span><Check size={15} /></span><p><strong>One simple link</strong><small>Share your catalogue anywhere.</small></p></div>
+              <div><span><Check size={15} /></span><p><strong>{isTamil ? "சில நிமிடங்களில் அமைக்கலாம்" : "Set up in minutes"}</strong><small>{isTamil ? "சிரமமின்றி உங்கள் பட்டியலைத் தயாரிக்கலாம்." : "Get your catalogue ready without the hassle."}</small></p></div>
+              <div><span><Check size={15} /></span><p><strong>{isTamil ? "உங்கள் துறைக்காக உருவாக்கப்பட்டது" : "Made for your industry"}</strong><small>{isTamil ? "உங்கள் விருப்பப்படி தயாரிப்புகளைக் காட்சிப்படுத்துங்கள்." : "Showcase products the way you want."}</small></p></div>
+              <div><span><Check size={15} /></span><p><strong>{isTamil ? "ஒரே எளிய இணைப்பு" : "One simple link"}</strong><small>{isTamil ? "உங்கள் பட்டியலை எங்கும் பகிருங்கள்." : "Share your catalogue anywhere."}</small></p></div>
             </div>
             <div className="sl-auth-new__signature">
               <span className="sl-auth-new__signature-mark">S</span>
-              <span>SELLORA <i /> DIGITAL CATALOGUES. SMARTER SALES.</span>
+              <span>SELLORA <i /> {isTamil ? "டிஜிட்டல் பட்டியல்கள். புத்திசாலித்தனமான விற்பனை." : "DIGITAL CATALOGUES. SMARTER SALES."}</span>
             </div>
           </div>
         </section>
