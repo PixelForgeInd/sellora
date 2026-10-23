@@ -24,7 +24,9 @@ export function PublicCatalogue({
   demo?: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
+  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(() => { const params = new URLSearchParams(window.location.search); return params.get("lang") === "ta" || params.get("uiLanguage") === "ta" ? "ta" : "en"; });
+  const isTamil = catalogueLanguage === "ta";
+  const tx = (en: string, ta: string) => isTamil ? ta : en;
   const [category, setCategory] = useState("All products");
   const [details, setDetails] = useState<Product | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -348,6 +350,8 @@ export function PublicCatalogue({
       style={{ "--store-brand": data.business.brandColor } as CSSProperties}
     >
       <style>{`
+        .sl-storefront .sl-store-language-toggle { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:10px 16px; border:1px solid #dce8d8; border-radius:999px; background:#fff; color:var(--store-brand,#599c56); font:700 13px/1.2 "DM Sans",sans-serif; cursor:pointer; white-space:nowrap; transition:background .18s,border-color .18s,transform .18s; }
+        .sl-storefront .sl-store-language-toggle:hover { background:#f3f8f1; border-color:var(--store-brand,#599c56); transform:translateY(-1px); }
         .sl-storefront .sl-store-quote,
         .sl-storefront .sl-store-secondary,
         .sl-storefront .sl-store-whatsapp,
@@ -561,16 +565,17 @@ export function PublicCatalogue({
           </span>
         </a>
         <nav>
-          <a href="#products">Products</a>
-          <a href="#why-us">Why us</a>
-          <a href="#contact">Contact</a>
+          <a href="#products">{tx("Products", "தயாரிப்புகள்")}</a>
+          <a href="#why-us">{tx("Why us", "எங்களை ஏன் தேர்வு செய்ய வேண்டும்")}</a>
+          <a href="#contact">{tx("Contact", "தொடர்பு")}</a>
         </nav>
         <div className="sl-store-header-actions">
+          <button type="button" className="sl-store-language-toggle" aria-label={tx("Switch to Tamil", "ஆங்கிலத்திற்கு மாற்றவும்")} onClick={() => { const next = isTamil ? "en" : "ta"; setCatalogueLanguage(next); const url = new URL(window.location.href); url.searchParams.set("lang", next); url.searchParams.delete("uiLanguage"); window.history.replaceState(null, "", url.toString()); document.documentElement.lang = next; }}>{isTamil ? "English" : "தமிழ்"}</button>
           <label className="sl-store-search">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search products…"
+              placeholder={tx("Search products…", "தயாரிப்புகளைத் தேடுங்கள்…")}
             />
           </label>
           <a
@@ -580,7 +585,7 @@ export function PublicCatalogue({
             rel="noreferrer"
           >
             <MessageCircle size={17} />
-            <span>WhatsApp</span>
+            <span>{tx("WhatsApp", "வாட்ஸ்அப்")}</span>
           </a>
           {data.checkoutReady && !demo ? (
             <button
@@ -602,7 +607,7 @@ export function PublicCatalogue({
               className="sl-store-quote"
               onClick={() => startEnquiry()}
             >
-              Get a quote <ArrowRight size={15} />
+              {tx("Get a quote", "விலை விவரம் கேட்கவும்")} <ArrowRight size={15} />
             </button>
           )}
           <span className="sl-powered-by">
@@ -688,14 +693,14 @@ export function PublicCatalogue({
               <small>Bulk orders · Custom requirements</small>
             </div>
             <div className="sl-store-float">
-              <Check size={15} /> Trusted B2B supplier
+              <Check size={15} /> {tx("Trusted B2B supplier", "நம்பகமான B2B வழங்குநர்")}
             </div>
           </div>
         </section>
         <section className="sl-store-categories">
           <div>
-            <span className="sl-store-eyebrow">DISCOVER THE RANGE</span>
-            <h2>Find what you need.</h2>
+            <span className="sl-store-eyebrow">{tx("DISCOVER THE RANGE", "வகைகளைக் கண்டறியுங்கள்")}</span>
+            <h2>{tx("Find what you need.", "உங்களுக்குத் தேவையானதைத் தேர்ந்தெடுங்கள்.")}</h2>
           </div>
           <div className="sl-store-category-list">
             {categories.map((c) => (
@@ -713,9 +718,9 @@ export function PublicCatalogue({
         <section className="sl-store-products" id="products">
           <div className="sl-store-section-head">
             <div>
-              <span className="sl-store-eyebrow">OUR COLLECTION</span>
-              <h2>Products to move your business forward.</h2>
-              <p>Explore the range and enquire directly with our team.</p>
+              <span className="sl-store-eyebrow">{tx("OUR COLLECTION", "எங்கள் தயாரிப்புகள்")}</span>
+              <h2>{tx("Products to move your business forward.", "உங்கள் வணிக வளர்ச்சிக்கான தயாரிப்புகள்.")}</h2>
+              <p>{tx("Explore the range and enquire directly with our team.", "தயாரிப்புகளைப் பார்த்து எங்கள் குழுவிடம் நேரடியாக விசாரிக்கவும்.")}</p>
             </div>
             <div className="sl-store-count">
               {filtered.length} products <span>·</span> {data.business.industry}
