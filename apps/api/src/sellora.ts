@@ -512,6 +512,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     description:z.string().trim().max(2000).optional(), price:z.number().positive().optional(),
     currency:z.string().length(3).default("INR"), unit:z.string().trim().min(1).max(20).default("piece"),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).optional(),
+    imageUrls:z.array(z.string().max(4200000)).max(10).optional(),
     stockEnabled:z.boolean().default(false), stockQuantity:z.number().min(0).max(100000000).nullable().optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).default({})
   }).refine(data => !data.stockEnabled || (data.stockQuantity !== undefined && data.stockQuantity !== null), {message:"Set an initial stock quantity when enabling stock tracking."}).parse(req.body);
@@ -524,7 +525,7 @@ router.post("/workspace/products", requireAuth, authenticated(async (req,res) =>
     const created=await tx.selloraProduct.create({data:{
       businessId:business.id,name:data.name,sku:data.sku || null,description:data.description || null,
       price:data.price === undefined ? null : new Prisma.Decimal(data.price),currency:data.currency,unit:data.unit,
-      imageUrl:data.imageUrl || null,stockEnabled:data.stockEnabled,stockQuantity:data.stockEnabled && data.stockQuantity !== undefined && data.stockQuantity !== null ? new Prisma.Decimal(data.stockQuantity) : null,fields:data.fields
+      imageUrl:data.imageUrl || data.imageUrls?.[0] || null,imageUrls:data.imageUrls ?? (data.imageUrl ? [data.imageUrl] : []),stockEnabled:data.stockEnabled,stockQuantity:data.stockEnabled && data.stockQuantity !== undefined && data.stockQuantity !== null ? new Prisma.Decimal(data.stockQuantity) : null,fields:data.fields
     }});
     if(data.stockEnabled && data.stockQuantity && data.stockQuantity>0) {
       await tx.selloraStockMovement.create({data:{businessId:business.id,productId:created.id,quantityDelta:new Prisma.Decimal(data.stockQuantity),reason:"INITIAL_STOCK"}});
@@ -539,6 +540,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
     description:z.string().trim().max(2000).nullable().optional(),price:z.number().positive().nullable().optional(),
     currency:z.string().length(3).optional(),unit:z.string().trim().min(1).max(20).optional(),
     imageUrl:z.union([z.string().url().max(500),z.string().regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/).max(4200000),z.literal("")]).nullable().optional(),
+    imageUrls:z.array(z.string().max(4200000)).max(10).optional(),
     fields:z.record(z.string(),z.union([z.string().max(500),z.number(),z.boolean(),z.array(z.string().max(80)).max(100)])).optional()
   }).parse(req.body);
   const business = await prisma.business.findFirst({where:{ownerUserId:req.userId},select:{id:true}});
@@ -554,7 +556,7 @@ router.patch("/workspace/products/:id", requireAuth, authenticated(async (req,re
   }
   const {price,...rest}=data;
   const product=await prisma.selloraProduct.update({where:{id:owned.id},data:{
-    ...rest,imageUrl:rest.imageUrl === "" ? null : rest.imageUrl,
+    ...rest,imageUrl:rest.imageUrl === "" ? null : (rest.imageUrls?.[0] ?? rest.imageUrl),imageUrls:rest.imageUrls ?? (rest.imageUrl ? [rest.imageUrl] : undefined),
     ...(price !== undefined ? {price:price===null?null:new Prisma.Decimal(price)} : {})
   }});
   const oldImageFilename=uploadedImageFilename(owned.imageUrl);
