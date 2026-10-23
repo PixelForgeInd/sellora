@@ -284,7 +284,7 @@ export function ProductModal({
                       })
                     }
                   >
-                    <option value="">Choose…</option>
+                    <option value="">{tx("Choose…", "தேர்ந்தெடுக்கவும்…")}</option>
                     <option value="true">{tx("Yes", "ஆம்")}</option>
                     <option value="false">{tx("No", "இல்லை")}</option>
                   </select>
@@ -327,10 +327,10 @@ export function ProductModal({
           </div>
           <div className="sl-modal-actions">
             <Btn kind="outline" onClick={() => setModal("")}>
-              Cancel
+              {tx("Cancel", "ரத்து செய்")}
             </Btn>
             <Btn type="submit" disabled={busy}>
-              {busy ? "Saving…" : "Save product"} <ArrowRight size={15} />
+              {busy ? tx("Saving…", "சேமிக்கிறது…") : tx("Save product", "தயாரிப்பைச் சேமிக்கவும்")} <ArrowRight size={15} />
             </Btn>
           </div>
         </form>
