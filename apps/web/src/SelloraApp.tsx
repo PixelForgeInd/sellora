@@ -2068,6 +2068,7 @@ export default function SelloraApp() {
       </main>
       {modal === "product" && (
         <ProductModal
+          isTamil={isTamil}
           category={category}
           error={error}
           editing={editing}
