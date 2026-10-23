@@ -1349,7 +1349,7 @@ export default function SelloraApp() {
           <div>
             <span className="sl-kicker">SELLORA WORKSPACE</span>
             <h1>
-              {page === "overview"
+              {isTamil ? ({ overview: "உங்கள் வணிகத்தின் கண்ணோட்டம்", products: "உங்கள் தயாரிப்புகள்", catalogues: "உங்கள் பட்டியல்கள்", orders: "வாடிக்கையாளர் ஆர்டர்கள்", customers: "வாடிக்கையாளர் விவரங்கள்", reports: "விற்பனை அறிக்கைகள்", settings: "வணிக அமைப்புகள்", payments: "கட்டணங்கள்", subscription: "சந்தா மற்றும் கட்டணம்" } as Record<string, string>)[page] || "பணியிடம்" : page === "overview"
                 ? "Your business at a glance"
                 : page === "products"
                   ? "Your products"
@@ -1370,7 +1370,7 @@ export default function SelloraApp() {
                                 : "Workspace"}
             </h1>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><button type="button" className="sl-button sl-outline" onClick={() => { const next = new URL(window.location.href); next.searchParams.set("uiLanguage", next.searchParams.get("uiLanguage") === "ta" ? "en" : "ta"); window.history.replaceState(null, "", next.toString()); window.dispatchEvent(new CustomEvent("sellora-language-change", {detail: next.searchParams.get("uiLanguage")})); }}>{new URLSearchParams(window.location.search).get("uiLanguage") === "ta" ? "English" : "தமிழ்"}</button><span className="sl-online-dot">● Workspace active</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><button type="button" className="sl-button sl-outline" onClick={() => { const nextLanguage = isTamil ? "en" : "ta"; setUiLanguage(nextLanguage); const next = new URL(window.location.href); next.searchParams.set("uiLanguage", nextLanguage); window.history.replaceState(null, "", next.toString()); document.documentElement.lang = nextLanguage; window.dispatchEvent(new CustomEvent("sellora-language-change", { detail: nextLanguage })); }}>{isTamil ? "English" : "தமிழ்"}</button><span className="sl-online-dot">● {isTamil ? "பணியிடம் செயலில் உள்ளது" : "Workspace active"}</span></div>
         </header>
         {error && <Err text={error} />}
         {notice && (
@@ -1393,7 +1393,7 @@ export default function SelloraApp() {
                   <Plus size={20} />
                 </span>
                 <div className="sl-compact-panel-copy">
-                  <strong>Make your next sale with Sellora</strong>
+                  <strong>{isTamil ? "Sellora மூலம் உங்கள் அடுத்த விற்பனையை மேம்படுத்துங்கள்" : "Make your next sale with Sellora"}</strong>
                   <span>
                     Bring your products together in a beautiful digital
                     catalogue, ready to share with every customer.
@@ -1423,13 +1423,13 @@ export default function SelloraApp() {
                     startProduct();
                   }}
                 >
-                  <Plus size={16} /> Add product
+                  <Plus size={16} /> {isTamil ? "தயாரிப்பைச் சேர்க்கவும்" : "Add product"}
                 </Btn>
               </div>
             </section>
             <section className="sl-stat-grid" aria-label="Business analytics">
               <div>
-                <span>ORDERS TODAY</span>
+                <span>{isTamil ? "இன்றைய ஆர்டர்கள்" : "ORDERS TODAY"}</span>
                 <ClipboardList />
                 <strong>
                   {
@@ -1444,10 +1444,10 @@ export default function SelloraApp() {
                     ).length
                   }
                 </strong>
-                <small>Orders created today</small>
+                <small>{isTamil ? "இன்று உருவாக்கப்பட்ட ஆர்டர்கள்" : "Orders created today"}</small>
               </div>
               <div>
-                <span>PAYMENTS RECEIVED TODAY</span>
+                <span>{isTamil ? "இன்று பெறப்பட்ட கட்டணங்கள்" : "PAYMENTS RECEIVED TODAY"}</span>
                 <CreditCard />
                 <strong>
                   {formatCurrency(
@@ -1471,16 +1471,16 @@ export default function SelloraApp() {
                     "INR",
                   )}
                 </strong>
-                <small>Verified payments received today</small>
+                <small>{isTamil ? "இன்று உறுதிப்படுத்தப்பட்ட கட்டணங்கள்" : "Verified payments received today"}</small>
               </div>
               <div>
-                <span>PRODUCTS</span>
+                <span>{isTamil ? "தயாரிப்புகள்" : "PRODUCTS"}</span>
                 <Package />
                 <strong>{products.length}</strong>
-                <small>In your workspace</small>
+                <small>{isTamil ? "உங்கள் பணியிடத்தில்" : "In your workspace"}</small>
               </div>
               <div>
-                <span>CATALOGUES</span>
+                <span>{isTamil ? "பட்டியல்கள்" : "CATALOGUES"}</span>
                 <BookOpen />
                 <strong>{catalogues.length}</strong>
                 <small>
@@ -1492,7 +1492,7 @@ export default function SelloraApp() {
                 </small>
               </div>
               <div>
-                <span>ENQUIRIES TODAY</span>
+                <span>{isTamil ? "இன்றைய விசாரணைகள்" : "ENQUIRIES TODAY"}</span>
                 <MessageSquare />
                 <strong>
                   {
@@ -1507,13 +1507,13 @@ export default function SelloraApp() {
                     ).length
                   }
                 </strong>
-                <small>Customer enquiries received today</small>
+                <small>{isTamil ? "இன்று பெறப்பட்ட வாடிக்கையாளர் விசாரணைகள்" : "Customer enquiries received today"}</small>
               </div>
               <div>
-                <span>TOTAL CUSTOMERS</span>
+                <span>{isTamil ? "மொத்த வாடிக்கையாளர்கள்" : "TOTAL CUSTOMERS"}</span>
                 <Users />
                 <strong>{overviewCustomers.length}</strong>
-                <small>In your customer directory</small>
+                <small>{isTamil ? "உங்கள் வாடிக்கையாளர் பட்டியலில்" : "In your customer directory"}</small>
               </div>
             </section>
 
