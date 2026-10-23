@@ -84,19 +84,19 @@ export function AuthScreen({
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
   const heading = isSignup
-    ? "{isTamil ? "ஒரே தயாரிப்புப் பட்டியல்." : "One catalogue."} A world of possibilities."
+    ? (isTamil ? "உங்கள் Sellora கணக்கை உருவாக்குங்கள்." : "Create your Sellora account.")
     : isForgot
-      ? "Let’s get you back in."
+      ? (isTamil ? "மீண்டும் உங்கள் கணக்கிற்குள் செல்வோம்." : "Let’s get you back in.")
       : isReset
-        ? "A fresh start."
-        : "Welcome back to Sellora.";
+        ? (isTamil ? "புதிய தொடக்கம்." : "A fresh start.")
+        : (isTamil ? "Sellora-வுக்கு மீண்டும் வரவேற்கிறோம்." : "Welcome back to Sellora.");
   const description = isSignup
-    ? "Bring your products together in one beautiful, shareable catalogue."
+    ? (isTamil ? "உங்கள் தயாரிப்புகளை அழகான, பகிரக்கூடிய ஒரே பட்டியலில் ஒன்றிணைக்கவும்." : "Bring your products together in one beautiful, shareable catalogue.")
     : isForgot
-      ? "Enter your email and we’ll send you a secure password reset link."
+      ? (isTamil ? "உங்கள் மின்னஞ்சலை உள்ளிடுங்கள்; பாதுகாப்பான கடவுச்சொல் மீட்டமைப்பு இணைப்பை அனுப்புவோம்." : "Enter your email and we’ll send you a secure password reset link.")
       : isReset
-        ? "Choose a strong new password for your account."
-        : "Your products, catalogues and next big sale are waiting.";
+        ? (isTamil ? "உங்கள் கணக்கிற்குப் புதிய வலுவான கடவுச்சொல்லைத் தேர்ந்தெடுக்கவும்." : "Choose a strong new password for your account.")
+        : (isTamil ? "உங்கள் தயாரிப்புகள், பட்டியல்கள் மற்றும் அடுத்த பெரிய விற்பனை உங்களுக்காகக் காத்திருக்கின்றன." : "Your products, catalogues and next big sale are waiting.");
 
   return (
     <div className="sl-auth-new">
@@ -141,7 +141,7 @@ export function AuthScreen({
             <span className="sl-auth-new__form-kicker">
               {isSignup ? "YOUR CATALOGUE JOURNEY STARTS HERE" : isForgot ? "ACCOUNT RECOVERY" : isReset ? "SECURE YOUR ACCOUNT" : "GOOD TO SEE YOU AGAIN"}
             </span>
-            <h2>{isSignup ? <>Create your<br /><span>Sellora account.</span></> : heading}</h2>
+            <h2>{isSignup && !isTamil ? <>Create your<br /><span>Sellora account.</span></> : heading}</h2>
             <p className="sl-auth-new__form-description">{description}</p>
             <Err text={error} />
             {notice && <p className="sl-auth-new__notice" role="status">{notice}</p>}
@@ -190,14 +190,14 @@ export function AuthScreen({
                 </div>
               )}
               <button className="sl-auth-new__submit" type="submit" disabled={busy}>
-                <span>{busy ? "Please wait…" : isSignup ? "Create account" : isForgot ? "Send reset link" : isReset ? "Reset password" : "Log in"}</span>
+                <span>{isTamil ? (busy ? "தயவுசெய்து காத்திருக்கவும்…" : isSignup ? "கணக்கை உருவாக்கவும்" : isForgot ? "மீட்டமைப்பு இணைப்பை அனுப்பவும்" : isReset ? "கடவுச்சொல்லை மீட்டமைக்கவும்" : "உள்நுழைக") : busy ? "Please wait…" : isSignup ? "Create account" : isForgot ? "Send reset link" : isReset ? "Reset password" : "Log in"}</span>
                 {!busy && <ArrowRight size={17} />}
               </button>
             </form>
             <div className="sl-auth-new__switch">
-              <span>{isForgot || isReset ? "Remember your password?" : isSignup ? "Already have an account?" : "New to Sellora?"}</span>
+              <span>{isTamil ? (isForgot || isReset ? "கடவுச்சொல் நினைவில் உள்ளதா?" : isSignup ? "ஏற்கனவே கணக்கு உள்ளதா?" : "Sellora-வுக்கு புதியவரா?") : isForgot || isReset ? "Remember your password?" : isSignup ? "Already have an account?" : "New to Sellora?"}</span>
               <button type="button" onClick={() => { setMode(isSignup || isForgot || isReset ? "login" : "signup"); setError(""); }}>
-                {isSignup ? "Log in" : isForgot || isReset ? "Back to log in" : "Create account"}
+                {isTamil ? (isSignup ? "உள்நுழைக" : isForgot || isReset ? "உள்நுழைவுக்குத் திரும்பவும்" : "கணக்கை உருவாக்கவும்") : isSignup ? "Log in" : isForgot || isReset ? "Back to log in" : "Create account"}
               </button>
             </div>
             <div className="sl-auth-new__privacy"><span className="sl-auth-new__privacy-dot">✓</span>{isTamil ? "உங்கள் பணியிடம் உங்கள் கணக்கிற்கு மட்டும் தனிப்பட்டது." : "Your workspace is private to your account."}</div>
