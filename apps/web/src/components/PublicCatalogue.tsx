@@ -350,6 +350,15 @@ export function PublicCatalogue({
       style={{ "--store-brand": data.business.brandColor } as CSSProperties}
     >
       <style>{`
+        .sl-storefront .sl-store-categories { align-items:center; }
+        .sl-storefront .sl-store-discover-copy { flex:1 1 360px; min-width:0; }
+        .sl-storefront .sl-store-discover-search { display:flex; align-items:center; gap:12px; width:min(100%,460px); min-height:48px; margin-top:18px; padding:0 15px; border:1px solid #dce5d8; border-radius:14px; background:#f8faf7; color:#718074; transition:border-color .18s,box-shadow .18s,background .18s; }
+        .sl-storefront .sl-store-discover-search:focus-within { border-color:var(--store-brand,#599c56); background:#fff; box-shadow:0 0 0 3px rgba(89,156,86,.14); }
+        .sl-storefront .sl-store-discover-search-icon { font-size:25px; line-height:1; color:var(--store-brand,#599c56); }
+        .sl-storefront .sl-store-discover-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#26382c; font:500 14px/1.4 "DM Sans",sans-serif; }
+        .sl-storefront .sl-store-discover-search input::placeholder { color:#879187; }
+        .sl-storefront .sl-store-discover-search > button { display:grid; place-items:center; width:28px; height:28px; border:0; border-radius:50%; background:#eaf2e7; color:#315633; font-size:20px; cursor:pointer; }
+        @media(max-width:640px) { .sl-storefront .sl-store-discover-search { width:100%; } }
         .sl-storefront .sl-store-language-toggle { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:10px 16px; border:1px solid #dce8d8; border-radius:999px; background:#fff; color:var(--store-brand,#599c56); font:700 13px/1.2 "DM Sans",sans-serif; cursor:pointer; white-space:nowrap; transition:background .18s,border-color .18s,transform .18s; }
         .sl-storefront .sl-store-language-toggle:hover { background:#f3f8f1; border-color:var(--store-brand,#599c56); transform:translateY(-1px); }
         .sl-storefront .sl-store-quote,
@@ -698,9 +707,14 @@ export function PublicCatalogue({
           </div>
         </section>
         <section className="sl-store-categories">
-          <div>
+          <div className="sl-store-discover-copy">
             <span className="sl-store-eyebrow">{tx("DISCOVER THE RANGE", "வகைகளைக் கண்டறியுங்கள்")}</span>
             <h2>{tx("Find what you need.", "உங்களுக்குத் தேவையானதைத் தேர்ந்தெடுங்கள்.")}</h2>
+            <label className="sl-store-discover-search">
+              <span className="sl-store-discover-search-icon" aria-hidden="true">⌕</span>
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tx("Search products…", "தயாரிப்புகளைத் தேடுங்கள்…")} aria-label={tx("Search products", "தயாரிப்புகளைத் தேடுங்கள்")} />
+              {query && <button type="button" onClick={() => setQuery("")} aria-label={tx("Clear search", "தேடலை அழிக்கவும்")}>×</button>}
+            </label>
           </div>
           <div className="sl-store-category-list">
             {categories.map((c) => (
