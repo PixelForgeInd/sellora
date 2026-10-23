@@ -24,6 +24,8 @@ const pageContent = {
 
 export function InformationalPage({ kind }: { kind: InfoPageKind }) {
   const content = pageContent[kind];
+  const [language, setLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
+  const isTamil = language === "ta";
   const [activeSection, setActiveSection] = useState("");
   const [readingProgress, setReadingProgress] = useState(0);
 
@@ -52,15 +54,15 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
   }, [kind]);
   return (
     <main className="sl-info-page">
-      <SiteHeader showLanguageToggle />
+      <SiteHeader language={language} onToggleLanguage={() => { const next = isTamil ? "en" : "ta"; setLanguage(next); const url = new URL(window.location.href); url.searchParams.set("lang", next); window.history.replaceState({}, "", url.toString()); }} showLanguageToggle />
       <section className="sl-info-hero">
         <span className="sl-home-eyebrow">
           {kind === "about" ? <Sprout size={15} /> : kind === "terms" ? <BookOpen size={15} /> : <ShieldCheck size={15} />}
-          {content.eyebrow}
+          {isTamil ? (kind === "terms" ? "விதிமுறைகள் மற்றும் நிபந்தனைகள்" : kind === "privacy" ? "தனியுரிமைக் கொள்கை" : "செல்லோரா பற்றி") : content.eyebrow}
         </span>
-        <h1>{content.title}</h1>
-        <p>{content.intro}</p>
-        <span className="sl-info-updated">General information · Please review the details below</span>
+        <h1>{isTamil ? (kind === "terms" ? "செல்லோராவைப் பயன்படுத்துவதற்கான விதிமுறைகள்" : kind === "privacy" ? "உங்கள் வணிகத் தகவலுக்கு பாதுகாப்பு முக்கியம்" : content.title) : content.title}</h1>
+        <p>{isTamil ? (kind === "terms" ? "செல்லோராவை அணுகி பயன்படுத்துவதற்கான அடிப்படை விதிகளை இந்த விதிமுறைகள் விளக்குகின்றன. சேவையைப் பயன்படுத்துவதற்கு முன் படிக்கவும்." : kind === "privacy" ? "இணையதளத்தைப் பார்வையிடும்போது அல்லது தளத்தைப் பயன்படுத்தும்போது தகவல்கள் எவ்வாறு கையாளப்படலாம் என்பதை இந்தக் கொள்கை விளக்குகிறது." : content.intro) : content.intro}</p>
+        <span className="sl-info-updated">{isTamil ? "பொதுவான தகவல் · கீழே உள்ள விவரங்களைப் பார்க்கவும்" : "General information · Please review the details below"}</span>
       </section>
 
       {kind !== "about" && (
@@ -80,7 +82,7 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
 
       {(kind === "terms" || kind === "privacy") && (
         <section className={"sl-policy-overview sl-policy-overview-" + kind} aria-label={kind === "terms" ? "Terms at a glance" : "Privacy at a glance"}>
-          <div className="sl-policy-overview-heading"><span className="sl-policy-overview-icon">{kind === "terms" ? <BookOpen size={19} /> : <ShieldCheck size={19} />}</span><div><span>{kind === "terms" ? "BEFORE YOU BEGIN" : "YOUR PRIVACY, AT A GLANCE"}</span><h2>{kind === "terms" ? "The essentials, up front." : "Know what to expect."}</h2></div></div>
+          <div className="sl-policy-overview-heading"><span className="sl-policy-overview-icon">{kind === "terms" ? <BookOpen size={19} /> : <ShieldCheck size={19} />}</span><div><span>{isTamil ? (kind === "terms" ? "தொடங்குவதற்கு முன்" : "உங்கள் தனியுரிமை") : kind === "terms" ? "BEFORE YOU BEGIN" : "YOUR PRIVACY, AT A GLANCE"}</span><h2>{isTamil ? (kind === "terms" ? "முக்கியமான விதிகள்" : "எதை எதிர்பார்க்கலாம்") : kind === "terms" ? "The essentials, up front." : "Know what to expect."}</h2></div></div>
           <div className="sl-policy-overview-grid">
             {(kind === "terms"
               ? [{title:"Your workspace",text:"Keep account details secure and activity lawful."},{title:"Your content",text:"You control what you publish and must have permission to use it."},{title:"Plans & payments",text:"Check plan, renewal and cancellation details before paying."}]
