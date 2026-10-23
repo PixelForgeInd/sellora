@@ -77,7 +77,8 @@ export function AuthScreen({
   auth,
   notice = "",
 }: AuthScreenProps) {
-  const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">("en");
+  const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">(() => new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en");
+  const isTamil = authHeaderLanguage === "ta";
   const isSignup = mode === "signup";
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
@@ -100,9 +101,7 @@ export function AuthScreen({
     <div className="sl-auth-new">
       <SiteHeader
         language={authHeaderLanguage}
-        onToggleLanguage={() =>
-          setAuthHeaderLanguage(authHeaderLanguage === "en" ? "ta" : "en")
-        }
+        onToggleLanguage={() => { const next = authHeaderLanguage === "en" ? "ta" : "en"; setAuthHeaderLanguage(next); const url = new URL(window.location.href); url.searchParams.set("lang", next); window.history.replaceState({}, "", url.toString()); }}
         showLanguageToggle
       />
       <main className="sl-auth-new__layout">
@@ -148,7 +147,7 @@ export function AuthScreen({
             <form className="sl-auth-new__form" onSubmit={auth}>
               {mode !== "reset" && (
                 <label>
-                  <span>Email address</span>
+                  <span>{isTamil ? "மின்னஞ்சல் முகவரி" : "Email address"}</span>
                   <input
                     type="email"
                     required
@@ -161,7 +160,7 @@ export function AuthScreen({
               )}
               {mode !== "forgot" && (
                 <label>
-                  <span>{isReset ? "New password" : "Password"}</span>
+                  <span>{isTamil ? (isReset ? "புதிய கடவுச்சொல்" : "கடவுச்சொல்") : isReset ? "New password" : "Password"}</span>
                   <div className="sl-auth-new__password">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -186,7 +185,7 @@ export function AuthScreen({
               )}
               {mode === "login" && (
                 <div className="sl-auth-new__forgot">
-                  <button type="button" onClick={() => { setMode("forgot"); setError(""); }}>Forgot password?</button>
+                  <button type="button" onClick={() => { setMode("forgot"); setError(""); }}>{isTamil ? "கடவுச்சொல்லை மறந்துவிட்டீர்களா?" : "Forgot password?"}</button>
                 </div>
               )}
               <button className="sl-auth-new__submit" type="submit" disabled={busy}>
@@ -200,7 +199,7 @@ export function AuthScreen({
                 {isSignup ? "Log in" : isForgot || isReset ? "Back to log in" : "Create account"}
               </button>
             </div>
-            <div className="sl-auth-new__privacy"><span className="sl-auth-new__privacy-dot">✓</span>Your workspace is private to your account.</div>
+            <div className="sl-auth-new__privacy"><span className="sl-auth-new__privacy-dot">✓</span>{isTamil ? "உங்கள் பணியிடம் உங்கள் கணக்கிற்கு மட்டும் தனிப்பட்டது." : "Your workspace is private to your account."}</div>
           </div>
         </section>
       </main>
