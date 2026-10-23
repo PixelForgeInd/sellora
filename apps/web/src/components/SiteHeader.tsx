@@ -18,11 +18,11 @@ export function SiteHeader({
     <header className="sl-home-nav">
       <Brand />
       <nav aria-label="Main navigation">
-        {showLanguageToggle && onToggleLanguage && (
+        {showLanguageToggle && (
           <button
             type="button"
             className="sl-home-language-toggle"
-            onClick={onToggleLanguage}
+            onClick={onToggleLanguage ?? (() => { const url = new URL(window.location.href); url.searchParams.set("lang", isTamil ? "en" : "ta"); window.location.href = url.toString(); })}
             aria-label="Switch language"
           >
             {isTamil ? "English" : "தமிழ்"}
