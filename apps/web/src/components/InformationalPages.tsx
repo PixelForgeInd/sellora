@@ -110,7 +110,7 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
       )}
 
       {kind === "terms" && (
-        <div className="sl-info-content">
+        <div className="sl-info-content sl-info-content-policy">
           <p className="sl-info-notice"><b>Draft terms:</b> This is a general starting point, not legal advice. Before public launch, confirm the legal business name, contact details, governing law, refund rules and other terms with a qualified professional.</p>
           <section id="using-service"><h2>1. Using the service</h2><p>You may use Sellora only in compliance with applicable laws and these terms. You are responsible for the accuracy of information you provide and for activity carried out through your account.</p></section>
           <section id="account-security"><h2>2. Your account and security</h2><p>Keep your login credentials confidential, use accurate account details and notify the service operator if you suspect unauthorised access. You are responsible for restricting access to your devices and account.</p></section>
@@ -126,7 +126,7 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
       )}
 
       {kind === "privacy" && (
-        <div className="sl-info-content">
+        <div className="sl-info-content sl-info-content-policy">
           <p className="sl-info-notice"><b>Draft privacy notice:</b> This is a template and must be checked against Sellora’s actual data flows, vendors, retention practices and applicable privacy law before launch.</p>
           <section id="information-processed"><h2>1. Information that may be processed</h2><p>Depending on how you use the service, this may include account and business details, product and catalogue content, customer enquiries and order information, subscription status, transaction references, and technical or diagnostic data needed to operate and secure the platform.</p></section>
           <section id="how-information-used"><h2>2. How information is used</h2><p>Information may be used to provide and maintain the service, publish catalogues at your request, route enquiries, manage workspaces and subscriptions, respond to support requests, protect against abuse and comply with legal obligations.</p></section>
