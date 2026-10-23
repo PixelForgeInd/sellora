@@ -22,6 +22,7 @@ type ProductForm = {
   currency: string;
   unit: string;
   imageUrl: string;
+  imageUrls: string[];
   stockEnabled: boolean;
   stockQuantity: string;
   fields: Record<string, string | number | boolean | string[]>;
@@ -58,14 +59,16 @@ export function ProductModal({
   uploadProductPhoto,
   saveProduct,
 }: ProductModalProps) {
+  const isTamil = new URLSearchParams(window.location.search).get("uiLanguage") === "ta" || new URLSearchParams(window.location.search).get("lang") === "ta";
+  const tx = (en: string, ta: string) => isTamil ? ta : en;
   return (
     <div className="sl-modal-backdrop">
       <section className="sl-modal">
         <header className="sl-modal-head">
           <div>
-            <span className="sl-kicker">PRODUCT LIBRARY</span>
-            <h2>{editing ? "Edit product" : "Add a product"}</h2>
-            <p>Enter the details your customers need.</p>
+            <span className="sl-kicker">{tx("PRODUCT LIBRARY", "தயாரிப்புகள்")}</span>
+            <h2>{editing ? tx("Edit product", "தயாரிப்பைத் திருத்து") : tx("Add a product", "தயாரிப்பைச் சேர்க்கவும்")}</h2>
+            <p>{tx("Enter the details your customers need.", "உங்கள் வாடிக்கையாளர்களுக்குத் தேவையான விவரங்களை உள்ளிடுங்கள்.")}</p>
           </div>
           <button onClick={() => setModal("")}>
             <X />
@@ -74,7 +77,7 @@ export function ProductModal({
         <Err text={error} />
         <form className="sl-form" onSubmit={saveProduct}>
           <label>
-            Product name
+            {tx("Product name", "தயாரிப்பின் பெயர்")}
             <input
               required
               minLength={2}
@@ -84,52 +87,31 @@ export function ProductModal({
           </label>
           <div className="sl-form-row">
             <label>
-              SKU / code
+              {tx("SKU / code", "SKU / குறியீடு")}
               <input
                 value={pform.sku}
                 onChange={(e) => setPform({ ...pform, sku: e.target.value })}
               />
             </label>
-            <div className="sl-photo-upload">
-              <label>
-                Product photo{" "}
-                <span className="sl-muted">
-                  Optional · JPG, PNG, WebP · up to 3 MB
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => uploadProductPhoto(e.target.files?.[0])}
-                />
+            <div className="sl-photo-upload sl-photo-gallery">
+              <div className="sl-photo-gallery__heading">
+                <strong>{tx("Product photos", "தயாரிப்பு புகைப்படங்கள்")}</strong>
+                <span className="sl-muted">{pform.imageUrls.length}/10 · {tx("Up to 10 photos, 3 MB each", "அதிகபட்சம் 10 புகைப்படங்கள்; ஒவ்வொன்றும் 3 MB வரை")}</span>
+              </div>
+              <label className="sl-photo-gallery__picker">
+                <ImagePlus size={20} />
+                <span>{tx("Choose photos", "புகைப்படங்களைத் தேர்ந்தெடுக்கவும்")}</span>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple disabled={pform.imageUrls.length >= 10} onChange={(e) => { const files = Array.from(e.target.files || []).slice(0, Math.max(0, 10 - pform.imageUrls.length)); files.forEach(uploadProductPhoto); e.currentTarget.value = ""; }} />
               </label>
-              {pform.imageUrl && (
-                <div className="sl-photo-preview">
-                  <img src={pform.imageUrl} alt="Product preview" />
-                  <button
-                    type="button"
-                    onClick={() => setPform({ ...pform, imageUrl: "" })}
-                  >
-                    Remove photo
-                  </button>
-                </div>
-              )}
+              {pform.imageUrls.length > 0 && <div className="sl-photo-gallery__grid">{pform.imageUrls.map((url, index) => <div className="sl-photo-gallery__item" key={url + index}><img src={url} alt={tx("Product photo", "தயாரிப்பு புகைப்படம்") + " " + (index + 1)} /><span>{index === 0 ? tx("Cover", "முதன்மை") : index + 1}</span><button type="button" aria-label={tx("Remove photo", "புகைப்படத்தை நீக்கு")} onClick={() => setPform(old => { const imageUrls = old.imageUrls.filter((_, i) => i !== index); return { ...old, imageUrls, imageUrl: imageUrls[0] || "" }; })}><X size={14} /></button></div>)}</div>}
               <label className="sl-image-url-label">
-                Or use an image URL
-                <input
-                  type="url"
-                  value={
-                    pform.imageUrl.startsWith("data:") ? "" : pform.imageUrl
-                  }
-                  onChange={(e) =>
-                    setPform({ ...pform, imageUrl: e.target.value })
-                  }
-                  placeholder="https://…"
-                />
+                {tx("Or add an image URL", "அல்லது பட URL-ஐச் சேர்க்கவும்")}
+                <input type="url" value={pform.imageUrl.startsWith("data:") ? "" : (pform.imageUrls[0] && !pform.imageUrls[0].startsWith("data:") ? pform.imageUrls[0] : "")} onChange={(e) => setPform(old => { const imageUrls = [...old.imageUrls]; if (imageUrls.length) imageUrls[0] = e.target.value; else if (e.target.value) imageUrls.push(e.target.value); return { ...old, imageUrl: e.target.value, imageUrls }; })} placeholder="https://…" />
               </label>
-            </div>
+            </div>      </div>
           </div>
           <label>
-            Description
+            {tx("Description", "விளக்கம்")}
             <textarea
               rows={2}
               value={pform.description}
@@ -141,13 +123,13 @@ export function ProductModal({
           <div className="sl-form-row">
             <div className="sl-price-editor">
               <div className="sl-price-editor-heading">
-                <span>Product price</span>
-                <span className="sl-muted">Optional</span>
+                <span>{tx("Product price", "தயாரிப்பு விலை")}</span>
+                <span className="sl-muted">{tx("Optional", "விருப்பத்தேர்வு")}</span>
               </div>
               <div
                 className="sl-price-mode"
                 role="group"
-                aria-label="Product pricing mode"
+                aria-label={tx("Product pricing mode", "விலை முறை")}
               >
                 <button
                   type="button"
@@ -155,7 +137,7 @@ export function ProductModal({
                   aria-pressed={pform.price === ""}
                   onClick={() => setPform({ ...pform, price: "" })}
                 >
-                  Price on request
+                  {tx("Price on request", "விலையைக் கேட்டு தெரிந்துகொள்ளவும்")}
                 </button>
                 <button
                   type="button"
@@ -165,17 +147,16 @@ export function ProductModal({
                     setPform({ ...pform, price: pform.price || "0.00" })
                   }
                 >
-                  Set a price
+                  {tx("Set a price", "விலையை நிர்ணயிக்கவும்")}
                 </button>
               </div>
               {pform.price === "" ? (
                 <p className="sl-muted">
-                  Customers will see “Price on request” and can enquire about
-                  this product.
+                  {tx("Customers will see “Price on request” and can enquire about this product.", "வாடிக்கையாளர்கள் விலையைக் கேட்டு இந்தத் தயாரிப்பைப் பற்றி விசாரிக்கலாம்.")}
                 </p>
               ) : (
                 <label>
-                  Price amount
+                  {tx("Price amount", "விலைத் தொகை")}
                   <input
                     type="number"
                     min="0.01"
@@ -185,13 +166,13 @@ export function ProductModal({
                     onChange={(e) =>
                       setPform({ ...pform, price: e.target.value })
                     }
-                    placeholder="Enter product price"
+                    placeholder={tx("Enter product price", "தயாரிப்பு விலையை உள்ளிடவும்")}
                   />
                 </label>
               )}
             </div>
             <label>
-              Currency
+              {tx("Currency", "நாணயம்")}
               <select
                 value={pform.currency}
                 onChange={(e) =>
@@ -205,7 +186,7 @@ export function ProductModal({
               </select>
             </label>
             <label>
-              Unit
+              {tx("Unit", "அலகு")}
               <input
                 required
                 value={pform.unit}
@@ -213,10 +194,10 @@ export function ProductModal({
               />
             </label>
           </div>
-          <div className="sl-field-divider">INVENTORY</div>
+          <div className="sl-field-divider">{tx("INVENTORY", "சரக்கு இருப்பு")}</div>
           <div className="sl-form-row">
             <label>
-              Available stock quantity
+              {tx("Available stock quantity", "கையிருப்பு அளவு")}
               <input
                 type="number"
                 min="0"
@@ -229,16 +210,15 @@ export function ProductModal({
                     stockEnabled: true,
                   })
                 }
-                placeholder="e.g. 100"
+                placeholder={tx("e.g. 100", "எ.கா. 100")}
               />
               <span className="sl-muted">
-                Enter 0 if currently out of stock. Saving a quantity enables
-                stock validation at checkout.
+                {tx("Enter 0 if currently out of stock. Saving a quantity enables stock validation at checkout.", "கையிருப்பில் இல்லையெனில் 0 என உள்ளிடவும். அளவைச் சேமித்தால் கட்டணத்தின் போது கையிருப்பு சரிபார்க்கப்படும்.")}
               </span>
             </label>
           </div>
           <div className="sl-field-divider">
-            PRODUCT DETAILS · {category.toUpperCase()}
+            {tx("PRODUCT DETAILS", "தயாரிப்பு விவரங்கள்")} · {category.toUpperCase()}
           </div>
           <div className="sl-dynamic-fields">
             {fields.map((f) => (
@@ -259,7 +239,7 @@ export function ProductModal({
                       })
                     }
                   >
-                    <option value="">Choose…</option>
+                    <option value="">{tx("Choose…", "தேர்ந்தெடுக்கவும்…")}</option>
                     {(Array.isArray(f.options) ? f.options : []).map((o) => (
                       <option key={String(o)}>{String(o)}</option>
                     ))}
@@ -305,8 +285,8 @@ export function ProductModal({
                     }
                   >
                     <option value="">Choose…</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
+                    <option value="true">{tx("Yes", "ஆம்")}</option>
+                    <option value="false">{tx("No", "இல்லை")}</option>
                   </select>
                 ) : f.type === "textarea" ? (
                   <textarea
