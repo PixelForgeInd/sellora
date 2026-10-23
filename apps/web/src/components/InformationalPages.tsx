@@ -94,20 +94,6 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
         </section>
       )}
 
-      {(kind === "terms" || kind === "privacy") && (
-        <div className="sl-info-tools">
-          <div className="sl-info-tools-label"><ListChecks size={16} /> On this page</div>
-          <nav aria-label="Policy sections">
-            {(kind === "terms"
-              ? [{"label":"Using the service","id":"using-service"},{"label":"Your account and security","id":"account-security"},{"label":"Your content and products","id":"content-products"},{"label":"Customer enquiries and orders","id":"enquiries-orders"},{"label":"Plans, billing and payments","id":"billing-payments"},{"label":"Acceptable use","id":"acceptable-use"},{"label":"Availability and changes","id":"availability-changes"},{"label":"Suspension or termination","id":"suspension-termination"},{"label":"Disclaimers and liability","id":"disclaimers-liability"},{"label":"Updates and contact","id":"updates-contact"}]
-              : [{"label":"Information that may be processed","id":"information-processed"},{"label":"How information is used","id":"how-information-used"},{"label":"Public catalogue information","id":"public-catalogue-information"},{"label":"Payments","id":"privacy-payments"},{"label":"Service providers and sharing","id":"service-providers-sharing"},{"label":"Security and retention","id":"security-retention"},{"label":"Your choices and requests","id":"choices-requests"},{"label":"Children","id":"children"},{"label":"Changes and contact","id":"privacy-changes-contact"}]
-            ).map((item) => (
-              <a key={item.id} href={"#" + item.id} className={activeSection === item.id ? "is-active" : undefined} aria-current={activeSection === item.id ? "location" : undefined}>{item.label}</a>
-            ))}
-          </nav>
-          <button type="button" className="sl-info-print" onClick={() => window.print()}><Printer size={15} /> Print / Save PDF</button>
-        </div>
-      )}
 
       {kind === "terms" && (
         <div className="sl-info-content sl-info-content-policy">
