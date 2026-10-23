@@ -866,7 +866,7 @@ export default function SelloraApp() {
               <h1>Activate your workspace</h1>
             </div>
             <button className="sl-button sl-button-outline" onClick={signOut}>
-              <LogOut size={15} /> Sign out
+              <LogOut size={15} /> {isTamil ? "வெளியேறு" : "Sign out"}
             </button>
           </header>
           <p
@@ -959,7 +959,7 @@ export default function SelloraApp() {
         <main className="sl-main sl-renewal-main">
           <header className="sl-workspace-top">
             <div>
-              <span className="sl-kicker">SELLORA WORKSPACE</span>
+              <span className="sl-kicker">{isTamil ? "SELLORA பணியிடம்" : "SELLORA WORKSPACE"}</span>
               <h1>Renew your subscription</h1>
             </div>
             <button className="sl-button sl-button-outline" onClick={signOut}>
