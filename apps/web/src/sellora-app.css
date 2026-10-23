@@ -3011,3 +3011,7 @@ body{border-top:0;}
     grid-column: 1;
   }
 }
+
+/* Match the public home-page Sellora wordmark scale inside the workspace sidebar. */
+.sl-app .sl-sidebar > .sl-brand .sl-mark{width:52px;height:52px}
+.sl-app .sl-sidebar > .sl-brand .sl-wordmark{font-family:"Sora","DM Sans",ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700;letter-spacing:-.8px}
