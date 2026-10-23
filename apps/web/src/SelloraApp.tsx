@@ -147,6 +147,7 @@ export default function SelloraApp() {
     currency: "INR",
     unit: "kg",
     imageUrl: "",
+    imageUrls: [],
     stockEnabled: false,
     stockQuantity: "",
     fields: {} as Record<string, string | number | boolean | string[]>,
