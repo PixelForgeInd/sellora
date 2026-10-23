@@ -580,13 +580,6 @@ export function PublicCatalogue({
         </nav>
         <div className="sl-store-header-actions">
           <button type="button" className="sl-store-language-toggle" aria-label={tx("Switch to Tamil", "ஆங்கிலத்திற்கு மாற்றவும்")} onClick={() => { const next = isTamil ? "en" : "ta"; setCatalogueLanguage(next); const url = new URL(window.location.href); url.searchParams.set("lang", next); url.searchParams.delete("uiLanguage"); window.history.replaceState(null, "", url.toString()); document.documentElement.lang = next; }}>{isTamil ? "English" : "தமிழ்"}</button>
-          <label className="sl-store-search">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={tx("Search products…", "தயாரிப்புகளைத் தேடுங்கள்…")}
-            />
-          </label>
           <a
             className="sl-store-whatsapp"
             href={wa}
