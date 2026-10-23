@@ -39,6 +39,7 @@ type ProductModalProps = {
   editing: string;
   category: string;
   error: string;
+  isTamil: boolean;
   pform: ProductForm;
   setPform: Dispatch<SetStateAction<ProductForm>>;
   fields: Field[];
@@ -51,6 +52,7 @@ export function ProductModal({
   editing,
   category,
   error,
+  isTamil,
   pform,
   setPform,
   fields,
@@ -59,7 +61,6 @@ export function ProductModal({
   uploadProductPhoto,
   saveProduct,
 }: ProductModalProps) {
-  const isTamil = new URLSearchParams(window.location.search).get("uiLanguage") === "ta" || new URLSearchParams(window.location.search).get("lang") === "ta";
   const tx = (en: string, ta: string) => isTamil ? ta : en;
   return (
     <div className="sl-modal-backdrop">
