@@ -557,6 +557,7 @@ export default function SelloraApp() {
             currency: p.currency,
             unit: p.unit,
             imageUrl: p.imageUrl || "",
+            imageUrls: p.imageUrls?.length ? p.imageUrls : (p.imageUrl ? [p.imageUrl] : []),
             stockEnabled: Boolean(p.stockEnabled),
             stockQuantity:
               p.stockQuantity == null ? "" : String(p.stockQuantity),
@@ -571,6 +572,7 @@ export default function SelloraApp() {
             unit:
               business?.productCategory === "yarn-textiles" ? "kg" : "piece",
             imageUrl: "",
+            imageUrls: [],
             stockEnabled: false,
             stockQuantity: "",
             fields: {},
@@ -581,23 +583,19 @@ export default function SelloraApp() {
   }
   function uploadProductPhoto(file?: File) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Choose an image file.");
-      return;
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setError("Please choose an image under 3 MB.");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { setError("Choose an image file."); return; }
+    if (file.size > 3 * 1024 * 1024) { setError("Please choose an image under 3 MB."); return; }
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPform((old) => ({ ...old, imageUrl: reader.result as string }));
+      if (typeof reader.result !== "string") return;
+      setPform((old) => {
+        if (old.imageUrls.length >= 10) { setError("You can add up to 10 photos per product."); return old; }
+        const imageUrls = [...old.imageUrls, reader.result as string];
         setError("");
-      }
+        return { ...old, imageUrls, imageUrl: imageUrls[0] || "" };
+      });
     };
-    reader.onerror = () =>
-      setError("Could not read this image. Try another file.");
+    reader.onerror = () => setError("Could not read this image. Try another file.");
     reader.readAsDataURL(file);
   }
   async function uploadProductImage(product: Product, file: File) {
@@ -650,6 +648,8 @@ export default function SelloraApp() {
     try {
       const body = {
         ...pform,
+        imageUrl: pform.imageUrls[0] || pform.imageUrl || "",
+        imageUrls: pform.imageUrls,
         price: pform.price ? Number(pform.price) : undefined,
         stockEnabled: pform.stockQuantity !== "" ? true : pform.stockEnabled,
         stockQuantity:
