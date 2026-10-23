@@ -2980,3 +2980,34 @@ body{border-top:0;}
     margin-top: 12px;
   }
 }
+
+
+/* Terms and Privacy: odd-numbered sections on the left, even-numbered sections on the right. */
+.sl-info-content-policy {
+  max-width: 1240px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  column-gap: 22px;
+  row-gap: 0;
+}
+.sl-info-content-policy > .sl-info-notice {
+  grid-column: 1 / -1;
+}
+.sl-info-content-policy > section:nth-of-type(odd) {
+  grid-column: 1;
+}
+.sl-info-content-policy > section:nth-of-type(even) {
+  grid-column: 2;
+}
+@media (max-width: 760px) {
+  .sl-info-content-policy {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .sl-info-content-policy > .sl-info-notice,
+  .sl-info-content-policy > section:nth-of-type(odd),
+  .sl-info-content-policy > section:nth-of-type(even) {
+    grid-column: 1;
+  }
+}
