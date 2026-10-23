@@ -3033,3 +3033,10 @@ body{border-top:0;}
 .sl-modal .sl-form label { color:#435347; font-size:14px; font-weight:650; }
 .sl-modal .sl-modal-actions button { font-family:"DM Sans",ui-sans-serif,system-ui,sans-serif; font-weight:700; }
 @media(max-width:640px) { .sl-photo-gallery__grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .sl-photo-gallery { padding:12px; } }
+
+/* The product pricing choices use the same Sellora pill/segmented-control language as the rest of the UI. */
+.sl-price-mode { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 14px; }
+.sl-price-mode > button { appearance:none; display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:10px 16px; border:1px solid #d7e4d2; border-radius:12px; background:#fff; color:#405544; font:600 14px/1.35 "DM Sans",ui-sans-serif,system-ui,sans-serif; cursor:pointer; transition:background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease; }
+.sl-price-mode > button:hover { border-color:#599c56; background:#f5faf3; }
+.sl-price-mode > button.is-active { border-color:#599c56; background:linear-gradient(135deg,#599c56,#478a49); color:#fff; box-shadow:0 5px 14px rgba(49,86,51,.16); }
+.sl-price-mode > button:focus-visible { outline:3px solid rgba(89,156,86,.28); outline-offset:2px; }
