@@ -98,6 +98,8 @@ export default function SelloraApp() {
 
   // Workspace navigation and feedback
   const [page, setPage] = useState("overview");
+  const [uiLanguage, setUiLanguage] = useState<"en" | "ta">(() => { const params = new URLSearchParams(window.location.search); return params.get("uiLanguage") === "ta" || params.get("lang") === "ta" ? "ta" : "en"; });
+  const isTamil = uiLanguage === "ta";
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1289,7 +1291,7 @@ export default function SelloraApp() {
     <div className="sl-app">
       <aside className="sl-sidebar">
         <Brand />
-        <span className="sl-workspace-label">WORKSPACE</span>
+        <span className="sl-workspace-label">{isTamil ? "பணியிடம்" : "WORKSPACE"}</span>
         <div className="sl-business-chip">
           <span style={{ background: business.brandColor }}>
             {business.name.slice(0, 1).toUpperCase()}
@@ -1301,15 +1303,15 @@ export default function SelloraApp() {
         </div>
         <nav className="sl-nav">
           {[
-            { id: "overview", label: "Overview", icon: LayoutDashboard },
-            { id: "products", label: "Products", icon: Package },
-            { id: "catalogues", label: "Catalogues", icon: BookOpen },
-            { id: "orders", label: "Orders", icon: ClipboardList },
-            { id: "customers", label: "Customers", icon: Users },
-            { id: "reports", label: "Reports", icon: BarChart3 },
-            { id: "payments", label: "Payments", icon: CreditCard },
-            { id: "subscription", label: "Subscription", icon: CreditCard },
-            { id: "settings", label: "Settings", icon: Settings },
+            { id: "overview", label: isTamil ? "கண்ணோட்டம்" : "Overview", icon: LayoutDashboard },
+            { id: "products", label: isTamil ? "தயாரிப்புகள்" : "Products", icon: Package },
+            { id: "catalogues", label: isTamil ? "பட்டியல்கள்" : "Catalogues", icon: BookOpen },
+            { id: "orders", label: isTamil ? "ஆர்டர்கள்" : "Orders", icon: ClipboardList },
+            { id: "customers", label: isTamil ? "வாடிக்கையாளர்கள்" : "Customers", icon: Users },
+            { id: "reports", label: isTamil ? "அறிக்கைகள்" : "Reports", icon: BarChart3 },
+            { id: "payments", label: isTamil ? "கட்டணங்கள்" : "Payments", icon: CreditCard },
+            { id: "subscription", label: isTamil ? "சந்தா" : "Subscription", icon: CreditCard },
+            { id: "settings", label: isTamil ? "அமைப்புகள்" : "Settings", icon: Settings },
           ].map((item) => (
             <button
               key={item.id}
