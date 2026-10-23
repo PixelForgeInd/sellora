@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, BookOpen, ShieldCheck, Sprout, Printer, ListChecks } from "lucide-react";
-import { Brand } from "./ui";
+import { BookOpen, ShieldCheck, Sprout, Printer, ListChecks } from "lucide-react";
+import { SiteHeader } from "./SiteHeader";
 
 type InfoPageKind = "about" | "terms" | "privacy";
 
@@ -52,10 +52,7 @@ export function InformationalPage({ kind }: { kind: InfoPageKind }) {
   }, [kind]);
   return (
     <main className="sl-info-page">
-      <header className="sl-info-header">
-        <Brand />
-        <a className="sl-info-back" href="/"><ArrowLeft size={15} /> Back to home</a>
-      </header>
+      <SiteHeader showLanguageToggle />
       <section className="sl-info-hero">
         <span className="sl-home-eyebrow">
           {kind === "about" ? <Sprout size={15} /> : kind === "terms" ? <BookOpen size={15} /> : <ShieldCheck size={15} />}
