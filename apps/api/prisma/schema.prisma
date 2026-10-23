@@ -214,6 +214,7 @@ model SelloraProduct {
   currency    String             @default("INR")
   unit        String             @default("piece")
   imageUrl    String?
+  imageUrls   String[]           @default([])
   stockEnabled Boolean @default(false)
   stockQuantity Decimal? @db.Decimal(12, 3)
   fields      Json               @default("{}")
