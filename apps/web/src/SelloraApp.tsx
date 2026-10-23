@@ -98,6 +98,13 @@ export default function SelloraApp() {
 
   // Workspace navigation and feedback
   const [page, setPage] = useState("overview");
+  const [uiLanguage, setUiLanguage] = useState<"en" | "ta">(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("uiLanguage") === "ta" || params.get("lang") === "ta"
+      ? "ta"
+      : "en";
+  });
+  const isTamil = uiLanguage === "ta";
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -145,6 +152,7 @@ export default function SelloraApp() {
     currency: "INR",
     unit: "kg",
     imageUrl: "",
+    imageUrls: [] as string[],
     stockEnabled: false,
     stockQuantity: "",
     fields: {} as Record<string, string | number | boolean | string[]>,
@@ -555,6 +563,11 @@ export default function SelloraApp() {
             currency: p.currency,
             unit: p.unit,
             imageUrl: p.imageUrl || "",
+            imageUrls: p.imageUrls?.length
+              ? p.imageUrls
+              : p.imageUrl
+                ? [p.imageUrl]
+                : [],
             stockEnabled: Boolean(p.stockEnabled),
             stockQuantity:
               p.stockQuantity == null ? "" : String(p.stockQuantity),
@@ -569,6 +582,7 @@ export default function SelloraApp() {
             unit:
               business?.productCategory === "yarn-textiles" ? "kg" : "piece",
             imageUrl: "",
+            imageUrls: [],
             stockEnabled: false,
             stockQuantity: "",
             fields: {},
@@ -589,10 +603,16 @@ export default function SelloraApp() {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPform((old) => ({ ...old, imageUrl: reader.result as string }));
+      if (typeof reader.result !== "string") return;
+      setPform((old) => {
+        if (old.imageUrls.length >= 10) {
+          setError("You can add up to 10 photos per product.");
+          return old;
+        }
+        const imageUrls = [...old.imageUrls, reader.result as string];
         setError("");
-      }
+        return { ...old, imageUrls, imageUrl: imageUrls[0] || "" };
+      });
     };
     reader.onerror = () =>
       setError("Could not read this image. Try another file.");
@@ -648,6 +668,8 @@ export default function SelloraApp() {
     try {
       const body = {
         ...pform,
+        imageUrl: pform.imageUrls[0] || pform.imageUrl || "",
+        imageUrls: pform.imageUrls,
         price: pform.price ? Number(pform.price) : undefined,
         stockEnabled: pform.stockQuantity !== "" ? true : pform.stockEnabled,
         stockQuantity:
@@ -864,7 +886,7 @@ export default function SelloraApp() {
               <h1>Activate your workspace</h1>
             </div>
             <button className="sl-button sl-button-outline" onClick={signOut}>
-              <LogOut size={15} /> Sign out
+              <LogOut size={15} /> {isTamil ? "வெளியேறு" : "Sign out"}
             </button>
           </header>
           <p
@@ -957,7 +979,9 @@ export default function SelloraApp() {
         <main className="sl-main sl-renewal-main">
           <header className="sl-workspace-top">
             <div>
-              <span className="sl-kicker">SELLORA WORKSPACE</span>
+              <span className="sl-kicker">
+                {isTamil ? "SELLORA பணியிடம்" : "SELLORA WORKSPACE"}
+              </span>
               <h1>Renew your subscription</h1>
             </div>
             <button className="sl-button sl-button-outline" onClick={signOut}>
@@ -1289,7 +1313,9 @@ export default function SelloraApp() {
     <div className="sl-app">
       <aside className="sl-sidebar">
         <Brand />
-        <span className="sl-workspace-label">WORKSPACE</span>
+        <span className="sl-workspace-label">
+          {isTamil ? "பணியிடம்" : "WORKSPACE"}
+        </span>
         <div className="sl-business-chip">
           <span style={{ background: business.brandColor }}>
             {business.name.slice(0, 1).toUpperCase()}
@@ -1301,15 +1327,51 @@ export default function SelloraApp() {
         </div>
         <nav className="sl-nav">
           {[
-            { id: "overview", label: "Overview", icon: LayoutDashboard },
-            { id: "products", label: "Products", icon: Package },
-            { id: "catalogues", label: "Catalogues", icon: BookOpen },
-            { id: "orders", label: "Orders", icon: ClipboardList },
-            { id: "customers", label: "Customers", icon: Users },
-            { id: "reports", label: "Reports", icon: BarChart3 },
-            { id: "payments", label: "Payments", icon: CreditCard },
-            { id: "subscription", label: "Subscription", icon: CreditCard },
-            { id: "settings", label: "Settings", icon: Settings },
+            {
+              id: "overview",
+              label: isTamil ? "கண்ணோட்டம்" : "Overview",
+              icon: LayoutDashboard,
+            },
+            {
+              id: "products",
+              label: isTamil ? "தயாரிப்புகள்" : "Products",
+              icon: Package,
+            },
+            {
+              id: "catalogues",
+              label: isTamil ? "பட்டியல்கள்" : "Catalogues",
+              icon: BookOpen,
+            },
+            {
+              id: "orders",
+              label: isTamil ? "ஆர்டர்கள்" : "Orders",
+              icon: ClipboardList,
+            },
+            {
+              id: "customers",
+              label: isTamil ? "வாடிக்கையாளர்கள்" : "Customers",
+              icon: Users,
+            },
+            {
+              id: "reports",
+              label: isTamil ? "அறிக்கைகள்" : "Reports",
+              icon: BarChart3,
+            },
+            {
+              id: "payments",
+              label: isTamil ? "கட்டணங்கள்" : "Payments",
+              icon: CreditCard,
+            },
+            {
+              id: "subscription",
+              label: isTamil ? "சந்தா" : "Subscription",
+              icon: CreditCard,
+            },
+            {
+              id: "settings",
+              label: isTamil ? "அமைப்புகள்" : "Settings",
+              icon: Settings,
+            },
           ].map((item) => (
             <button
               key={item.id}
@@ -1347,28 +1409,72 @@ export default function SelloraApp() {
           <div>
             <span className="sl-kicker">SELLORA WORKSPACE</span>
             <h1>
-              {page === "overview"
-                ? "Your business at a glance"
-                : page === "products"
-                  ? "Your products"
-                  : page === "catalogues"
-                    ? "Your catalogues"
-                    : page === "orders"
-                      ? "Customer orders"
-                      : page === "customers"
-                        ? "Customer directory"
-                        : page === "reports"
-                          ? "Sales reports"
-                          : page === "settings"
-                            ? "Business settings"
-                            : page === "payments"
-                              ? "Payments"
-                              : page === "subscription"
-                                ? "Subscription & billing"
-                                : "Workspace"}
+              {isTamil
+                ? (
+                    {
+                      overview: "உங்கள் வணிகத்தின் கண்ணோட்டம்",
+                      products: "உங்கள் தயாரிப்புகள்",
+                      catalogues: "உங்கள் பட்டியல்கள்",
+                      orders: "வாடிக்கையாளர் ஆர்டர்கள்",
+                      customers: "வாடிக்கையாளர் விவரங்கள்",
+                      reports: "விற்பனை அறிக்கைகள்",
+                      settings: "வணிக அமைப்புகள்",
+                      payments: "கட்டணங்கள்",
+                      subscription: "சந்தா மற்றும் கட்டணம்",
+                    } as Record<string, string>
+                  )[page] || "பணியிடம்"
+                : page === "overview"
+                  ? "Your business at a glance"
+                  : page === "products"
+                    ? "Your products"
+                    : page === "catalogues"
+                      ? "Your catalogues"
+                      : page === "orders"
+                        ? "Customer orders"
+                        : page === "customers"
+                          ? "Customer directory"
+                          : page === "reports"
+                            ? "Sales reports"
+                            : page === "settings"
+                              ? "Business settings"
+                              : page === "payments"
+                                ? "Payments"
+                                : page === "subscription"
+                                  ? "Subscription & billing"
+                                  : "Workspace"}
             </h1>
           </div>
-          <span className="sl-online-dot">● Workspace active</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              type="button"
+              className="sl-button sl-outline"
+              onClick={() => {
+                const nextLanguage = isTamil ? "en" : "ta";
+                setUiLanguage(nextLanguage);
+                const next = new URL(window.location.href);
+                next.searchParams.set("uiLanguage", nextLanguage);
+                window.history.replaceState(null, "", next.toString());
+                document.documentElement.lang = nextLanguage;
+                window.dispatchEvent(
+                  new CustomEvent("sellora-language-change", {
+                    detail: nextLanguage,
+                  }),
+                );
+              }}
+            >
+              {isTamil ? "English" : "தமிழ்"}
+            </button>
+            <span className="sl-online-dot">
+              ● {isTamil ? "பணியிடம் செயலில் உள்ளது" : "Workspace active"}
+            </span>
+          </div>
         </header>
         {error && <Err text={error} />}
         {notice && (
@@ -1391,7 +1497,11 @@ export default function SelloraApp() {
                   <Plus size={20} />
                 </span>
                 <div className="sl-compact-panel-copy">
-                  <strong>Make your next sale with Sellora</strong>
+                  <strong>
+                    {isTamil
+                      ? "Sellora மூலம் உங்கள் அடுத்த விற்பனையை மேம்படுத்துங்கள்"
+                      : "Make your next sale with Sellora"}
+                  </strong>
                   <span>
                     Bring your products together in a beautiful digital
                     catalogue, ready to share with every customer.
@@ -1421,13 +1531,14 @@ export default function SelloraApp() {
                     startProduct();
                   }}
                 >
-                  <Plus size={16} /> Add product
+                  <Plus size={16} />{" "}
+                  {isTamil ? "தயாரிப்பைச் சேர்க்கவும்" : "Add product"}
                 </Btn>
               </div>
             </section>
             <section className="sl-stat-grid" aria-label="Business analytics">
               <div>
-                <span>ORDERS TODAY</span>
+                <span>{isTamil ? "இன்றைய ஆர்டர்கள்" : "ORDERS TODAY"}</span>
                 <ClipboardList />
                 <strong>
                   {
@@ -1442,10 +1553,18 @@ export default function SelloraApp() {
                     ).length
                   }
                 </strong>
-                <small>Orders created today</small>
+                <small>
+                  {isTamil
+                    ? "இன்று உருவாக்கப்பட்ட ஆர்டர்கள்"
+                    : "Orders created today"}
+                </small>
               </div>
               <div>
-                <span>PAYMENTS RECEIVED TODAY</span>
+                <span>
+                  {isTamil
+                    ? "இன்று பெறப்பட்ட கட்டணங்கள்"
+                    : "PAYMENTS RECEIVED TODAY"}
+                </span>
                 <CreditCard />
                 <strong>
                   {formatCurrency(
@@ -1469,16 +1588,22 @@ export default function SelloraApp() {
                     "INR",
                   )}
                 </strong>
-                <small>Verified payments received today</small>
+                <small>
+                  {isTamil
+                    ? "இன்று உறுதிப்படுத்தப்பட்ட கட்டணங்கள்"
+                    : "Verified payments received today"}
+                </small>
               </div>
               <div>
-                <span>PRODUCTS</span>
+                <span>{isTamil ? "தயாரிப்புகள்" : "PRODUCTS"}</span>
                 <Package />
                 <strong>{products.length}</strong>
-                <small>In your workspace</small>
+                <small>
+                  {isTamil ? "உங்கள் பணியிடத்தில்" : "In your workspace"}
+                </small>
               </div>
               <div>
-                <span>CATALOGUES</span>
+                <span>{isTamil ? "பட்டியல்கள்" : "CATALOGUES"}</span>
                 <BookOpen />
                 <strong>{catalogues.length}</strong>
                 <small>
@@ -1490,7 +1615,7 @@ export default function SelloraApp() {
                 </small>
               </div>
               <div>
-                <span>ENQUIRIES TODAY</span>
+                <span>{isTamil ? "இன்றைய விசாரணைகள்" : "ENQUIRIES TODAY"}</span>
                 <MessageSquare />
                 <strong>
                   {
@@ -1505,13 +1630,23 @@ export default function SelloraApp() {
                     ).length
                   }
                 </strong>
-                <small>Customer enquiries received today</small>
+                <small>
+                  {isTamil
+                    ? "இன்று பெறப்பட்ட வாடிக்கையாளர் விசாரணைகள்"
+                    : "Customer enquiries received today"}
+                </small>
               </div>
               <div>
-                <span>TOTAL CUSTOMERS</span>
+                <span>
+                  {isTamil ? "மொத்த வாடிக்கையாளர்கள்" : "TOTAL CUSTOMERS"}
+                </span>
                 <Users />
                 <strong>{overviewCustomers.length}</strong>
-                <small>In your customer directory</small>
+                <small>
+                  {isTamil
+                    ? "உங்கள் வாடிக்கையாளர் பட்டியலில்"
+                    : "In your customer directory"}
+                </small>
               </div>
             </section>
 
@@ -2066,6 +2201,7 @@ export default function SelloraApp() {
       </main>
       {modal === "product" && (
         <ProductModal
+          isTamil={isTamil}
           category={category}
           error={error}
           editing={editing}
