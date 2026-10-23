@@ -148,7 +148,7 @@ export default function App() {
     try {
       const pdfjs = await import("pdfjs-dist");
       pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${(pdfjs as any).version}/pdf.worker.min.mjs`;
-      const pdf = await pdfjs.getDocument(url).promise;
+      const pdf = await pdfjs.getDocument({ url }).promise;
       const pages: string[] = [];
       const maxPages = Math.min(pdf.numPages, 80);
       for (let n = 1; n <= maxPages; n++) {
