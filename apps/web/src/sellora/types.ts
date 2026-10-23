@@ -35,6 +35,7 @@ export type Product = {
   currency: string;
   unit: string;
   imageUrl?: string | null;
+  imageUrls?: string[];
   stockEnabled?: boolean;
   stockQuantity?: string | number | null;
   fields: Record<string, string | number | boolean | string[]>;

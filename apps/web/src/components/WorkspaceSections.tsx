@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import {
   ArrowRight,
@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Brand, Button as Btn, ErrorMessage as Err } from "./ui";
+import { SiteHeader } from "./SiteHeader";
 import {
   categories as cats,
   fallbackFields as fallback,
@@ -76,175 +77,324 @@ export function AuthScreen({
   auth,
   notice = "",
 }: AuthScreenProps) {
+  const [authHeaderLanguage, setAuthHeaderLanguage] = useState<"en" | "ta">(
+    () =>
+      new URLSearchParams(window.location.search).get("lang") === "ta"
+        ? "ta"
+        : "en",
+  );
+  const isTamil = authHeaderLanguage === "ta";
+  useEffect(() => {
+    document.documentElement.lang = isTamil ? "ta" : "en";
+  }, [isTamil]);
+  const isSignup = mode === "signup";
+  const isForgot = mode === "forgot";
+  const isReset = mode === "reset";
+  const heading = isSignup
+    ? isTamil
+      ? "உங்கள் Sellora கணக்கை உருவாக்குங்கள்."
+      : "Create your Sellora account."
+    : isForgot
+      ? isTamil
+        ? "மீண்டும் உங்கள் கணக்கிற்குள் செல்வோம்."
+        : "Let’s get you back in."
+      : isReset
+        ? isTamil
+          ? "புதிய தொடக்கம்."
+          : "A fresh start."
+        : isTamil
+          ? "Sellora-வுக்கு மீண்டும் வரவேற்கிறோம்."
+          : "Welcome back to Sellora.";
+  const description = isSignup
+    ? isTamil
+      ? "உங்கள் தயாரிப்புகளை அழகான, பகிரக்கூடிய ஒரே பட்டியலில் ஒன்றிணைக்கவும்."
+      : "Bring your products together in one beautiful, shareable catalogue."
+    : isForgot
+      ? isTamil
+        ? "உங்கள் மின்னஞ்சலை உள்ளிடுங்கள்; பாதுகாப்பான கடவுச்சொல் மீட்டமைப்பு இணைப்பை அனுப்புவோம்."
+        : "Enter your email and we’ll send you a secure password reset link."
+      : isReset
+        ? isTamil
+          ? "உங்கள் கணக்கிற்குப் புதிய வலுவான கடவுச்சொல்லைத் தேர்ந்தெடுக்கவும்."
+          : "Choose a strong new password for your account."
+        : isTamil
+          ? "உங்கள் தயாரிப்புகள், பட்டியல்கள் மற்றும் அடுத்த பெரிய விற்பனை உங்களுக்காகக் காத்திருக்கின்றன."
+          : "Your products, catalogues and next big sale are waiting.";
+
   return (
-    <div className="sl-auth-layout">
-      <section className="sl-auth-story">
-        <Brand />
-        <div className="sl-story-content">
-          <span className="sl-kicker">YOUR PRODUCTS. YOUR BRAND.</span>
-          <h1>
-            One catalogue.
-            <br />
-            <em>More possibilities.</em>
-          </h1>
-          <p>
-            Create a polished, shareable product catalogue for your business. No
-            design tools or technical skills required.
-          </p>
-          <div className="sl-story-points">
-            <span>
-              <Check size={16} /> Set up in minutes
+    <div className="sl-auth-new">
+      <SiteHeader
+        language={authHeaderLanguage}
+        onToggleLanguage={() => {
+          const next = authHeaderLanguage === "en" ? "ta" : "en";
+          setAuthHeaderLanguage(next);
+          const url = new URL(window.location.href);
+          url.searchParams.set("lang", next);
+          window.history.replaceState({}, "", url.toString());
+        }}
+        showLanguageToggle
+      />
+      <main className="sl-auth-new__layout">
+        <section className="sl-auth-new__story" aria-label="About Sellora">
+          <div className="sl-auth-new__orb sl-auth-new__orb--one" />
+          <div className="sl-auth-new__orb sl-auth-new__orb--two" />
+          <div className="sl-auth-new__story-inner">
+            <span className="sl-auth-new__eyebrow">
+              <span className="sl-auth-new__eyebrow-dot" />
+              {isTamil
+                ? "உங்கள் தயாரிப்புகள். உங்கள் பிராண்ட்."
+                : "YOUR PRODUCTS. YOUR BRAND."}
             </span>
-            <span>
-              <Check size={16} /> Fields for your industry
-            </span>
-            <span>
-              <Check size={16} /> Share one simple link
-            </span>
-          </div>
-        </div>
-        <small>SELLORA · DIGITAL CATALOGUES. SMARTER SALES.</small>
-      </section>
-      <section className="sl-auth-main">
-        <div className="sl-auth-card">
-          <Brand />
-          <span className="sl-kicker">
-            {mode === "signup"
-              ? "DIGITAL CATALOGUES. SMARTER SALES."
-              : mode === "forgot"
-                ? "PASSWORD RECOVERY"
-                : mode === "reset"
-                  ? "CHOOSE A NEW PASSWORD"
-                  : "WELCOME BACK"}
-          </span>
-          <h2>
-            {mode === "signup"
-              ? "Create your Sellora account"
-              : mode === "forgot"
-                ? "Reset your password"
-                : mode === "reset"
-                  ? "Set a new password"
-                  : "Log in to Sellora"}
-          </h2>
-          <p>
-            {mode === "signup"
-              ? "Your catalogue journey starts here."
-              : mode === "forgot"
-                ? "We will email a secure reset link if the account exists."
-                : mode === "reset"
-                  ? "Choose a password you have not used before."
-                  : "Continue managing products and catalogues."}
-          </p>
-          <Err text={error} />
-          {notice && (
-            <p className="sl-notice" role="status">
-              {notice}
+            <h1>
+              One catalogue.
+              <br />
+              <em>
+                {isTamil ? "மேலும் பல வாய்ப்புகள்." : "More possibilities."}
+              </em>
+            </h1>
+            <p className="sl-auth-new__intro">
+              A polished, shareable product catalogue for your business. No
+              design tools or technical skills required.
             </p>
-          )}
-          <form className="sl-form" onSubmit={auth}>
-            {mode !== "reset" && (
-              <label>
-                Email address
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                />
-              </label>
+            <div className="sl-auth-new__benefits">
+              <div>
+                <span>
+                  <Check size={15} />
+                </span>
+                <p>
+                  <strong>
+                    {isTamil
+                      ? "சில நிமிடங்களில் அமைக்கலாம்"
+                      : "Set up in minutes"}
+                  </strong>
+                  <small>
+                    {isTamil
+                      ? "சிரமமின்றி உங்கள் பட்டியலைத் தயாரிக்கலாம்."
+                      : "Get your catalogue ready without the hassle."}
+                  </small>
+                </p>
+              </div>
+              <div>
+                <span>
+                  <Check size={15} />
+                </span>
+                <p>
+                  <strong>
+                    {isTamil
+                      ? "உங்கள் துறைக்காக உருவாக்கப்பட்டது"
+                      : "Made for your industry"}
+                  </strong>
+                  <small>
+                    {isTamil
+                      ? "உங்கள் விருப்பப்படி தயாரிப்புகளைக் காட்சிப்படுத்துங்கள்."
+                      : "Showcase products the way you want."}
+                  </small>
+                </p>
+              </div>
+              <div>
+                <span>
+                  <Check size={15} />
+                </span>
+                <p>
+                  <strong>
+                    {isTamil ? "ஒரே எளிய இணைப்பு" : "One simple link"}
+                  </strong>
+                  <small>
+                    {isTamil
+                      ? "உங்கள் பட்டியலை எங்கும் பகிருங்கள்."
+                      : "Share your catalogue anywhere."}
+                  </small>
+                </p>
+              </div>
+            </div>
+            <div className="sl-auth-new__signature">
+              <span className="sl-auth-new__signature-mark">S</span>
+              <span>
+                SELLORA <i />{" "}
+                {isTamil
+                  ? "டிஜிட்டல் பட்டியல்கள். புத்திசாலித்தனமான விற்பனை."
+                  : "DIGITAL CATALOGUES. SMARTER SALES."}
+              </span>
+            </div>
+          </div>
+        </section>
+        <section className="sl-auth-new__form-panel">
+          <div className="sl-auth-new__glow" />
+          <div className="sl-auth-new__card">
+            <div className="sl-auth-new__mobile-brand">
+              <Brand />
+            </div>
+            <span className="sl-auth-new__form-kicker">
+              {isSignup
+                ? "YOUR CATALOGUE JOURNEY STARTS HERE"
+                : isForgot
+                  ? "ACCOUNT RECOVERY"
+                  : isReset
+                    ? "SECURE YOUR ACCOUNT"
+                    : "GOOD TO SEE YOU AGAIN"}
+            </span>
+            <h2>
+              {isSignup && !isTamil ? (
+                <>
+                  Create your
+                  <br />
+                  <span>Sellora account.</span>
+                </>
+              ) : (
+                heading
+              )}
+            </h2>
+            <p className="sl-auth-new__form-description">{description}</p>
+            <Err text={error} />
+            {notice && (
+              <p className="sl-auth-new__notice" role="status">
+                {notice}
+              </p>
             )}
-            {mode !== "forgot" && (
-              <label>
-                {mode === "reset" ? "New password" : "Password"}
-                <div className="sl-password-wrap">
+            <form className="sl-auth-new__form" onSubmit={auth}>
+              {mode !== "reset" && (
+                <label>
+                  <span>{isTamil ? "மின்னஞ்சல் முகவரி" : "Email address"}</span>
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type="email"
                     required
-                    minLength={mode === "signup" || mode === "reset" ? 8 : 1}
-                    autoComplete={
-                      mode === "signup" || mode === "reset"
-                        ? "new-password"
-                        : "current-password"
-                    }
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      mode === "signup" || mode === "reset"
-                        ? "At least 8 characters"
-                        : "Your password"
-                    }
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
                   />
+                </label>
+              )}
+              {mode !== "forgot" && (
+                <label>
+                  <span>
+                    {isTamil
+                      ? isReset
+                        ? "புதிய கடவுச்சொல்"
+                        : "கடவுச்சொல்"
+                      : isReset
+                        ? "New password"
+                        : "Password"}
+                  </span>
+                  <div className="sl-auth-new__password">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={isSignup || isReset ? 8 : 1}
+                      autoComplete={
+                        isSignup || isReset
+                          ? "new-password"
+                          : "current-password"
+                      }
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={
+                        isSignup || isReset
+                          ? "At least 8 characters"
+                          : "Enter your password"
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="sl-auth-new__eye"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      aria-pressed={showPassword}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </label>
+              )}
+              {mode === "login" && (
+                <div className="sl-auth-new__forgot">
                   <button
-                    className="sl-password-toggle"
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                    aria-pressed={showPassword}
+                    onClick={() => {
+                      setMode("forgot");
+                      setError("");
+                    }}
                   >
-                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    {isTamil
+                      ? "கடவுச்சொல்லை மறந்துவிட்டீர்களா?"
+                      : "Forgot password?"}
                   </button>
                 </div>
-              </label>
-            )}
-            <Btn type="submit" disabled={busy}>
-              {busy
-                ? "Please wait…"
-                : mode === "signup"
-                  ? "Create account"
-                  : mode === "forgot"
-                    ? "Send reset link"
-                    : mode === "reset"
-                      ? "Reset password"
-                      : "Log in"}{" "}
-              <ArrowRight size={16} />
-            </Btn>
-          </form>
-          {mode === "login" && (
-            <p className="sl-auth-switch">
+              )}
+              <button
+                className="sl-auth-new__submit"
+                type="submit"
+                disabled={busy}
+              >
+                <span>
+                  {isTamil
+                    ? busy
+                      ? "தயவுசெய்து காத்திருக்கவும்…"
+                      : isSignup
+                        ? "கணக்கை உருவாக்கவும்"
+                        : isForgot
+                          ? "மீட்டமைப்பு இணைப்பை அனுப்பவும்"
+                          : isReset
+                            ? "கடவுச்சொல்லை மீட்டமைக்கவும்"
+                            : "உள்நுழைக"
+                    : busy
+                      ? "Please wait…"
+                      : isSignup
+                        ? "Create account"
+                        : isForgot
+                          ? "Send reset link"
+                          : isReset
+                            ? "Reset password"
+                            : "Log in"}
+                </span>
+                {!busy && <ArrowRight size={17} />}
+              </button>
+            </form>
+            <div className="sl-auth-new__switch">
+              <span>
+                {isTamil
+                  ? isForgot || isReset
+                    ? "கடவுச்சொல் நினைவில் உள்ளதா?"
+                    : isSignup
+                      ? "ஏற்கனவே கணக்கு உள்ளதா?"
+                      : "Sellora-வுக்கு புதியவரா?"
+                  : isForgot || isReset
+                    ? "Remember your password?"
+                    : isSignup
+                      ? "Already have an account?"
+                      : "New to Sellora?"}
+              </span>
               <button
                 type="button"
                 onClick={() => {
-                  setMode("forgot");
+                  setMode(isSignup || isForgot || isReset ? "login" : "signup");
                   setError("");
                 }}
               >
-                Forgot password?
+                {isTamil
+                  ? isSignup
+                    ? "உள்நுழைக"
+                    : isForgot || isReset
+                      ? "உள்நுழைவுக்குத் திரும்பவும்"
+                      : "கணக்கை உருவாக்கவும்"
+                  : isSignup
+                    ? "Log in"
+                    : isForgot || isReset
+                      ? "Back to log in"
+                      : "Create account"}
               </button>
-            </p>
-          )}
-          <p className="sl-auth-switch">
-            {mode === "forgot" || mode === "reset"
-              ? "Remember your password?"
-              : mode === "signup"
-                ? "Already have an account?"
-                : "New to Sellora?"}{" "}
-            <button
-              type="button"
-              onClick={() => {
-                setMode(
-                  mode === "signup" || mode === "forgot" || mode === "reset"
-                    ? "login"
-                    : "signup",
-                );
-                setError("");
-              }}
-            >
-              {mode === "signup"
-                ? "Log in"
-                : mode === "forgot" || mode === "reset"
-                  ? "Back to log in"
-                  : "Create account"}
-            </button>
-          </p>
-          <small className="sl-muted">
-            Your workspace is private to your account.
-          </small>
-        </div>
-      </section>
+            </div>
+            <div className="sl-auth-new__privacy">
+              <span className="sl-auth-new__privacy-dot">✓</span>
+              {isTamil
+                ? "உங்கள் பணியிடம் உங்கள் கணக்கிற்கு மட்டும் தனிப்பட்டது."
+                : "Your workspace is private to your account."}
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

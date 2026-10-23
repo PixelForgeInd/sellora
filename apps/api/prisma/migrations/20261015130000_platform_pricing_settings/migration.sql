@@ -1,4 +1,4 @@
-CREATE TABLE "PlatformPricing" (
+CREATE TABLE IF NOT EXISTS "PlatformPricing" (
   "id" TEXT NOT NULL DEFAULT 'default',
   "monthlyPrice" DECIMAL(12,2) NOT NULL DEFAULT 249,
   "yearlyPrice" DECIMAL(12,2) NOT NULL DEFAULT 2490,

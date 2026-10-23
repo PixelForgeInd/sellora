@@ -24,6 +24,8 @@ function FlipPage({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [isTamil, setIsTamil] = useState(() => { const p = new URLSearchParams(window.location.search); return p.get("lang") === "ta" || p.get("uiLanguage") === "ta"; });
+  const tx = (en: string, ta: string) => isTamil ? ta : en;
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState("");
   const [count, setCount] = useState("All counts");
@@ -146,7 +148,7 @@ export default function App() {
     try {
       const pdfjs = await import("pdfjs-dist");
       pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${(pdfjs as any).version}/pdf.worker.min.mjs`;
-      const pdf = await pdfjs.getDocument(url).promise;
+      const pdf = await pdfjs.getDocument({ url }).promise;
       const pages: string[] = [];
       const maxPages = Math.min(pdf.numPages, 80);
       for (let n = 1; n <= maxPages; n++) {
@@ -183,20 +185,21 @@ export default function App() {
         <span className="brand-mark">S</span><span><strong>SELLORA</strong><small>DIGITAL CATALOGUES · SMARTER SALES</small></span>
       </a>
       <nav className="header-actions">
-        <a href="#catalogue" className="nav-link">Catalogue</a>
-        <a href="#products" className="nav-link">Yarns & Shades</a>
-        <button className="button button-quiet" onClick={() => setShowOnboarding(true)}><Building2 size={16}/> New business</button><button className="button button-quiet" onClick={openAdmin}><LayoutDashboard size={16}/> Sales dashboard</button>
-        <button className="button button-primary" onClick={() => setShowEnquiry(true)}><ShoppingBag size={16}/> Enquiry {cart.length > 0 && <span className="cart-count">{cart.length}</span>}</button>
+        <button type="button" className="button button-quiet language-toggle" aria-label={tx("Switch to Tamil", "ஆங்கிலத்திற்கு மாற்றவும்")} onClick={() => { const next = !isTamil; setIsTamil(next); const url = new URL(window.location.href); url.searchParams.set("lang", next ? "ta" : "en"); window.history.replaceState(null, "", url.toString()); document.documentElement.lang = next ? "ta" : "en"; }}>{isTamil ? "English" : "தமிழ்"}</button>
+        <a href="#catalogue" className="nav-link">{tx("Catalogue", "பட்டியல்")}</a>
+        <a href="#products" className="nav-link">{tx("Yarns & Shades", "நூல் வகைகள் மற்றும் நிறங்கள்")}</a>
+        <button className="button button-quiet" onClick={() => setShowOnboarding(true)}><Building2 size={16}/> {tx("New business", "புதிய வணிகம்")}</button><button className="button button-quiet" onClick={openAdmin}><LayoutDashboard size={16}/> {tx("Sales dashboard", "விற்பனை டாஷ்போர்டு")}</button>
+        <button className="button button-primary" onClick={() => setShowEnquiry(true)}><ShoppingBag size={16}/> {tx("Enquiry", "விசாரணை")} {cart.length > 0 && <span className="cart-count">{cart.length}</span>}</button>
       </nav>
     </header>
 
     <main>
       <section className="hero">
         <div className="hero-copy">
-          <div className="eyebrow"><span className="eyebrow-dot"/> DIGITAL CATALOGUES · SMARTER SALES</div>
-          <h1>Find the right yarn.<br/><em>Build better textiles.</em></h1>
-          <p>Explore our yarn range, browse shades and view published prices. Select what you need and send our team an enquiry.</p>
-          <div className="hero-actions"><a className="button button-primary button-large" href="#catalogue"><BookOpen size={18}/> Explore catalogue</a><a className="text-link" href="#products">Browse products <ChevronRight size={16}/></a></div>
+          <div className="eyebrow"><span className="eyebrow-dot"/> {tx("DIGITAL CATALOGUES · SMARTER SALES", "டிஜிட்டல் பட்டியல்கள் · சிறந்த விற்பனை")}</div>
+          <h1>{tx("Find the right yarn.", "சரியான நூலைத் தேர்ந்தெடுங்கள்.")}<br/><em>{tx("Build better textiles.", "சிறந்த துணிகளை உருவாக்குங்கள்.")}</em></h1>
+          <p>{tx("Explore our yarn range, browse shades and view published prices. Select what you need and send our team an enquiry.", "எங்கள் நூல் வகைகள், நிறங்கள் மற்றும் வெளியிடப்பட்ட விலைகளைப் பாருங்கள். தேவையானவற்றைத் தேர்ந்தெடுத்து எங்கள் குழுவிடம் விசாரிக்கவும்.")}</p>
+          <div className="hero-actions"><a className="button button-primary button-large" href="#catalogue"><BookOpen size={18}/> {tx("Explore catalogue", "பட்டியலைப் பாருங்கள்")}</a><a className="text-link" href="#products">{tx("Browse products", "தயாரிப்புகளைப் பாருங்கள்")} <ChevronRight size={16}/></a></div>
           <div className="hero-proof"><span><CheckCircle2 size={15}/> B2B yarn trading</span><span><CheckCircle2 size={15}/> Direct sales enquiry</span></div>
         </div>
         <div className="hero-art" aria-label="Decorative yarn shade display">

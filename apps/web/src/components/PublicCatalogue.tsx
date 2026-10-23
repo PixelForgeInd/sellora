@@ -24,6 +24,16 @@ export function PublicCatalogue({
   demo?: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const [catalogueLanguage, setCatalogueLanguage] = useState<"en" | "ta">(
+    () => {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("lang") === "ta" || params.get("uiLanguage") === "ta"
+        ? "ta"
+        : "en";
+    },
+  );
+  const isTamil = catalogueLanguage === "ta";
+  const tx = (en: string, ta: string) => (isTamil ? ta : en);
   const [category, setCategory] = useState("All products");
   const [details, setDetails] = useState<Product | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -100,7 +110,12 @@ export function PublicCatalogue({
         "Hi " + data.business.name + ", I'm interested in your products.",
       )
     : "#contact";
-  const publicUrl = typeof window !== "undefined" ? window.location.href : "";
+  const publicUrl =
+    typeof window !== "undefined"
+      ? window.location.origin +
+        window.location.pathname +
+        (catalogueLanguage === "ta" ? "?lang=ta" : "")
+      : "";
   const shareText =
     "View " +
     (data?.title || "catalogue") +
@@ -120,12 +135,13 @@ export function PublicCatalogue({
     setEnquiryError("");
     setEnquirySuccess("");
     setDetails(null);
-    window.location.hash = "enquiry-form";
+    window.history.replaceState(null, "", "#enquiry-form");
     window.setTimeout(() => {
-      document
-        .getElementById("enquiry-form")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
+      const enquirySection = document.getElementById("enquiry-form");
+      if (enquirySection) {
+        enquirySection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   };
   const copyCatalogue = async () => {
     try {
@@ -346,6 +362,17 @@ export function PublicCatalogue({
       style={{ "--store-brand": data.business.brandColor } as CSSProperties}
     >
       <style>{`
+        .sl-storefront .sl-store-categories { align-items:center; }
+        .sl-storefront .sl-store-discover-copy { flex:1 1 360px; min-width:0; }
+        .sl-storefront .sl-store-discover-search { display:flex; align-items:center; gap:12px; width:min(100%,460px); min-height:48px; margin-top:18px; padding:0 15px; border:1px solid #dce5d8; border-radius:14px; background:#f8faf7; color:#718074; transition:border-color .18s,box-shadow .18s,background .18s; }
+        .sl-storefront .sl-store-discover-search:focus-within { border-color:var(--store-brand,#599c56); background:#fff; box-shadow:0 0 0 3px rgba(89,156,86,.14); }
+        .sl-storefront .sl-store-discover-search-icon { font-size:25px; line-height:1; color:var(--store-brand,#599c56); }
+        .sl-storefront .sl-store-discover-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#26382c; font:500 14px/1.4 "DM Sans",sans-serif; }
+        .sl-storefront .sl-store-discover-search input::placeholder { color:#879187; }
+        .sl-storefront .sl-store-discover-search > button { display:grid; place-items:center; width:28px; height:28px; border:0; border-radius:50%; background:#eaf2e7; color:#315633; font-size:20px; cursor:pointer; }
+        @media(max-width:640px) { .sl-storefront .sl-store-discover-search { width:100%; } }
+        .sl-storefront .sl-store-language-toggle { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:10px 16px; border:1px solid #dce8d8; border-radius:999px; background:#fff; color:var(--store-brand,#599c56); font:700 13px/1.2 "DM Sans",sans-serif; cursor:pointer; white-space:nowrap; transition:background .18s,border-color .18s,transform .18s; }
+        .sl-storefront .sl-store-language-toggle:hover { background:#f3f8f1; border-color:var(--store-brand,#599c56); transform:translateY(-1px); }
         .sl-storefront .sl-store-quote,
         .sl-storefront .sl-store-secondary,
         .sl-storefront .sl-store-whatsapp,
@@ -372,11 +399,11 @@ export function PublicCatalogue({
           width: 100%;
           min-height: 54px;
           padding: 14px 22px;
-          border: 1px solid #080d49;
+          border: 1px solid #147b49;
           border-radius: 14px;
-          background: #080d49;
+          background: #147b49;
           color: #fff;
-          box-shadow: 0 8px 18px rgba(8, 13, 73, 0.12);
+          box-shadow: 0 8px 18px rgba(20, 123, 73, 0.12);
           font-family: inherit;
           font-size: 16px;
           font-weight: 600;
@@ -387,8 +414,8 @@ export function PublicCatalogue({
           transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
         }
         .sl-storefront .sl-store-enquiry-submit:hover:not(:disabled) {
-          background: #11195f;
-          box-shadow: 0 10px 22px rgba(8, 13, 73, 0.18);
+          background: #10683f;
+          box-shadow: 0 10px 22px rgba(20, 123, 73, 0.18);
           transform: translateY(-1px);
         }
         .sl-storefront .sl-store-enquiry-submit:active:not(:disabled) {
@@ -412,11 +439,11 @@ export function PublicCatalogue({
           min-height: 48px;
           margin-top: 12px;
           padding: 12px 18px;
-          border: 1px solid #080d49;
+          border: 1px solid #147b49;
           border-radius: 12px;
-          background: #080d49;
+          background: #147b49;
           color: #fff;
-          box-shadow: 0 6px 16px rgba(8, 13, 73, 0.14);
+          box-shadow: 0 6px 16px rgba(20, 123, 73, 0.14);
           cursor: pointer;
         }
         .sl-storefront .sl-store-out-of-stock-enquire-label {
@@ -428,8 +455,8 @@ export function PublicCatalogue({
           opacity: 1 !important;
         }
         .sl-storefront .sl-store-out-of-stock-message + .sl-store-enquire:hover {
-          background: #11195f;
-          border-color: #11195f;
+          background: #10683f;
+          border-color: #10683f;
         }
         .sl-storefront .sl-store-detail-content > .sl-store-contact-primary + .sl-store-out-of-stock-message,
         .sl-storefront .sl-store-detail-content > .sl-store-contact-primary + .sl-store-contact-primary {
@@ -437,6 +464,94 @@ export function PublicCatalogue({
         }
         .sl-storefront .sl-store-out-of-stock-message {
           line-height: 1.5;
+        }
+        .sl-storefront .sl-store-product-bottom button {
+          min-height: 36px;
+          padding: 7px 12px;
+          gap: 7px;
+          border-radius: 10px;
+          font-size: 12px;
+        }
+        .sl-storefront .sl-store-product-bottom .sl-price-request-link {
+          min-height: 0;
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          color: #147b49 !important;
+          font-size: 13px;
+          font-weight: 750;
+          white-space: normal;
+          text-align: left;
+        }
+        .sl-storefront .sl-store-product-bottom .sl-price-request-link:hover {
+          background: transparent;
+          border-color: transparent;
+          box-shadow: none;
+          color: #10683f !important;
+          text-decoration: underline;
+          transform: none;
+        }
+        .sl-storefront .sl-store-product-bottom button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          min-height: 42px;
+          padding: 9px 15px;
+          border: 1px solid #147b49;
+          border-radius: 14px;
+          background: #147b49;
+          color: #fff !important;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 700;
+          letter-spacing: 0;
+          line-height: 1.25;
+          white-space: nowrap;
+          box-shadow: 0 5px 13px rgba(20, 123, 73, .12);
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .sl-storefront .sl-store-product-bottom button:hover {
+          border-color: #10683f;
+          background: #10683f;
+          color: #fff !important;
+          box-shadow: 0 8px 18px rgba(20, 123, 73, .18);
+          transform: translateY(-1px);
+        }
+        .sl-storefront .sl-store-product-bottom button:focus-visible {
+          outline: 2px solid #599c56;
+          outline-offset: 3px;
+        }
+        .sl-storefront .sl-store-enquire {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          min-height: 42px;
+          margin-top: 12px;
+          padding: 9px 15px;
+          border: 1px solid #147b49;
+          border-radius: 14px;
+          background: #147b49;
+          color: #fff !important;
+          box-shadow: 0 5px 13px rgba(20, 123, 73, .12);
+          font-family: inherit;
+          font-size: 17px;
+          font-weight: 700;
+          letter-spacing: 0;
+          line-height: 1.25;
+          text-align: center;
+          transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        .sl-storefront .sl-store-enquire:hover {
+          border-color: #10683f;
+          background: #10683f;
+          color: #fff !important;
+          box-shadow: 0 8px 18px rgba(20, 123, 73, .18);
+          transform: translateY(-1px);
         }
         .sl-storefront .sl-store-contact-primary:focus-visible,
         .sl-storefront .sl-store-contact-secondary:focus-visible,
@@ -471,18 +586,29 @@ export function PublicCatalogue({
           </span>
         </a>
         <nav>
-          <a href="#products">Products</a>
-          <a href="#why-us">Why us</a>
-          <a href="#contact">Contact</a>
+          <a href="#products">{tx("Products", "தயாரிப்புகள்")}</a>
+          <a href="#why-us">
+            {tx("Why us", "எங்களை ஏன் தேர்வு செய்ய வேண்டும்")}
+          </a>
+          <a href="#contact">{tx("Contact", "தொடர்பு")}</a>
         </nav>
         <div className="sl-store-header-actions">
-          <label className="sl-store-search">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search products…"
-            />
-          </label>
+          <button
+            type="button"
+            className="sl-store-language-toggle"
+            aria-label={tx("Switch to Tamil", "ஆங்கிலத்திற்கு மாற்றவும்")}
+            onClick={() => {
+              const next = isTamil ? "en" : "ta";
+              setCatalogueLanguage(next);
+              const url = new URL(window.location.href);
+              url.searchParams.set("lang", next);
+              url.searchParams.delete("uiLanguage");
+              window.history.replaceState(null, "", url.toString());
+              document.documentElement.lang = next;
+            }}
+          >
+            {isTamil ? "English" : "தமிழ்"}
+          </button>
           <a
             className="sl-store-whatsapp"
             href={wa}
@@ -490,7 +616,7 @@ export function PublicCatalogue({
             rel="noreferrer"
           >
             <MessageCircle size={17} />
-            <span>WhatsApp</span>
+            <span>{tx("WhatsApp", "வாட்ஸ்அப்")}</span>
           </a>
           {data.checkoutReady && !demo ? (
             <button
@@ -512,7 +638,8 @@ export function PublicCatalogue({
               className="sl-store-quote"
               onClick={() => startEnquiry()}
             >
-              Get a quote <ArrowRight size={15} />
+              {tx("Get a quote", "விலை விவரம் கேட்கவும்")}{" "}
+              <ArrowRight size={15} />
             </button>
           )}
           <span className="sl-powered-by">
@@ -598,14 +725,48 @@ export function PublicCatalogue({
               <small>Bulk orders · Custom requirements</small>
             </div>
             <div className="sl-store-float">
-              <Check size={15} /> Trusted B2B supplier
+              <Check size={15} />{" "}
+              {tx("Trusted B2B supplier", "நம்பகமான B2B வழங்குநர்")}
             </div>
           </div>
         </section>
         <section className="sl-store-categories">
-          <div>
-            <span className="sl-store-eyebrow">DISCOVER THE RANGE</span>
-            <h2>Find what you need.</h2>
+          <div className="sl-store-discover-copy">
+            <span className="sl-store-eyebrow">
+              {tx("DISCOVER THE RANGE", "வகைகளைக் கண்டறியுங்கள்")}
+            </span>
+            <h2>
+              {tx(
+                "Find what you need.",
+                "உங்களுக்குத் தேவையானதைத் தேர்ந்தெடுங்கள்.",
+              )}
+            </h2>
+            <label className="sl-store-discover-search">
+              <span
+                className="sl-store-discover-search-icon"
+                aria-hidden="true"
+              >
+                ⌕
+              </span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={tx(
+                  "Search products…",
+                  "தயாரிப்புகளைத் தேடுங்கள்…",
+                )}
+                aria-label={tx("Search products", "தயாரிப்புகளைத் தேடுங்கள்")}
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label={tx("Clear search", "தேடலை அழிக்கவும்")}
+                >
+                  ×
+                </button>
+              )}
+            </label>
           </div>
           <div className="sl-store-category-list">
             {categories.map((c) => (
@@ -623,9 +784,21 @@ export function PublicCatalogue({
         <section className="sl-store-products" id="products">
           <div className="sl-store-section-head">
             <div>
-              <span className="sl-store-eyebrow">OUR COLLECTION</span>
-              <h2>Products to move your business forward.</h2>
-              <p>Explore the range and enquire directly with our team.</p>
+              <span className="sl-store-eyebrow">
+                {tx("OUR COLLECTION", "எங்கள் தயாரிப்புகள்")}
+              </span>
+              <h2>
+                {tx(
+                  "Products to move your business forward.",
+                  "உங்கள் வணிக வளர்ச்சிக்கான தயாரிப்புகள்.",
+                )}
+              </h2>
+              <p>
+                {tx(
+                  "Explore the range and enquire directly with our team.",
+                  "தயாரிப்புகளைப் பார்த்து எங்கள் குழுவிடம் நேரடியாக விசாரிக்கவும்.",
+                )}
+              </p>
             </div>
             <div className="sl-store-count">
               {filtered.length} products <span>·</span> {data.business.industry}
@@ -679,7 +852,18 @@ export function PublicCatalogue({
                       ))}
                   </div>
                   <div className="sl-store-product-bottom">
-                    <strong>{money(p.price, p.currency, p.unit)}</strong>
+                    {p.price == null || p.price === "" ? (
+                      <button
+                        type="button"
+                        className="sl-price-request-link"
+                        onClick={() => startEnquiry(p.id)}
+                        aria-label={"Enquire for price of " + p.name}
+                      >
+                        Price on request
+                      </button>
+                    ) : (
+                      <strong>{money(p.price, p.currency, p.unit)}</strong>
+                    )}
                     <button onClick={() => openProduct(p)}>
                       Details <ArrowRight size={14} />
                     </button>
